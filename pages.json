@@ -1,0 +1,61 @@
+{
+  "pages": [
+    {
+      "path": "pages/wardrobe/wardrobe"
+      // "style": {
+      //   "navigationBarTitleText": "衣橱"
+      // }
+    },
+    {
+      "path": "pages/matching/matching",
+      "style": {
+        "navigationBarTitleText": "搭配"
+      }
+    },
+    {
+      "path": "pages/personal/personal",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+    	"path" : "pages/addClothes/addClothes",
+    	"style" : 
+    	{
+    		"navigationBarTitleText" : ""
+    	}
+    }
+  ],
+  "globalStyle": {
+  	"navigationBarTextStyle": "white",
+  	"navigationBarTitleText": "小胖的衣橱",
+  	"navigationBarBackgroundColor": "#d0e183",
+  	"backgroundColor": "#eeeeee"
+  },
+  "tabBar": {
+    "list": [
+      {
+        "pagePath": "pages/wardrobe/wardrobe",
+        "text": "衣橱",
+        "iconPath": "/static/tabBarIcons/wardrode.png",
+        "selectedIconPath": "/static/tabBarIcons/wardrode-select.png"
+      },
+      {
+        "pagePath": "pages/matching/matching",
+        "text": "搭配",
+        "iconPath": "/static/tabBarIcons/matching.png",
+        "selectedIconPath": "/static/tabBarIcons/matching-select.png"
+      },
+      {
+        "pagePath": "pages/personal/personal",
+        "text": "我的",
+        "iconPath": "/static/tabBarIcons/personal.png",
+        "selectedIconPath": "/static/tabBarIcons/personal-select.png"
+      }
+    ],
+    "color": "#a9b7b7",
+    "selectedColor": "#8a8a8a",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black"
+  }
+}
