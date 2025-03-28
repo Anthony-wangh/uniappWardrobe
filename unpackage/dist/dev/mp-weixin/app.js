@@ -6,6 +6,7 @@ if (!Math) {
   "./pages/matching/matching.js";
   "./pages/personal/personal.js";
   "./pages/addClothes/addClothes.js";
+  "./pages/addMatching/addMatching.js";
 }
 const _sfc_main = {
   onLaunch: function() {

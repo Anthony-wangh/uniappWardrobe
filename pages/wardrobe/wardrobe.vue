@@ -1,5 +1,6 @@
 <template>
 	<view class="container">
+
 		<!-- 一级类目 -->
 		<view class="category-level-1">
 			<view v-for="(season, index) in seasons" :key="index" class="season-item"
@@ -9,18 +10,21 @@
 			</view>
 		</view>
 
+		<view class="main-container">
 		<!-- 二级类目（横向滑动） -->
 		<view class="category-container">
-			<scroll-view class="category-level-2" scroll-x>
+			<scroll-view class="category-level-2" scroll-y>
 				<view class="category-wrapper">
 					<view v-for="(category, index) in categories" :key="index" class="category-item"
-						:class="{ 'active': currentCategoryIndex === index }" @click="selectCategory(index)" @longpress="confirmDeleteCategory(index)">
+						:class="{ 'active': currentCategoryIndex === index }" @click="selectCategory(index)"
+						@longpress="confirmDeleteCategory(index)">
 						{{ category.name }}
 					</view>
 				</view>
 			</scroll-view>
 			<!-- 添加类目按钮 -->
-			<image src="/static/add.png" class="add-category-btn" @click="showAddCategoryModal">+ </image>
+			<image v-if="!editModel" src="/static/tianjia1.png" mode="aspectFit" class="add-category-btn"
+				@click="showAddCategoryModal"></image>
 		</view>
 
 
@@ -33,19 +37,24 @@
 			</view>
 			<view v-else class="clothes-list-content">
 				<view class="clothes-row" v-for="(row, rowIndex) in filteredClothesRows" :key="rowIndex">
-					<view class="clothes-item" v-for="(item, itemIndex) in row" :key="itemIndex">
+					<view class="clothes-item" v-for="(item, itemIndex) in row" :key="itemIndex"
+						@click="editModel ? toggleSelect(item) : editClothes(item)" @longpress="longpressClothes(item)">
+						<!-- 复选框（仅在编辑模式下显示） -->
+						<checkbox v-if="editModel" class="select-checkbox" :value="item.id"
+							:checked="selectedClothes.includes(item.id)" @click.stop="toggleSelect(item)">
+						</checkbox>
 						<image class="clothes-image" :src="item.image" mode="aspectFill" />
 						<text class="clothes-time">{{ item.purchaseDate }}</text>
 						<text class="clothes-name">{{ item.name }}</text>
 					</view>
 					<!-- 用占位符填充，使每行始终保持 3 列 -->
-					<view class="clothes-item placeholder" v-for="(n, index) in (3 - (row?.length || 0))"
+					<view class="clothes-item placeholder" v-for="(n, index) in (2 - (row?.length || 0))"
 						:key="'placeholder' + index">
 					</view>
 				</view>
 			</view>
 		</scroll-view>
-
+		</view>
 		<!-- 添加类目弹窗 -->
 		<view class="modal-mask" v-if="showModal">
 			<view class="modal">
@@ -60,18 +69,43 @@
 		</view>
 
 		<!-- 右下角浮动按钮 -->
-		<image src="/static/add.png" class="floating-btn" @click="onFloatingButtonClick"></image>
+		<view  class="floating-btn" v-if="!editModel" @click="onFloatingButtonClick">
+			<image class="floating-btn-image" src="/static/tianjia1.png"></image>
+			<text class="floating-btn-text">添加衣服</text>			
+		</view>
 		
+
+		<!-- 编辑模式 -->
+		<view v-if="editModel" class="editBtn-container">
+			<view @click="cancleEditMode">
+				<image class="editBtn" src="/static/tuichu.png">
+				</image>
+				<text class="editBtnName">退出</text>
+			</view>
+
+			<view @click="deleteClothes">
+				<image class="editBtn" src="/static/shanchu.png">
+				</image>
+				<text class="editBtnName">删除</text>
+			</view>
+
+			<view @click="beginEdit">
+				<image class="editBtn" src="/static/dapeixinxi.png">
+				</image>
+				<text class="editBtnName">搭配</text>
+			</view>
+
+		</view>
 		<!-- 删除确认弹窗 -->
 		<view class="modal-mask" v-if="showDeleteModal">
-		    <view class="modal">
-		        <text class="modal-title">确认删除？</text>
-		        <text class="modal-text">删除后，该类目下的衣物不会被删除。</text>
-		        <view class="modal-buttons">
-		            <button class="cancel-btn" @click="closeDeleteModal">取消</button>
-		            <button class="confirm-btn" @click="deleteCategory">删除</button>
-		        </view>
-		    </view>
+			<view class="modal">
+				<text class="modal-title">确认删除？</text>
+				<text class="modal-text">删除后，该类目下的衣物不会被删除。</text>
+				<view class="modal-buttons">
+					<button class="cancel-btn" @click="closeDeleteModal">取消</button>
+					<button class="confirm-btn" @click="deleteCategory">删除</button>
+				</view>
+			</view>
 		</view>
 	</view>
 </template>
@@ -110,9 +144,23 @@
 				filteredClothesRows: [],
 				showDeleteModal: false, // 控制删除弹窗
 				deleteCategoryIndex: null, // 记录要删除的类目索引
+				editModel: false,
+				wardrobeData: {
+					editMode: false
+				},
+				selectedClothes: [], // 记录选中的衣物ID
 			};
 		},
 		onShow() {
+			const app = getApp();
+			this.wardrobeData = app.globalData.wardrobeData;
+			if (this.wardrobeData) {
+				this.editModel = this.wardrobeData.editMode;
+				this.wardrobeData = null;
+				if (this.editModel)
+					uni.hideTabBar();
+			}
+
 			this.clothes = uni.getStorageSync('clothes') || [];
 
 			const categories = uni.getStorageSync('clothesCategories');
@@ -151,7 +199,7 @@
 				this.filteredClothes.forEach((item, index) => {
 					if (!item) return; // 避免 null 被添加
 					tempRow.push(item);
-					if (tempRow.length === 3 || index === this.filteredClothes.length - 1) {
+					if (tempRow.length === 2 || index === this.filteredClothes.length - 1) {
 						rows.push([...tempRow]);
 						tempRow = [];
 					}
@@ -172,10 +220,12 @@
 				this.showModal = true;
 				this.newCategoryName = "";
 				this.errorMsg = "";
+				uni.hideTabBar();
 			},
 			// 关闭弹窗
 			closeModal() {
 				this.showModal = false;
+				uni.showTabBar();
 			},
 			// 添加类目
 			addCategory() {
@@ -226,6 +276,7 @@
 					this.categories.splice(this.deleteCategoryIndex, 1);
 					this.currentCategoryIndex = 0; // 选回 "全部"
 					this.filteredClothesBycategory(); // 重新筛选衣物
+					uni.setStorageSync('clothesCategories', this.categories); //保存
 				}
 				this.showDeleteModal = false;
 				this.deleteCategoryIndex = null;
@@ -239,7 +290,65 @@
 			closeDeleteModal() {
 				this.showDeleteModal = false;
 				this.deleteCategoryIndex = null;
+			},
+
+			// 进入编辑界面
+			editClothes(item) {
+				uni.navigateTo({
+					url: `/pages/addClothes/addClothes?data=${encodeURIComponent(JSON.stringify(item))}`
+				});
+			},
+			longpressClothes(item) {				
+				uni.hideTabBar();
+				setTimeout(()=>{
+					this.editModel = true;
+				},100);
+			},
+			cancleEditMode() {
+				this.editModel = false;
+				uni.showTabBar();
+			},
+			beginEdit() {
+				if (this.selectedClothes.length === 0) {
+					uni.showToast({
+						title: '请选择衣物',
+						icon: 'none'
+					});
+					return;
+				}
+
+				this.cancleEditMode();
+
+				// 传递选中的衣物数据
+				const selectedItems = this.clothes.filter(item => this.selectedClothes.includes(item.id));
+
+				setTimeout(() => {
+					uni.navigateTo({
+						url: `/pages/addMatching/addMatching?data=${encodeURIComponent(JSON.stringify(selectedItems))}`
+					});
+				}, 100);
+
+			},
+			deleteClothes(){
+				if (this.selectedClothes.length === 0) {
+					uni.showToast({
+						title: '请选择衣物',
+						icon: 'none'
+					});
+					return;
+				}
+				//删除选中的衣物
+				
+			},
+			toggleSelect(item) {
+				const index = this.selectedClothes.indexOf(item.id);
+				if (index === -1) {
+					this.selectedClothes.push(item.id); // 选中
+				} else {
+					this.selectedClothes.splice(index, 1); // 取消选中
+				}
 			}
+
 		}
 	};
 </script>
@@ -251,25 +360,62 @@
 		flex-direction: column;
 		height: 100vh;
 		background-color: #f9f9f9;
+		 
+	}
+	
+	.main-container{
+		display: flex;	
+		flex-direction: row;
+	}
+
+	.editBtn-container {
+		justify-content: space-around;
+		display: flex;		
+		padding: 10px 0;
+		background-color: #f8f8f8;
+		box-shadow: 0px -1px 2px rgba(0, 0, 0, 0.2);
+	}
+
+	
+	.editBtnName {
+		font-size: 12px;
+		color: #707070;
+	}
+
+	.editBtn {
+		width: 20px;
+		height: 20px;
+		display: block;
 	}
 
 	/* 右下角浮动按钮 */
 	.floating-btn {
+		display: flex;
+		flex-direction: column;
 		position: fixed;
+		
+		width: auto;
+		height: auto;
 		right: 20px;
 		bottom: 40px;
-		/* 位于底部导航栏上方 */
-		width: 50px;
-		height: 50px;
-		background: #ff9800;
+		background: #fcfcfc;
 		color: white;
-		border-radius: 50%;
-		text-align: center;
-		line-height: 50px;
-		font-size: 20px;
+		border-radius: 10%;
 		box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
 		border: none;
 		cursor: pointer;
+		padding: 5px 10px;
+		align-items: center;
+	}
+	
+	.floating-btn-text{
+		color: #d0e183;
+		font-size: 16px;
+	}
+	.floating-btn-image{
+		width: 30px;
+		height: 30px;
+		
 	}
 
 	/* 一级分类（季节） */
@@ -295,34 +441,36 @@
 		background-color: #d0e183;
 	}
 
-	/* 二级分类（横向滑动） */
+	/* 二级分类（纵向滑动） */
 	.category-container {
-		display: flex;
+		display: block;
 		align-items: center;
-		padding: 10px;
-		background-color: #fff;
+		background-color: #eaeaea;
 		border-bottom: 1px solid #eee;
+		height: calc(100vh - 100px);
 	}
 
 	.category-level-2 {
 		flex-grow: 1;
 		white-space: nowrap;
-		overflow-x: auto;
+		overflow-y: auto;
+		height: 100%;
 	}
+
 
 	.category-wrapper {
 		display: flex;
+		flex-direction: column;
+		
 	}
 
 	.category-item {
-		padding: 8px 15px;
-		margin-right: 10px;
-		border-radius: 5px;
+		padding: 15px 20px;
 		cursor: pointer;
-		background-color: #eaeaea;
+		background-color: #f5f5f5;
 		color: #333;
 		transition: all 0.2s;
-		font-size: 14px;
+		font-size: 16px;
 	}
 
 	.category-item.active {
@@ -333,19 +481,12 @@
 
 	/* 添加分类按钮 */
 	.add-category-btn {
-		width: 35px;
-		height: 35px;
-		line-height: 35px;
-		color: #fff;
-		border: none;
-		background-color: #fff;
-		color: white;
-		border-radius: 10%;
-		box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-		position: relative;
-		right: 0;
-		padding: 3px;
-		margin-left: 10px;
+		width: 100%;
+		height: 20px;
+		justify-content: center;
+		box-shadow: 0px -1px 2px rgba(0, 0, 0, 0.1);
+		background: #f7f7f7;
+		padding: 8px 0;
 	}
 
 	/* 空态页样式 */
@@ -385,8 +526,8 @@
 
 	/* 衣物卡片 */
 	.clothes-item {
-		width: 32%;
-		margin: 1%;
+		width: 48%;
+		margin: 2%;
 		background-color: white;
 		padding: 10px;
 		border-radius: 10px;
@@ -407,8 +548,8 @@
 
 	/* 图片 */
 	.clothes-image {
-		width: 70px;
-		height: 70px;
+		width: 80%;
+		height: 80px;
 		border-radius: 10px;
 		margin-bottom: 5px;
 	}
@@ -430,9 +571,22 @@
 		margin-bottom: 5px;
 	}
 
+	/* 复选框（右上角） */
+	.select-checkbox {
+		position: absolute;
+		top: 5px;
+		right: 5px;
+		width: 20px;
+		height: 20px;
+		background-color: white;
+		border-radius: 50%;
+		z-index: 10;
+	}
+
 	/* 弹窗背景 */
 	.modal-mask {
 		position: fixed;
+		z-index: 1000;
 		top: 0;
 		left: 0;
 		width: 100%;
@@ -502,18 +656,18 @@
 	/* 确定按钮 */
 	.confirm-btn {
 		padding: 0px 20px;
-		background: #d0e183;
+		background: #ccd3ff;
 		color: white;
 		border: none;
 		border-radius: 5px;
 		font-size: 16px;
 		cursor: pointer;
 	}
-	
+
 	/* 删除确认弹窗文本 */
 	.modal-text {
-	    font-size: 14px;
-	    color: #666;
-	    margin-bottom: 10px;
+		font-size: 14px;
+		color: #666;
+		margin-bottom: 10px;
 	}
 </style>

@@ -24,13 +24,20 @@
     	{
     		"navigationBarTitleText" : ""
     	}
+    },
+    {
+    	"path" : "pages/addMatching/addMatching",
+    	"style" : 
+    	{
+    		"navigationBarTitleText" : ""
+    	}
     }
   ],
   "globalStyle": {
-  	"navigationBarTextStyle": "white",
-  	"navigationBarTitleText": "小胖的衣橱",
-  	"navigationBarBackgroundColor": "#d0e183",
-  	"backgroundColor": "#eeeeee"
+  	"navigationBarTextStyle": "black",
+  	"navigationBarTitleText": "我的衣橱",
+  	"navigationBarBackgroundColor": "#fffccc",
+  	"backgroundColor": "#ccd3ff"
   },
   "tabBar": {
     "list": [

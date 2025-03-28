@@ -38,11 +38,25 @@ const _sfc_main = {
       filteredClothesRows: [],
       showDeleteModal: false,
       // 控制删除弹窗
-      deleteCategoryIndex: null
+      deleteCategoryIndex: null,
       // 记录要删除的类目索引
+      editModel: false,
+      wardrobeData: {
+        editMode: false
+      },
+      selectedClothes: []
+      // 记录选中的衣物ID
     };
   },
   onShow() {
+    const app = getApp();
+    this.wardrobeData = app.globalData.wardrobeData;
+    if (this.wardrobeData) {
+      this.editModel = this.wardrobeData.editMode;
+      this.wardrobeData = null;
+      if (this.editModel)
+        common_vendor.index.hideTabBar();
+    }
     this.clothes = common_vendor.index.getStorageSync("clothes") || [];
     const categories = common_vendor.index.getStorageSync("clothesCategories");
     if (categories)
@@ -73,7 +87,7 @@ const _sfc_main = {
         if (!item)
           return;
         tempRow.push(item);
-        if (tempRow.length === 3 || index === this.filteredClothes.length - 1) {
+        if (tempRow.length === 2 || index === this.filteredClothes.length - 1) {
           rows.push([...tempRow]);
           tempRow = [];
         }
@@ -93,10 +107,12 @@ const _sfc_main = {
       this.showModal = true;
       this.newCategoryName = "";
       this.errorMsg = "";
+      common_vendor.index.hideTabBar();
     },
     // 关闭弹窗
     closeModal() {
       this.showModal = false;
+      common_vendor.index.showTabBar();
     },
     // 添加类目
     addCategory() {
@@ -142,6 +158,7 @@ const _sfc_main = {
         this.categories.splice(this.deleteCategoryIndex, 1);
         this.currentCategoryIndex = 0;
         this.filteredClothesBycategory();
+        common_vendor.index.setStorageSync("clothesCategories", this.categories);
       }
       this.showDeleteModal = false;
       this.deleteCategoryIndex = null;
@@ -154,6 +171,55 @@ const _sfc_main = {
     closeDeleteModal() {
       this.showDeleteModal = false;
       this.deleteCategoryIndex = null;
+    },
+    // 进入编辑界面
+    editClothes(item) {
+      common_vendor.index.navigateTo({
+        url: `/pages/addClothes/addClothes?data=${encodeURIComponent(JSON.stringify(item))}`
+      });
+    },
+    longpressClothes(item) {
+      common_vendor.index.hideTabBar();
+      setTimeout(() => {
+        this.editModel = true;
+      }, 100);
+    },
+    cancleEditMode() {
+      this.editModel = false;
+      common_vendor.index.showTabBar();
+    },
+    beginEdit() {
+      if (this.selectedClothes.length === 0) {
+        common_vendor.index.showToast({
+          title: "请选择衣物",
+          icon: "none"
+        });
+        return;
+      }
+      this.cancleEditMode();
+      const selectedItems = this.clothes.filter((item) => this.selectedClothes.includes(item.id));
+      setTimeout(() => {
+        common_vendor.index.navigateTo({
+          url: `/pages/addMatching/addMatching?data=${encodeURIComponent(JSON.stringify(selectedItems))}`
+        });
+      }, 100);
+    },
+    deleteClothes() {
+      if (this.selectedClothes.length === 0) {
+        common_vendor.index.showToast({
+          title: "请选择衣物",
+          icon: "none"
+        });
+        return;
+      }
+    },
+    toggleSelect(item) {
+      const index = this.selectedClothes.indexOf(item.id);
+      if (index === -1) {
+        this.selectedClothes.push(item.id);
+      } else {
+        this.selectedClothes.splice(index, 1);
+      }
     }
   }
 };
@@ -177,48 +243,70 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         e: common_vendor.o(($event) => $options.confirmDeleteCategory(index), index)
       };
     }),
-    c: common_assets._imports_0,
-    d: common_vendor.o((...args) => $options.showAddCategoryModal && $options.showAddCategoryModal(...args)),
-    e: $data.filteredClothesRows.length === 0
+    c: !$data.editModel
+  }, !$data.editModel ? {
+    d: common_assets._imports_0,
+    e: common_vendor.o((...args) => $options.showAddCategoryModal && $options.showAddCategoryModal(...args))
+  } : {}, {
+    f: $data.filteredClothesRows.length === 0
   }, $data.filteredClothesRows.length === 0 ? {
-    f: common_assets._imports_1
+    g: common_assets._imports_1
   } : {
-    g: common_vendor.f($data.filteredClothesRows, (row, rowIndex, i0) => {
+    h: common_vendor.f($data.filteredClothesRows, (row, rowIndex, i0) => {
       return {
         a: common_vendor.f(row, (item, itemIndex, i1) => {
-          return {
-            a: item.image,
-            b: common_vendor.t(item.purchaseDate),
-            c: common_vendor.t(item.name),
-            d: itemIndex
-          };
+          return common_vendor.e($data.editModel ? {
+            a: item.id,
+            b: $data.selectedClothes.includes(item.id),
+            c: common_vendor.o(($event) => $options.toggleSelect(item), itemIndex)
+          } : {}, {
+            d: item.image,
+            e: common_vendor.t(item.purchaseDate),
+            f: common_vendor.t(item.name),
+            g: itemIndex,
+            h: common_vendor.o(($event) => $data.editModel ? $options.toggleSelect(item) : $options.editClothes(item), itemIndex),
+            i: common_vendor.o(($event) => $options.longpressClothes(item), itemIndex)
+          });
         }),
-        b: common_vendor.f(3 - ((row == null ? void 0 : row.length) || 0), (n, index, i1) => {
+        b: common_vendor.f(2 - ((row == null ? void 0 : row.length) || 0), (n, index, i1) => {
           return {
             a: "placeholder" + index
           };
         }),
         c: rowIndex
       };
-    })
+    }),
+    i: $data.editModel
   }, {
-    h: $data.showModal
+    j: $data.showModal
   }, $data.showModal ? common_vendor.e({
-    i: $data.newCategoryName,
-    j: common_vendor.o(($event) => $data.newCategoryName = $event.detail.value),
-    k: $data.errorMsg
+    k: $data.newCategoryName,
+    l: common_vendor.o(($event) => $data.newCategoryName = $event.detail.value),
+    m: $data.errorMsg
   }, $data.errorMsg ? {
-    l: common_vendor.t($data.errorMsg)
+    n: common_vendor.t($data.errorMsg)
   } : {}, {
-    m: common_vendor.o((...args) => $options.closeModal && $options.closeModal(...args)),
-    n: common_vendor.o((...args) => $options.addCategory && $options.addCategory(...args))
+    o: common_vendor.o((...args) => $options.closeModal && $options.closeModal(...args)),
+    p: common_vendor.o((...args) => $options.addCategory && $options.addCategory(...args))
   }) : {}, {
-    o: common_assets._imports_0,
-    p: common_vendor.o((...args) => $options.onFloatingButtonClick && $options.onFloatingButtonClick(...args)),
-    q: $data.showDeleteModal
+    q: !$data.editModel
+  }, !$data.editModel ? {
+    r: common_assets._imports_0,
+    s: common_vendor.o((...args) => $options.onFloatingButtonClick && $options.onFloatingButtonClick(...args))
+  } : {}, {
+    t: $data.editModel
+  }, $data.editModel ? {
+    v: common_assets._imports_2,
+    w: common_vendor.o((...args) => $options.cancleEditMode && $options.cancleEditMode(...args)),
+    x: common_assets._imports_3,
+    y: common_vendor.o((...args) => $options.deleteClothes && $options.deleteClothes(...args)),
+    z: common_assets._imports_4,
+    A: common_vendor.o((...args) => $options.beginEdit && $options.beginEdit(...args))
+  } : {}, {
+    B: $data.showDeleteModal
   }, $data.showDeleteModal ? {
-    r: common_vendor.o((...args) => $options.closeDeleteModal && $options.closeDeleteModal(...args)),
-    s: common_vendor.o((...args) => $options.deleteCategory && $options.deleteCategory(...args))
+    C: common_vendor.o((...args) => $options.closeDeleteModal && $options.closeDeleteModal(...args)),
+    D: common_vendor.o((...args) => $options.deleteCategory && $options.deleteCategory(...args))
   } : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-9e425260"]]);

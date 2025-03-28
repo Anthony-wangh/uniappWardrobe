@@ -6,24 +6,53 @@
 		height: 100vh;
 		background-color: #f9f9f9;
 }
+.main-container.data-v-9e425260{
+		display: flex;	
+		flex-direction: row;
+}
+.editBtn-container.data-v-9e425260 {
+		justify-content: space-around;
+		display: flex;		
+		padding: 10px 0;
+		background-color: #f8f8f8;
+		box-shadow: 0px -1px 2px rgba(0, 0, 0, 0.2);
+}
+.editBtnName.data-v-9e425260 {
+		font-size: 12px;
+		color: #707070;
+}
+.editBtn.data-v-9e425260 {
+		width: 20px;
+		height: 20px;
+		display: block;
+}
 
 	/* 右下角浮动按钮 */
 .floating-btn.data-v-9e425260 {
+		display: flex;
+		flex-direction: column;
 		position: fixed;
+		
+		width: auto;
+		height: auto;
 		right: 20px;
 		bottom: 40px;
-		/* 位于底部导航栏上方 */
-		width: 50px;
-		height: 50px;
-		background: #ff9800;
+		background: #fcfcfc;
 		color: white;
-		border-radius: 50%;
-		text-align: center;
-		line-height: 50px;
-		font-size: 20px;
+		border-radius: 10%;
 		box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
 		border: none;
 		cursor: pointer;
+		padding: 5px 10px;
+		align-items: center;
+}
+.floating-btn-text.data-v-9e425260{
+		color: #d0e183;
+		font-size: 16px;
+}
+.floating-btn-image.data-v-9e425260{
+		width: 30px;
+		height: 30px;
 }
 
 	/* 一级分类（季节） */
@@ -47,31 +76,31 @@
 		background-color: #d0e183;
 }
 
-	/* 二级分类（横向滑动） */
+	/* 二级分类（纵向滑动） */
 .category-container.data-v-9e425260 {
-		display: flex;
+		display: block;
 		align-items: center;
-		padding: 10px;
-		background-color: #fff;
+		background-color: #eaeaea;
 		border-bottom: 1px solid #eee;
+		height: calc(100vh - 100px);
 }
 .category-level-2.data-v-9e425260 {
 		flex-grow: 1;
 		white-space: nowrap;
-		overflow-x: auto;
+		overflow-y: auto;
+		height: 100%;
 }
 .category-wrapper.data-v-9e425260 {
 		display: flex;
+		flex-direction: column;
 }
 .category-item.data-v-9e425260 {
-		padding: 8px 15px;
-		margin-right: 10px;
-		border-radius: 5px;
+		padding: 15px 20px;
 		cursor: pointer;
-		background-color: #eaeaea;
+		background-color: #f5f5f5;
 		color: #333;
 		transition: all 0.2s;
-		font-size: 14px;
+		font-size: 16px;
 }
 .category-item.active.data-v-9e425260 {
 		background-color: #d0e183;
@@ -81,19 +110,12 @@
 
 	/* 添加分类按钮 */
 .add-category-btn.data-v-9e425260 {
-		width: 35px;
-		height: 35px;
-		line-height: 35px;
-		color: #fff;
-		border: none;
-		background-color: #fff;
-		color: white;
-		border-radius: 10%;
-		box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-		position: relative;
-		right: 0;
-		padding: 3px;
-		margin-left: 10px;
+		width: 100%;
+		height: 20px;
+		justify-content: center;
+		box-shadow: 0px -1px 2px rgba(0, 0, 0, 0.1);
+		background: #f7f7f7;
+		padding: 8px 0;
 }
 
 	/* 空态页样式 */
@@ -131,8 +153,8 @@
 
 	/* 衣物卡片 */
 .clothes-item.data-v-9e425260 {
-		width: 32%;
-		margin: 1%;
+		width: 48%;
+		margin: 2%;
 		background-color: white;
 		padding: 10px;
 		border-radius: 10px;
@@ -152,8 +174,8 @@
 
 	/* 图片 */
 .clothes-image.data-v-9e425260 {
-		width: 70px;
-		height: 70px;
+		width: 80%;
+		height: 80px;
 		border-radius: 10px;
 		margin-bottom: 5px;
 }
@@ -175,9 +197,22 @@
 		margin-bottom: 5px;
 }
 
+	/* 复选框（右上角） */
+.select-checkbox.data-v-9e425260 {
+		position: absolute;
+		top: 5px;
+		right: 5px;
+		width: 20px;
+		height: 20px;
+		background-color: white;
+		border-radius: 50%;
+		z-index: 10;
+}
+
 	/* 弹窗背景 */
 .modal-mask.data-v-9e425260 {
 		position: fixed;
+		z-index: 1000;
 		top: 0;
 		left: 0;
 		width: 100%;
@@ -247,17 +282,17 @@
 	/* 确定按钮 */
 .confirm-btn.data-v-9e425260 {
 		padding: 0px 20px;
-		background: #d0e183;
+		background: #ccd3ff;
 		color: white;
 		border: none;
 		border-radius: 5px;
 		font-size: 16px;
 		cursor: pointer;
 }
-	
+
 	/* 删除确认弹窗文本 */
 .modal-text.data-v-9e425260 {
-	    font-size: 14px;
-	    color: #666;
-	    margin-bottom: 10px;
+		font-size: 14px;
+		color: #666;
+		margin-bottom: 10px;
 }
