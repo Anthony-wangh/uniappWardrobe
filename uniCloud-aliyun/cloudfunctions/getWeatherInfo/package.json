@@ -1,0 +1,7 @@
+{
+  "name": "getWeatherInfo",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

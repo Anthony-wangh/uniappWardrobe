@@ -54,7 +54,15 @@
         "setting" : {
             "urlCheck" : false
         },
-        "usingComponents" : true
+        "usingComponents" : true,
+        "lazyCodeLoading" : "requiredComponents",
+        "requiredPrivateInfos" : [ "getLocation" ],
+        "permission" : {
+            "scope.userLocation" : {
+                "desc" : "天气服务需要获取位置信息"
+            }
+        },
+		"__usePrivacyCheck__" : true
     },
     "mp-alipay" : {
         "usingComponents" : true
