@@ -1,0 +1,314 @@
+
+	/* 全局容器 */
+.container.data-v-5d3d730d {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		background: linear-gradient(5deg, #fffccc, #ccd3ff);
+}
+.main-container.data-v-5d3d730d {
+		display: flex;
+		flex-direction: row;
+		height: calc(100vh - 60px);
+		margin: 10px;
+		/* 50px 是 .category-level-1 的高度 */
+}
+
+	/* 右下角浮动按钮 */
+.floating-btn.data-v-5d3d730d {
+		display: flex;
+		flex-direction: column;
+		position: fixed;
+
+		width: auto;
+		height: auto;
+		right: 20px;
+		bottom: 40px;
+		background: #fcfcfc;
+		color: white;
+		border-radius: 10%;
+		box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+		border: none;
+		cursor: pointer;
+		padding: 5px 10px;
+		align-items: center;
+}
+.floating-btn-text.data-v-5d3d730d {
+		color: #ccd3ff;
+		font-size: 16px;
+}
+.floating-btn-image.data-v-5d3d730d {
+		width: 30px;
+		height: 30px;
+}
+
+	/* 一级分类（季节） */
+.category-level-1.data-v-5d3d730d {
+		align-self: center;
+	    display: flex;
+	    justify-content: space-between; /* 保持间距 */
+	    width: 95%;
+	    background-color: #ffffff;
+	    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		padding: 8px 0;
+		border-radius: 10px;
+}
+	
+	/* 一级类目按钮 */
+.season-item.data-v-5d3d730d {
+	    flex: 1;  /* 让所有按钮均分父容器 */
+	    text-align: center; /* 文字居中 */
+	    padding: 10px 0; /* 调整合适的内边距 */
+		background-color: #fff;
+	    color: #666;
+	    cursor: pointer;
+	    transition: all 0.2s;
+}
+	
+	/* 选中状态 */
+.season-item.active.data-v-5d3d730d {
+	    color: #9399b8;
+	    font-weight: bold;
+	    position: relative;
+}
+	
+	/* 底部横线 */
+.season-item.active.data-v-5d3d730d::after {
+	    content: "";
+	    position: absolute;
+	    bottom: -3px;
+		left: 35%;
+	    width: 30%;
+	    height: 3px;
+	    background-color: #9399b8;
+	    border-radius: 2px;
+}
+	
+
+
+	/* 二级分类 */
+.category-container.data-v-5d3d730d {
+		display: block;
+		align-items: center;
+		background-color: #fff;
+		border-bottom: 1px solid #eee;
+		border-radius: 5px;
+		overflow: hidden;
+		height: 100%;
+}
+.category-level-2.data-v-5d3d730d {
+		flex-grow: 1;
+		white-space: nowrap;
+		overflow-y: auto;
+		max-height: calc(100vh - 110px);
+		/* 适当调整 */
+}
+.category-wrapper.data-v-5d3d730d {
+		display: flex;
+		flex-direction: column;
+}
+.category-item.data-v-5d3d730d {
+		width: 80px;
+		padding: 10px 15px;
+		text-align: center;
+		cursor: pointer;
+		background-color: #f5f5f5;
+		color: #333;
+		transition: all 0.2s;
+		font-size: auto;
+}
+
+	/* 二级类目选中时左侧竖线 */
+.category-item.active.data-v-5d3d730d {
+		position: relative;
+		/* background-color: #ccd3ff; */
+		background: linear-gradient(90deg, #ccd3ff, #9399b8); 
+		color: #4f427a;
+		font-weight: bold;
+}
+.category-item.active.data-v-5d3d730d::before {
+		content: "";
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		width: 3px;
+		height: 100%;
+		background-color: #9399b8;
+		border-radius: 2px;
+}
+
+	/* 添加分类按钮 */
+.add-category-btn.data-v-5d3d730d {
+		width: 100%;
+		height: 20px;
+		justify-content: center;
+		box-shadow: 0px -1px 2px rgba(0, 0, 0, 0.1);
+		background: #f7f7f7;
+		padding: 8px 0;
+}
+
+	/* 空态页样式 */
+.empty-state.data-v-5d3d730d {
+		flex: 1;
+		flex-direction: column;
+		margin: 30px;
+		margin-top: 50px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+}
+.emptyIcon.data-v-5d3d730d {
+		width: 100px;
+		height: 90px;
+		padding: 5px;
+}
+.empty-state-text.data-v-5d3d730d {
+		font-size: 15px;
+		color: #c7c7c7;
+}
+
+	/* 衣物列表 */
+.clothes-list.data-v-5d3d730d {
+		flex: 1;
+		overflow-y: auto;
+		max-height: calc(100vh - 70px);
+		align-items: center;
+		/* 150px 根据实际布局调整 */
+}
+
+	/* 每一行 */
+.clothes-row.data-v-5d3d730d {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+}
+
+	/* 衣物卡片 */
+.clothes-item.data-v-5d3d730d {
+		width: 95%;
+		/* 一行显示两个，留 4% 的间距 */
+		aspect-ratio: 1;
+		/* 保持正方形 */
+		background-color: white;
+		border-radius: 10px;
+		box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+		text-align: center;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		margin: 10px;
+}
+
+	/* 隐藏占位符 */
+.clothes-item.placeholder.data-v-5d3d730d {
+		visibility: hidden;
+}
+
+	/* 图片 */
+.clothes-image.data-v-5d3d730d {
+		width: 80%;
+		height: 80%;
+		border-radius: 10px;
+		margin-bottom: 5px;
+}
+
+
+
+	/* 衣物名称 */
+.clothes-name.data-v-5d3d730d {
+		font-size: 14px;
+		color: #333;
+		margin-bottom: 5px;
+}
+
+
+	/* 弹窗背景 */
+.modal-mask.data-v-5d3d730d {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+}
+
+	/* 弹窗内容 */
+.modal.data-v-5d3d730d {
+		width: 80%;
+		background: white;
+		padding: 20px;
+		border-radius: 10px;
+		box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+}
+
+	/* 标题 */
+.modal-title.data-v-5d3d730d {
+		font-size: 18px;
+		font-weight: bold;
+		color: #333;
+		margin-bottom: 10px;
+}
+
+	/* 输入框 */
+.modal-input.data-v-5d3d730d {
+		width: 90%;
+		padding: 10px;
+		margin: 10px 0;
+		border: 1px solid #ddd;
+		border-radius: 5px;
+		font-size: 16px;
+		text-align: center;
+}
+
+	/* 错误提示 */
+.error-msg.data-v-5d3d730d {
+		color: red;
+		font-size: 14px;
+		margin-bottom: 10px;
+}
+
+	/* 按钮区域 */
+.modal-buttons.data-v-5d3d730d {
+		display: flex;
+		justify-content: space-around;
+		margin-top: 10px;
+}
+
+	/* 取消按钮 */
+.cancel-btn.data-v-5d3d730d {
+		padding: 0px 20px;
+		background: #d4d4d4;
+		color: #333;
+		border: none;
+		border-radius: 5px;
+		font-size: 16px;
+		cursor: pointer;
+}
+
+	/* 确定按钮 */
+.confirm-btn.data-v-5d3d730d {
+		padding: 0px 20px;
+		background: #ccd3ff;
+		color: white;
+		border: none;
+		border-radius: 5px;
+		font-size: 16px;
+		cursor: pointer;
+}
+
+	/* 删除确认弹窗文本 */
+.modal-text.data-v-5d3d730d {
+		font-size: 14px;
+		color: #666;
+		margin-bottom: 10px;
+}

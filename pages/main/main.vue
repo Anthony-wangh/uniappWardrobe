@@ -26,7 +26,10 @@
 				<text class="tempreture-text">{{weatherDetail}}</text>
 				<text class="tips-text">{{weatherTips}}</text>
 			</view>
-
+		</view>
+		
+		<view class="words-container">
+			<text class="words-text">让穿搭变得简单</text>
 		</view>
 
 	</view>
@@ -53,7 +56,7 @@
 			}
 		},
 
-		onLoad() {
+		onShow() {
 			this.getWeather();
 		},
 		methods: {
@@ -345,42 +348,44 @@
 	.header-container {
 		display: flex;
 		flex-direction: column;
+		padding-top: calc(var(--status-bar-height) + 20px) ;
 	}
 
 	.mp-name-text {
 		color: azure;
-		font-size: 25px;
+		font-size: 22px;
 		font-weight: bold;
 		padding: 5px 25px;
 	}
 
 	.nickName-text {
 		color: #fffccc;
-		font-size: 20px;
+		font-size: 16px;
 		padding: 5px 25px;
 	}
 
 	.usingDate-text {
 		color: azure;
-		font-size: 16px;
+		font-size: 14px;
 		padding: 0px 25px;
 	}
 
 	/*天气卡片*/
 	.weather-container {
-		position: absolute;
-		bottom: 0;
+		/* position: absolute;
+		bottom: 0; */
 		padding: 10px 0;
 		width: calc(100vw - 60px);
 		/* 让天气模块适应屏幕 */
 		display: flex;
 		flex-direction: column;
 		border: none;
+		align-items: left;
 
 		margin: 0px 30px;
 	}
 	.tips-title {
-		font-size: 20px;
+		font-size: 16px;
 		color: #3d3d3d;
 		margin: 10px 20px;
 		font-weight: bold;
@@ -393,7 +398,7 @@
 		flex-direction: column;
 		padding: 5px;
 		border-radius: 10px;
-		background-color: #fff;
+		background-color: #f9f9f9;
 		/* box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); */
 		margin-top: 10px;
 	}
@@ -429,7 +434,7 @@
 
 	.module-enter {
 		border-radius: 5px;
-		background-color: #f0f2ff;
+		background-color: #ffffff;
 		width: 45%;
 		display: flex;
 		flex-direction: column;
@@ -446,7 +451,7 @@
 	}
 
 	.wardrobe-name {
-		color: #707070;
+		color: #343434;
 		font-size: 15px;
 		word-wrap: break-word;
 		/* 让长文本自动换行 */
@@ -465,7 +470,7 @@
 	}
 
 	.suit-name {
-		color: #707070;
+		color: #343434;
 		font-size: 15px;
 		margin-bottom: 20px;
 		word-wrap: break-word;
@@ -475,4 +480,15 @@
 		text-align: center;
 	}
 	
+	.words-container{
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		margin-top: 100px;		
+	}
+	.words-text{
+		color: #2f2f2f;
+		font-size: 18px;
+		text-align: center;
+	}
 </style>

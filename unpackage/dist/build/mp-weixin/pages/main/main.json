@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "",
+  "usingComponents": {
+    "privacy-check": "../../components/PrivacyCheck"
+  }
+}

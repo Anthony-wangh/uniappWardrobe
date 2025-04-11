@@ -2,7 +2,11 @@
 	<view class="container">
 		<!-- 顶部类目 -->
 		<view class="header-container">
-			<text class="title-text">衣橱</text>
+			<view class="title-container">			
+				
+				
+			</view>
+			<text class="title-text">我的衣橱</text>
 			<view class="category-level-1">
 				<view v-for="(category, index) in categories" :key="index" class="category-tab"
 					:class="{ active: currentMainCategoryIndex === index }" @click="selectMainCategory(index)">
@@ -21,19 +25,20 @@
 						</view>
 					</view>
 				</scroll-view>
-				<image v-if="!editModel" src="/static/tianjia3.png" mode="aspectFit" class="add-category-btn"
-					@click="showAddCategoryModal" />
+				<view class="add-category">
+					<text v-if="!editModel" class="add-category-btn">自定义</text>
+				</view>
 			</view>
 
 
 			<!-- 衣物列表 -->
-			<scroll-view class="clothes-list" scroll-y>
+			<view class="clothes-list">
 				<!-- 如果没有过滤到衣物，显示空态页 -->
 				<view v-if="filteredClothesRows.length === 0" class="empty-state">
 					<image src="/static/empty.png" class="emptyIcon"></image>
-					<text class="empty-state-text">啥都没有\n点击右下角添加一件衣服吧~</text>
+					<text class="empty-state-text">暂无数据</text>
 				</view>
-				<view v-else class="clothes-list-content">
+				<scroll-view v-else class="clothes-list-content" scroll-y>
 					<view class="clothes-row" v-for="(row, rowIndex) in filteredClothesRows" :key="rowIndex">
 						<view class="clothes-item" v-for="(item, itemIndex) in row" :key="itemIndex"
 							@click="editModel ? toggleSelect(item) : editClothes(item)"
@@ -42,8 +47,8 @@
 							<checkbox v-if="editModel" class="select-checkbox" :value="item.id"
 								:checked="selectedClothes.includes(item.id)" @click.stop="toggleSelect(item)">
 							</checkbox>
-							<image class="clothes-image" :src="item.image" mode="aspectFill" />
-							<text class="clothes-time">{{ item.purchaseDate }}</text>
+							<image class="clothes-image" :src="item.image" mode="aspectFit" />
+							<!-- <text class="clothes-time">{{ item.purchaseDate }}</text> -->
 							<text class="clothes-name">{{ item.name }}</text>
 						</view>
 						<!-- 用占位符填充，使每行始终保持 3 列 -->
@@ -51,8 +56,8 @@
 							:key="'placeholder' + index">
 						</view>
 					</view>
-				</view>
-			</scroll-view>
+				</scroll-view>
+			</view>
 		</view>
 		<!-- 添加类目弹窗 -->
 		<view class="modal-mask" v-if="showModal">
@@ -69,8 +74,8 @@
 
 		<!-- 右下角浮动按钮 -->
 		<view class="floating-btn" v-if="!editModel" @click="onFloatingButtonClick">
-			<image class="floating-btn-image" src="/static/tianjia3.png"></image>
-			<text class="floating-btn-text">添加衣服</text>
+			<image class="floating-btn-image" src="/static/plus-l.png" mode="aspectFit"></image>
+			<!-- <text class="floating-btn-text">添加衣服</text> -->
 		</view>
 
 
@@ -303,7 +308,7 @@
 					success: res => {
 						if (res.confirm) {
 							this.clothes = this.clothes.filter(item => !this.selectedClothes.includes(item
-							.id));
+								.id));
 							this.filteredClothesByCategory();
 							this.cancleEditMode();
 							uni.setStorageSync("clothes", this.clothes);
@@ -333,7 +338,7 @@
 		display: flex;
 		flex-direction: column;
 		height: 100vh;
-		background: #ffffff;
+		background: #f8f8f8;
 
 	}
 
@@ -344,12 +349,12 @@
 		width: 100%;
 		display: flex;
 		flex-direction: column;
-		background-color: #f8f8f8;
+		background-color: #fff;
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	.title-text {
-		font-size: 20px;
+		font-size: 16px;
 		font-weight: bold;
 		color: #333;
 		text-align: center;
@@ -391,30 +396,24 @@
 		flex-direction: column;
 		position: fixed;
 
-		width: auto;
-		height: auto;
+		width: 50px;
+		height: 50px;
 		right: 20px;
 		bottom: 40px;
-		background: #fcfcfc;
-		color: white;
-		border-radius: 10%;
+		background-color: #ccd3ff;
+		border-radius: 25px;
 		box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-		border: none;
-		cursor: pointer;
-		padding: 5px 10px;
 		align-items: center;
-	}
+		justify-content: center;
 
-	.floating-btn-text {
-		color: #ccd3ff;
-		font-size: 16px;
 	}
 
 	.floating-btn-image {
-		width: 30px;
-		height: 30px;
-
+		width: 35px;
+		height: 35px;
+		align-self: center;
 	}
+
 
 	/* 一级分类（季节） */
 	.category-level-1 {
@@ -423,9 +422,9 @@
 		justify-content: space-between;
 		/* 保持间距 */
 		width: 100%;
-		
-		/* border-bottom:1px solid #6c6c6c; */
+
 		padding: 10px 0;
+
 	}
 
 	/* 一级类目按钮 */
@@ -437,7 +436,7 @@
 		color: #383838;
 		cursor: pointer;
 		transition: all 0.2s;
-		font-size: 18px;
+		font-size: 16px;
 	}
 
 	/* 选中状态 */
@@ -462,12 +461,15 @@
 
 	/* 二级分类 */
 	.category-container {
+		width: 80px;
+		min-width: 80px;
 		display: block;
 		align-items: center;
 		background-color: #f4f4f4;
 		overflow: hidden;
 		height: 100%;
 		margin-top: 2px;
+		box-shadow: 1px 0px 2px rgba(0, 0, 0, 0.1);
 	}
 
 	.category-level-2 {
@@ -484,21 +486,20 @@
 	}
 
 	.category-item {
-		width: 80px;
-		padding: 10px 15px;
+		width: 100%;
+		padding: 10px 0px;
 		text-align: center;
 		cursor: pointer;
 		background-color: #f8f8f8;
 		color: #666;
 		transition: all 0.2s;
-		font-size: auto;
+		font-size: 14px;
 	}
 
 	/* 二级类目选中时左侧竖线 */
 	.category-item.active {
 		position: relative;
 		background-color: #ffffff;
-		/* background: linear-gradient(90deg, #ccd3ff, #9399b8); */
 		color: #909cd1;
 		font-weight: bold;
 	}
@@ -514,25 +515,32 @@
 		border-radius: 2px;
 	}
 
-	/* 添加分类按钮 */
-	.add-category-btn {
+	.add-category {
 		width: 100%;
 		height: 20px;
 		justify-content: center;
-		background: #f8f8f8;
-		padding: 8px 0;
+		padding: 10px 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* 添加分类按钮 */
+	.add-category-btn {
+
+		color: #4b5bb4;
+		font-size: 12px;
+		text-align: center;
 	}
 
 	/* 空态页样式 */
 	.empty-state {
-		flex: 1;
+		position: relative;
+		top: 50px;
+		width: 100%;
+		height: 100%;
 		flex-direction: column;
-		margin: 30px;
-		margin-top: 50px;
 		display: flex;
-		justify-content: center;
 		align-items: center;
-		text-align: center;
 	}
 
 	.emptyIcon {
@@ -547,27 +555,36 @@
 
 	/* 衣物列表 */
 	.clothes-list {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		height: calc(100vh - 150px);
+		margin-top: 6px;
+	}
+
+	.clothes-list-content {
+		width: 100%;
 		flex: 1;
+		overflow-y: auto;
 	}
 
 	/* 每一行 */
 	.clothes-row {
 		display: flex;
-		justify-content: flex-start;
-		margin-bottom: 10px;
+		flex: 1;
+		justify-content: space-between;
 	}
 
 	/* 衣物卡片 */
 	.clothes-item {
-		width: 48%;
-		margin: 2%;
-		background-color: white;
-		padding: 10px;
-		border-radius: 10px;
-		box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+		/* width: calc(50% - 20px); */
+		margin: 10px;
+		padding: 20px;
+		background-color: #ffffff;
+		border-radius: 5px;
+		box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
 		text-align: center;
 		position: relative;
-		transition: transform 0.2s ease-in-out;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -581,9 +598,9 @@
 
 	/* 图片 */
 	.clothes-image {
-		width: 80%;
-		height: 80px;
-		border-radius: 10px;
+		width: 120px;
+		height: 120px;
+		/* border-radius: 10px; */
 		margin-bottom: 5px;
 	}
 
@@ -599,9 +616,9 @@
 
 	/* 衣物名称 */
 	.clothes-name {
-		font-size: 14px;
-		color: #333;
-		margin-bottom: 5px;
+		margin-top: 10px;
+		font-size: 16px;
+		color: #000000;
 	}
 
 	/* 复选框（右上角） */
