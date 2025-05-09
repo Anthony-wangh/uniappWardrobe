@@ -14,20 +14,22 @@
 				<text v-else class="upload-text">点击选择图片</text>
 			</view>
 
-			<!-- 名称输入 -->
-			<view class="main-form-group">
-				<label>名称</label>
-				<input class="input-field" v-model="form.name" placeholder="请输入衣服名称（必填）" />
-			</view>
-
 			<view class="main-form-group">
 				<label>类目</label>
-				<view class="picker" @click="openCategoryPicker">
-					<text class="picker-text">
-						{{ form.primaryCategory && form.secondaryCategory ? form.primaryCategory + ' / ' + form.secondaryCategory : '请选择类目（必选）' }}
+				<view class="picker categoryPicker" @click="openCategoryPicker">
+					<text class="picker-text category-picker-text">
+						{{ form.primaryCategory && form.secondaryCategory ? form.primaryCategory + ' / ' + form.secondaryCategory : '请选择类目' }}
 					</text>
 				</view>
 			</view>
+
+			<!-- 名称输入 -->
+			<view class="main-form-group">
+				<label>名称</label>
+				<input class="input-field" v-model="form.name" placeholder="请输入衣服名称（选填）" />
+			</view>
+
+			
 			<view class="main-form-group">
 				<label>备注</label>
 				<textarea class="textarea-field" v-model="form.notes" placeholder="请输入备注（可选）"></textarea>
@@ -61,7 +63,7 @@
 		</view>
 	</view>
 
-	<category-picker ref="categoryPicker" :data="categories" :defaultValue="['上衣', 'T恤']" :cancelText="'关闭'"
+	<category-picker ref="categoryPicker" :data="categories" :defaultValue="[form.primaryCategory, form.secondaryCategory]" :cancelText="'关闭'"
 		:confirmText="'选择'" @confirm="onCategoryConfirm" />
 
 
@@ -95,19 +97,19 @@
 					id: '',
 					image: '',
 					name: '',
-					primaryCategory: '',
-					secondaryCategory: '',
+					primaryCategory: '上衣',
+					secondaryCategory: 'T恤',
 					value: '',
 					notes: '',
 					purchaseDate: '',
 					brand: ''
 				},
-				categories: {
-					"上衣": ["T恤", "衬衫", "外套", "羽绒服"],
-					"裤子": ["牛仔裤", "运动裤", "休闲裤", "裙子"],
-					"鞋": ["运动鞋", "高跟鞋", "靴子", "皮鞋", "休闲鞋", "拖鞋"],
-					"配饰": ["帽子", "眼镜", "丝巾"],
-					"包": ["单肩包", "双肩包"]
+				categories:{
+					上衣: ["T恤", "衬衫", "外套", "羽绒服"],
+					裤子: ["牛仔裤", "运动裤", "休闲裤", "裙子"],
+					鞋: ["运动鞋","板鞋", "高跟鞋", "靴子"],
+					配饰: ["帽子", "眼镜", "丝巾"],
+					包: ["单肩包", "双肩包"]
 				},
 				errorMsg: '',
 				isEdit: false,
@@ -116,7 +118,11 @@
 				tempCropperSrc:''//缓存裁剪图片，当前裁剪图
 			};
 		},
-		onLoad() {
+		onLoad(options) {
+			if (options.primaryCategory&&options.secondaryCategory) {
+				this.form.primaryCategory= decodeURIComponent(options.primaryCategory);
+				this.form.secondaryCategory=decodeURIComponent(options.secondaryCategory);				
+			}			
 			this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
 		},
 		methods: {
@@ -126,7 +132,7 @@
 			onCategoryConfirm(e) {
 				this.form.primaryCategory = e.main;
 				this.form.secondaryCategory = e.sub;
-				console.log('用户选择了：', e);
+				// console.log('用户选择了：', e);
 			},
 			chooseImage() {
 				uni.chooseImage({
@@ -148,15 +154,15 @@
 				this.tempCropperSrc = '';
 			},
 			beforeDraw(context, transform) {
-				context.setFillStyle('yellow')
-				transform.zoom = 2
+				context.setFillStyle('white')
+				// transform.zoom = 2
 			},
 			afterDraw(ctx, info) {
 				// ctx.fillText('我是一行文字水印', 20, 20)
-				console.log(`当前画布大小：${info.width}*${info.height}`)
+				// console.log(`当前画布大小：${info.width}*${info.height}`)
 			},
 			cropped(imagePath, imageInfo) {
-				console.log(imagePath, imageInfo)
+				// console.log(imagePath, imageInfo)
 				this.tempCropperSrc = imagePath;
 			},
 			selectPurchaseDate(e) {
@@ -167,7 +173,7 @@
 			},
 			submitForm() {
 				if (!this.form.image) return (this.errorMsg = '请上传衣服图片');
-				if (!this.form.name) return (this.errorMsg = '请输入衣服名称');
+				// if (!this.form.name) return (this.errorMsg = '请输入衣服名称');
 				if (!this.form.primaryCategory) return (this.errorMsg = '请选择一级类目');
 				if (!this.form.secondaryCategory) return (this.errorMsg = '请选择二级类目');
 
@@ -339,11 +345,21 @@
 		display: flex;
 		align-items: center;
 	}
+	
+	.categoryPicker{
+		border:1px solid #868686;
+		background-color: #fff;
+		border-radius: 5px;
+	}
+	
 
 	.picker-text {
 		color: #747474;
 	}
-
+	.category-picker-text{
+		color: #6668ff;
+		font-weight: bold;
+	}
 	.textarea-field {
 		width: 100%;
 		height: 80px;

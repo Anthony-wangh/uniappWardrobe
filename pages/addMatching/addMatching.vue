@@ -1,75 +1,76 @@
 <template>
+
 	<view class="container">
-		<!-- 搭配模块 -->
-		<view class="outfit-preview" @click="clearSelection">
-			<view class="clothes-item" v-for="(item, index) in selectedClothes" :key="index" :style="getStyle(item)"
-				@touchstart.stop="startDrag(index,$event)" @touchmove.stop="handleMove($event)">
-				<image class="clothes-image" :src="item.image"></image>
 
-				<!-- 只有选中的衣服才显示操作按钮 -->
-				<view v-if="activeIndex === index">
-					<!-- 旋转按钮 -->
-					<image src="/static/rotateBtn.png" class="rotate-btn" @touchstart.stop="startRotate($event)"
-						@touchmove.stop="rotateDrag($event)"></image>
+		<view class="header-container">
+			<!-- 状态栏占位 -->
+			<view class="status-bar"></view>
+			<!-- 页面标题 -->
+			<view class="header">
+				<text class="header-title">搭配</text>
+			</view>
 
-					<!-- 缩放按钮 -->
-					<image src="/static/scaleBtn.png" class="resize-btn" @touchstart.stop="startResize( $event)"
-						@touchmove.stop="resizeDrag($event)"></image>
+		</view>
 
-					<!-- 删除按钮 -->
-					<view class="remove-btn" @touchstart.stop="removeClothes(index)">×</view>
+		<view class="main-container">
+
+			<!-- 搭配模块 -->
+			<view class="outfit-preview" @click="clearSelection">
+				<view class="clothes-item" v-for="(item, index) in selectedClothes" :key="index" 
+				:id="'clothesItem' + index" 
+				:ref="'clothesItem' + index" 
+				:style="getStyle(item)">
+					<image class="clothes-image" :src="item.image" @touchstart.stop="startDrag(index,$event)" @touchmove.stop="handleMove($event)"></image>
+
+					<!-- 只有选中的衣服才显示操作按钮 -->
+					<view v-if="activeIndex === index">
+						<!-- 旋转按钮 -->
+						<image src="/static/rotateBtn.png" class="rotate-btn" @touchstart.stop="startRotate($event)"
+							@touchmove.stop="rotateDrag($event)"></image>
+
+						<!-- 缩放按钮 -->
+						<image src="/static/scaleBtn.png" class="resize-btn" @touchstart.stop="startResize( $event)"
+							@touchmove.stop="resizeDrag($event)"></image>
+
+						<!-- 删除按钮 -->
+						<view class="remove-btn" @click.stop="removeClothes(index)">×</view>
+					</view>
+
+
 				</view>
+
+				<view v-if="selectedClothes.length === 0" class="empty-text">请选择衣物</view>
+				<view class="floating-btn" @click="navigateToSelectClothes">
+					<image class="floating-btn-image" src="/static/plus-l.png" mode="aspectFit"></image>
+				</view>
+				<canvas canvas-id="outfitCanvas" class="hidden-canvas"></canvas>
 			</view>
 
-			<view v-if="selectedClothes.length === 0" class="empty-text">请选择衣物</view>
+			<!-- 添加衣物按钮 -->
+			<!-- <button class="add-clothes-btn" @click="navigateToSelectClothes">+ 添加衣物</button> -->
 
-			<canvas canvas-id="outfitCanvas" class="hidden-canvas" />
+			<!-- 套装详情模块 -->
+			<view class="details-section">
+				<view class="input-row">
+					<text class="label">套装名称</text>
+					<input class="input-box" v-model="outfitName" placeholder="请输入套装名称" />
+				</view>
+
+
+				<view class="input-row">
+					<text class="label">备注</text>
+					<input class="input-box" v-model="note" placeholder="请输入备注（可选）" />
+				</view>
+
+				<button class="save-btn" @click="saveOutfit">保存套装</button>
+			</view>
+
 		</view>
-
-		<!-- 添加衣物按钮 -->
-		<button class="add-clothes-btn" @click="navigateToSelectClothes">+ 添加衣物</button>
-
-		<!-- 套装详情模块 -->
-		<view class="details-section">
-			<view class="input-row">
-				<text class="label">套装名称</text>
-				<input class="input-box" v-model="outfitName" placeholder="请输入套装名称" />
-			</view>
-
-			<view class="input-row">
-				<text class="label">季节</text>
-				<picker class="input-box" mode="selector" :range="seasons" @change="selectSeason">
-					<text>{{ selectedSeason }}</text>
-				</picker>
-			</view>
-
-			<view class="input-row">
-				<text class="label">套装类目</text>
-				<picker class="input-box" mode="selector" :range="outfitCategories" @change="selectCategory">
-					<text>{{ selectedCategory }}</text>
-				</picker>
-			</view>
-
-			<view class="input-row">
-				<text class="label">备注</text>
-				<input class="input-box" v-model="note" placeholder="请输入备注（可选）" />
-			</view>
-
-			<button class="save-btn" @click="saveOutfit">保存套装</button>
-		</view>
-
-		<!-- 使用通用删除确认弹窗 -->
-		<confirm-modal :visible="showDeleteModal" title="确认删除？" message="" cancelText="取消" confirmText="删除"
-			@cancel="closeDeleteModal" @confirm="deleteConfirm" />
 	</view>
 </template>
 
 <script>
-	import ConfirmModal from '@/components/ConfirmModal.vue';
 	export default {
-		components: {
-			ConfirmModal
-		},
 		data() {
 			return {
 				selectedClothes: [
@@ -82,24 +83,18 @@
 					// }
 				],
 				outfitName: "",
-				seasons: ["春", "夏", "秋", "冬"],
-				selectedSeason: "请选择季节",
-				outfitCategories: ["工作通勤", "正式场合", "运动休闲", "精致约会", "出游"],
-				selectedCategory: "请选择类目",
 				note: "",
 				activeIndex: null,
 				startX: 0,
 				startY: 0,
 				startDistance: null,
 				startRotateX: 0,
-				startRotateY: 0,
-				showDeleteModal: false,
-				deleteClothesIndex: null
+				startRotateY: 0
 			};
 		},
 		onLoad(options) {
-			if (options.data) {
-				let selectItems = JSON.parse(decodeURIComponent(options.data));
+			if (options.clothes) {
+				let selectItems = JSON.parse(decodeURIComponent(options.clothes));
 				if (selectItems.length === 0) {
 					console.log("未选中任何衣物！！");
 					return;
@@ -135,14 +130,6 @@
 			}
 		},
 		methods: {
-			selectCategory(e) {
-				this.selectedCategory = this.outfitCategories[e.detail.value];
-			},
-
-
-			selectSeason(e) {
-				this.selectedSeason = this.seasons[e.detail.value];
-			},
 			getStyle(item) {
 				return {
 					transform: `translate(${item.x}px, ${item.y}px) rotate(${item.rotation}deg) scale(${item.scale})`
@@ -151,7 +138,6 @@
 
 			selectClothes(index) {
 				this.activeIndex = index;
-				console.log("selectClothes" + index);
 			},
 
 			clearSelection() {
@@ -159,8 +145,7 @@
 			},
 
 			startDrag(index, event) {
-				if (this.activeIndex !== index)
-					this.activeIndex = index;
+				this.activeIndex = index;
 				this.startX = event.touches[0].clientX - this.selectedClothes[this.activeIndex].x;
 				this.startY = event.touches[0].clientY - this.selectedClothes[this.activeIndex].y;
 			},
@@ -169,7 +154,6 @@
 				if (this.activeIndex !== null) {
 					let x = event.touches[0].clientX - this.startX;
 					let y = event.touches[0].clientY - this.startY;
-
 					this.selectedClothes[this.activeIndex].x = x;
 					this.selectedClothes[this.activeIndex].y = y;
 				}
@@ -182,7 +166,7 @@
 
 				// 获取衣物的中心点
 				const query = uni.createSelectorQuery().in(this);
-				query.select('.clothes-item').boundingClientRect((rect) => {
+				query.select(`#clothesItem${this.activeIndex}`).boundingClientRect((rect) => {
 					if (!rect) return;
 
 					// 计算衣物的中心坐标
@@ -211,6 +195,8 @@
 
 				// 计算旋转角度变化量
 				const angleDelta = currentAngle - this.startAngle;
+				
+				// console.log('/*****/'+this.startRotation+'**'+angleDelta);
 
 				// 更新衣物的旋转角度
 				this.selectedClothes[this.activeIndex].rotation = this.startRotation + angleDelta;
@@ -240,8 +226,19 @@
 			},
 
 			removeClothes(index) {
-				this.deleteClothesIndex = index;
-				this.showDeleteModal = true;
+				uni.showModal({
+				  title: '确认删除？', // 标题文字，支持字符串或空值
+				  showCancel: true, // 是否显示取消按钮（默认true）
+				  cancelText: '取消', // 取消按钮文字（默认"取消"）
+				  cancelColor: '#999', // 取消按钮文字颜色（默认#000）
+				  confirmText: '确定', // 确认按钮文字（默认"确定"）
+				  confirmColor: '#212121', // 确认按钮颜色（默认#3CC51F）
+				  success: res => {
+				    if (res.confirm) {
+						this.selectedClothes.splice(index, 1);
+				    } 
+				  }
+				});				
 			},
 
 			navigateToSelectClothes() {
@@ -249,50 +246,10 @@
 				// 	url: "/pages/selectClothes/selectClothes"
 				// });
 			},
-			closeDeleteModal() {
-				this.showDeleteModal = false;
-				this.deleteClothesIndex = null;
-			},
-			deleteConfirm() {
-				if (this.deleteClothesIndex === null)
-					return;
-				this.selectedClothes.splice(this.deleteClothesIndex, 1);
-				this.deleteClothesIndex = null;
-				this.showDeleteModal = false;
-			},
+			
 			generateUniqueId() {
 				return 'id_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 			},
-			// 	saveOutfit() {
-
-			// 		this.activeIndex = null;
-
-			// 		if (!this.outfitName.trim()) {
-			// 			uni.showToast({
-			// 				title: "请输入套装名称",
-			// 				icon: "none"
-			// 			});
-			// 			return;
-			// 		}
-			// 		if (this.selectedSeason === "请选择季节") {
-			// 			uni.showToast({
-			// 				title: "请选择季节",
-			// 				icon: "none"
-			// 			});
-			// 			return;
-			// 		}
-			// 		if (this.selectedCategory === "请选择类目") {
-			// 			uni.showToast({
-			// 				title: "请选择类目",
-			// 				icon: "none"
-			// 			});
-			// 			return;
-			// 		}
-
-			// 		//生成缩略图后保存数据
-			// 	}
-
-			// },
 
 			async generateThumbnail() {
 				return new Promise((resolve, reject) => {
@@ -301,6 +258,7 @@
 					ctx.fillRect(0, 0, 300, 300);
 
 					this.selectedClothes.forEach((item) => {
+						console.log('********'+item.rotation);
 						ctx.save();
 						ctx.translate(150 + item.x, 150 + item.y);
 						ctx.rotate((item.rotation * Math.PI) / 180);
@@ -327,20 +285,6 @@
 					});
 					return;
 				}
-				if (this.selectedSeason === "请选择季节") {
-					uni.showToast({
-						title: "请选择季节",
-						icon: "none"
-					});
-					return;
-				}
-				if (this.selectedCategory === "请选择类目") {
-					uni.showToast({
-						title: "请选择类目",
-						icon: "none"
-					});
-					return;
-				}
 
 				try {
 					const thumbnail = await this.generateThumbnail();
@@ -358,11 +302,8 @@
 				const outfit = {
 					id: this.generateUniqueId(),
 					name: this.outfitName,
-					clothes: this.selectedClothes,
-					primaryCategory: this.selectedSeason,
-					secondaryCategory: this.selectedCategory,
 					note: this.note,
-					image: imagePath
+					thumbnail: imagePath
 				};
 
 				let outfits = uni.getStorageSync("outfits") || [];
@@ -390,22 +331,62 @@
 		align-items: center;
 		background-color: #f9f9f9;
 		height: 100vh;
-		padding: 10px;
+		width: 100%;
 	}
+
+	.header-container {
+		width: 100%;
+		background-color: #ffffff;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		padding-top: calc(var(--status-bar-height) + 30px);
+		padding-bottom: 10px;
+	}
+
+	.status-bar {
+		width: 100%;
+		background-color: #ffffff;
+	}
+
+	.header {
+		width: 100%;
+		height: 44px;
+		background-color: #ffffff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.header-title {
+		font-size: 18px;
+		font-weight: bold;
+		text-align: center;
+		margin-left: 20px;
+	}
+
+	.main-container {
+		width: 100%;
+		margin-top: 10px;
+		/* box-sizing: border-box; */
+		background-color: #f5f5f5;
+		justify-items: center;
+		justify-content: center;
+	}
+
+
 
 	/* 套装搭配模块 */
 	.outfit-preview {
-		width: 100%;
-		height: 320px;
+		margin: 0 10px;
+		width: calc(100vw - 20px);
+		height: calc(100vw - 20px);
 		background-color: #fff;
-		position: relative;
-		border: 2px dashed #ccc;
-		margin-top: 10px;
+		border: 1px dashed #ccc;
 		border-radius: 10px;
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		overflow: visible;
+		overflow: hidden;
+		position: relative;
 	}
 
 	/* 空白提示文字 */
@@ -443,7 +424,6 @@
 		left: -12px;
 		width: 24px;
 		height: 24px;
-		/* background-color: #ff9800; */
 		border-radius: 50%;
 		cursor: pointer;
 		border: 1px solid #fff;
@@ -485,7 +465,7 @@
 		width: 90%;
 		height: 45px;
 		margin: 15px 0;
-		background-color: #4caf50;
+		background-color: #3e4faf;
 		color: white;
 		font-size: 16px;
 		text-align: center;
@@ -498,7 +478,7 @@
 
 	/* 套装详情 */
 	.details-section {
-		width: 90%;
+		margin: 0 10px;
 		background: white;
 		padding: 15px;
 		border-radius: 10px;
@@ -526,11 +506,9 @@
 		width: 65%;
 		height: 40px;
 		padding: 5px;
-		border: 1px solid #ddd;
-		border-radius: 5px;
+		border-bottom: 1px solid #cbcbcb;
 		font-size: 14px;
 		text-align: center;
-		background-color: #f7f7f7;
 	}
 
 	/* 选择框样式 */
@@ -544,7 +522,7 @@
 	.save-btn {
 		width: 100%;
 		height: 45px;
-		background-color: #ff9800;
+		background-color: #1e1e1e;
 		color: white;
 		font-size: 16px;
 		text-align: center;
@@ -562,5 +540,24 @@
 		left: -9999px;
 		width: 300px;
 		height: 300px;
+	}
+
+	.floating-btn {
+		position: absolute;
+		right: 5px;
+		bottom: 5px;
+		width: 30px;
+		height: 30px;
+		background-color: #1e1e1e;
+		border-radius: 25px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	}
+
+	.floating-btn-image {
+		width: 30px;
+		height: 30px;
 	}
 </style>

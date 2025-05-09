@@ -85,7 +85,7 @@ export default {
     },
     zoom: { // initial scaling factor
       type: Number,
-      default: 1
+      default: 2
     },
     offset: { // initial offset relative to the cutter left border
       type: Array,
@@ -266,7 +266,6 @@ export default {
     
       this.setTranslate(offset)
       this.setZoom(this.zoom)
-	  console.log("initImage****")
       this.transform.angle = this.freeBoundDetect || !this.disableRotate ? this.angle : 0
     
       this.setBoundary()
@@ -405,7 +404,6 @@ export default {
     setTransform(x, y, angle, scale) {
       this.setTranslate([x, y])
       this.setZoom(scale)
-	  console.log("setTransform***")
       this.setRotate(angle)
     },
     setCutMode(type) {

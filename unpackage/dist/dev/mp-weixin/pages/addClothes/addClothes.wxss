@@ -128,8 +128,17 @@
   display: flex;
   align-items: center;
 }
+.categoryPicker.data-v-f0dbcc2f {
+  border: 1px solid #868686;
+  background-color: #fff;
+  border-radius: 5px;
+}
 .picker-text.data-v-f0dbcc2f {
   color: #747474;
+}
+.category-picker-text.data-v-f0dbcc2f {
+  color: #6668ff;
+  font-weight: bold;
 }
 .textarea-field.data-v-f0dbcc2f {
   width: 100%;

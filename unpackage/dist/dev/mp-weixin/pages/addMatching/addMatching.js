@@ -1,11 +1,7 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const common_assets = require("../../common/assets.js");
-const ConfirmModal = () => "../../components/ConfirmModal.js";
 const _sfc_main = {
-  components: {
-    ConfirmModal
-  },
   data() {
     return {
       selectedClothes: [
@@ -18,26 +14,20 @@ const _sfc_main = {
         // }
       ],
       outfitName: "",
-      seasons: ["春", "夏", "秋", "冬"],
-      selectedSeason: "请选择季节",
-      outfitCategories: ["工作通勤", "正式场合", "运动休闲", "精致约会", "出游"],
-      selectedCategory: "请选择类目",
       note: "",
       activeIndex: null,
       startX: 0,
       startY: 0,
       startDistance: null,
       startRotateX: 0,
-      startRotateY: 0,
-      showDeleteModal: false,
-      deleteClothesIndex: null
+      startRotateY: 0
     };
   },
   onLoad(options) {
-    if (options.data) {
-      let selectItems = JSON.parse(decodeURIComponent(options.data));
+    if (options.clothes) {
+      let selectItems = JSON.parse(decodeURIComponent(options.clothes));
       if (selectItems.length === 0) {
-        common_vendor.index.__f__("log", "at pages/addMatching/addMatching.vue:104", "未选中任何衣物！！");
+        common_vendor.index.__f__("log", "at pages/addMatching/addMatching.vue:99", "未选中任何衣物！！");
         return;
       }
       const {
@@ -63,12 +53,6 @@ const _sfc_main = {
     }
   },
   methods: {
-    selectCategory(e) {
-      this.selectedCategory = this.outfitCategories[e.detail.value];
-    },
-    selectSeason(e) {
-      this.selectedSeason = this.seasons[e.detail.value];
-    },
     getStyle(item) {
       return {
         transform: `translate(${item.x}px, ${item.y}px) rotate(${item.rotation}deg) scale(${item.scale})`
@@ -76,14 +60,12 @@ const _sfc_main = {
     },
     selectClothes(index) {
       this.activeIndex = index;
-      common_vendor.index.__f__("log", "at pages/addMatching/addMatching.vue:154", "selectClothes" + index);
     },
     clearSelection() {
       this.activeIndex = null;
     },
     startDrag(index, event) {
-      if (this.activeIndex !== index)
-        this.activeIndex = index;
+      this.activeIndex = index;
       this.startX = event.touches[0].clientX - this.selectedClothes[this.activeIndex].x;
       this.startY = event.touches[0].clientY - this.selectedClothes[this.activeIndex].y;
     },
@@ -100,7 +82,7 @@ const _sfc_main = {
         return;
       const item = this.selectedClothes[this.activeIndex];
       const query = common_vendor.index.createSelectorQuery().in(this);
-      query.select(".clothes-item").boundingClientRect((rect) => {
+      query.select(`#clothesItem${this.activeIndex}`).boundingClientRect((rect) => {
         if (!rect)
           return;
         this.centerX = rect.left + rect.width / 2;
@@ -140,57 +122,38 @@ const _sfc_main = {
       this.selectedClothes[this.activeIndex].scale = scale;
     },
     removeClothes(index) {
-      this.deleteClothesIndex = index;
-      this.showDeleteModal = true;
+      common_vendor.index.showModal({
+        title: "确认删除？",
+        // 标题文字，支持字符串或空值
+        showCancel: true,
+        // 是否显示取消按钮（默认true）
+        cancelText: "取消",
+        // 取消按钮文字（默认"取消"）
+        cancelColor: "#999",
+        // 取消按钮文字颜色（默认#000）
+        confirmText: "确定",
+        // 确认按钮文字（默认"确定"）
+        confirmColor: "#212121",
+        // 确认按钮颜色（默认#3CC51F）
+        success: (res) => {
+          if (res.confirm) {
+            this.selectedClothes.splice(index, 1);
+          }
+        }
+      });
     },
     navigateToSelectClothes() {
-    },
-    closeDeleteModal() {
-      this.showDeleteModal = false;
-      this.deleteClothesIndex = null;
-    },
-    deleteConfirm() {
-      if (this.deleteClothesIndex === null)
-        return;
-      this.selectedClothes.splice(this.deleteClothesIndex, 1);
-      this.deleteClothesIndex = null;
-      this.showDeleteModal = false;
     },
     generateUniqueId() {
       return "id_" + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     },
-    // 	saveOutfit() {
-    // 		this.activeIndex = null;
-    // 		if (!this.outfitName.trim()) {
-    // 			uni.showToast({
-    // 				title: "请输入套装名称",
-    // 				icon: "none"
-    // 			});
-    // 			return;
-    // 		}
-    // 		if (this.selectedSeason === "请选择季节") {
-    // 			uni.showToast({
-    // 				title: "请选择季节",
-    // 				icon: "none"
-    // 			});
-    // 			return;
-    // 		}
-    // 		if (this.selectedCategory === "请选择类目") {
-    // 			uni.showToast({
-    // 				title: "请选择类目",
-    // 				icon: "none"
-    // 			});
-    // 			return;
-    // 		}
-    // 		//生成缩略图后保存数据
-    // 	}
-    // },
     async generateThumbnail() {
       return new Promise((resolve, reject) => {
         const ctx = common_vendor.index.createCanvasContext("outfitCanvas", this);
         ctx.setFillStyle("#ffffff");
         ctx.fillRect(0, 0, 300, 300);
         this.selectedClothes.forEach((item) => {
+          common_vendor.index.__f__("log", "at pages/addMatching/addMatching.vue:261", "********" + item.rotation);
           ctx.save();
           ctx.translate(150 + item.x, 150 + item.y);
           ctx.rotate(item.rotation * Math.PI / 180);
@@ -215,20 +178,6 @@ const _sfc_main = {
         });
         return;
       }
-      if (this.selectedSeason === "请选择季节") {
-        common_vendor.index.showToast({
-          title: "请选择季节",
-          icon: "none"
-        });
-        return;
-      }
-      if (this.selectedCategory === "请选择类目") {
-        common_vendor.index.showToast({
-          title: "请选择类目",
-          icon: "none"
-        });
-        return;
-      }
       try {
         const thumbnail = await this.generateThumbnail();
         this.saveToStorage(thumbnail);
@@ -243,11 +192,8 @@ const _sfc_main = {
       const outfit = {
         id: this.generateUniqueId(),
         name: this.outfitName,
-        clothes: this.selectedClothes,
-        primaryCategory: this.selectedSeason,
-        secondaryCategory: this.selectedCategory,
         note: this.note,
-        image: imagePath
+        thumbnail: imagePath
       };
       let outfits = common_vendor.index.getStorageSync("outfits") || [];
       outfits.push(outfit);
@@ -264,55 +210,39 @@ const _sfc_main = {
     }
   }
 };
-if (!Array) {
-  const _component_confirm_modal = common_vendor.resolveComponent("confirm-modal");
-  _component_confirm_modal();
-}
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: common_vendor.f($data.selectedClothes, (item, index, i0) => {
       return common_vendor.e({
         a: item.image,
-        b: $data.activeIndex === index
+        b: common_vendor.o(($event) => $options.startDrag(index, $event), index),
+        c: common_vendor.o(($event) => $options.handleMove($event), index),
+        d: $data.activeIndex === index
       }, $data.activeIndex === index ? {
-        c: common_assets._imports_0$2,
-        d: common_vendor.o(($event) => $options.startRotate($event), index),
-        e: common_vendor.o(($event) => $options.rotateDrag($event), index),
-        f: common_assets._imports_1$3,
-        g: common_vendor.o(($event) => $options.startResize($event), index),
-        h: common_vendor.o(($event) => $options.resizeDrag($event), index),
-        i: common_vendor.o(($event) => $options.removeClothes(index), index)
+        e: common_assets._imports_0$2,
+        f: common_vendor.o(($event) => $options.startRotate($event), index),
+        g: common_vendor.o(($event) => $options.rotateDrag($event), index),
+        h: common_assets._imports_1$2,
+        i: common_vendor.o(($event) => $options.startResize($event), index),
+        j: common_vendor.o(($event) => $options.resizeDrag($event), index),
+        k: common_vendor.o(($event) => $options.removeClothes(index), index)
       } : {}, {
-        j: index,
-        k: common_vendor.s($options.getStyle(item)),
-        l: common_vendor.o(($event) => $options.startDrag(index, $event), index),
-        m: common_vendor.o(($event) => $options.handleMove($event), index)
+        l: index,
+        m: "clothesItem" + index,
+        n: "clothesItem" + index,
+        o: common_vendor.s($options.getStyle(item))
       });
     }),
     b: $data.selectedClothes.length === 0
   }, $data.selectedClothes.length === 0 ? {} : {}, {
-    c: common_vendor.o((...args) => $options.clearSelection && $options.clearSelection(...args)),
+    c: common_assets._imports_1$1,
     d: common_vendor.o((...args) => $options.navigateToSelectClothes && $options.navigateToSelectClothes(...args)),
-    e: $data.outfitName,
-    f: common_vendor.o(($event) => $data.outfitName = $event.detail.value),
-    g: common_vendor.t($data.selectedSeason),
-    h: $data.seasons,
-    i: common_vendor.o((...args) => $options.selectSeason && $options.selectSeason(...args)),
-    j: common_vendor.t($data.selectedCategory),
-    k: $data.outfitCategories,
-    l: common_vendor.o((...args) => $options.selectCategory && $options.selectCategory(...args)),
-    m: $data.note,
-    n: common_vendor.o(($event) => $data.note = $event.detail.value),
-    o: common_vendor.o((...args) => $options.saveOutfit && $options.saveOutfit(...args)),
-    p: common_vendor.o($options.closeDeleteModal),
-    q: common_vendor.o($options.deleteConfirm),
-    r: common_vendor.p({
-      visible: $data.showDeleteModal,
-      title: "确认删除？",
-      message: "",
-      cancelText: "取消",
-      confirmText: "删除"
-    })
+    e: common_vendor.o((...args) => $options.clearSelection && $options.clearSelection(...args)),
+    f: $data.outfitName,
+    g: common_vendor.o(($event) => $data.outfitName = $event.detail.value),
+    h: $data.note,
+    i: common_vendor.o(($event) => $data.note = $event.detail.value),
+    j: common_vendor.o((...args) => $options.saveOutfit && $options.saveOutfit(...args))
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-cfe86fb7"]]);

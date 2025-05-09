@@ -1,142 +1,123 @@
 
-.container.data-v-4f50ca8f {
-		background: linear-gradient(5deg, #fffccc, #ccd3ff);
-		width: 100vw;
+.page.data-v-4f50ca8f {
+		display: flex;
+		flex-direction: column;
 		height: 100vh;
+		width: 100vw;
+}
+.hero.data-v-4f50ca8f {
+		width: 100%;
+		height: 150px;
+		padding-top: calc(var(--status-bar-height) + 24px);
+		display: flex;
+		justify-content: center;
+}
+.user-info.data-v-4f50ca8f {
 		display: flex;
 		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		color: #fff;
 }
-
-	/*头部卡片（用户信息）*/
-.header-container.data-v-4f50ca8f {
-		display: flex;
-		flex-direction: column;
-		padding-top: calc(var(--status-bar-height) + 20px) ;
-}
-.mp-name-text.data-v-4f50ca8f {
-		color: azure;
+.mp-name.data-v-4f50ca8f {
 		font-size: 22px;
 		font-weight: bold;
-		padding: 5px 25px;
 }
-.nickName-text.data-v-4f50ca8f {
-		color: #fffccc;
-		font-size: 16px;
-		padding: 5px 25px;
-}
-.usingDate-text.data-v-4f50ca8f {
-		color: azure;
-		font-size: 14px;
-		padding: 0px 25px;
-}
-
-	/*天气卡片*/
-.weather-container.data-v-4f50ca8f {
-		/* position: absolute;
-		bottom: 0; */
-		padding: 10px 0;
-		width: calc(100vw - 60px);
-		/* 让天气模块适应屏幕 */
-		display: flex;
-		flex-direction: column;
-		border: none;
-		align-items: left;
-
-		margin: 0px 30px;
-}
-.tips-title.data-v-4f50ca8f {
-		font-size: 16px;
-		color: #3d3d3d;
-		margin: 10px 20px;
-		font-weight: bold;
-		padding-bottom: 5px;
-		border-bottom: 1px solid #e0e0e0;
-}
-.weather-tip.data-v-4f50ca8f {
-		display: flex;
-		flex-direction: column;
-		padding: 5px;
-		border-radius: 10px;
-		background-color: #f9f9f9;
-		/* box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); */
-		margin-top: 10px;
-}
-.tempreture-text.data-v-4f50ca8f {
-		color: #3d3d3d;
-		font-size: 16px;
-		margin: 0px 20px;
-}
-.tips-text.data-v-4f50ca8f {
-		color: #797b86;
+.greeting.data-v-4f50ca8f {
 		font-size: 15px;
-		margin: 10px 20px;
-		word-wrap: break-word;
-		/* 让长文本自动换行 */
-		white-space: normal;
-		/* 允许换行 */
-		text-align: left;
-		/* 让文本居中 */
+		margin-top: 30px;
+}
+.date.data-v-4f50ca8f {
+		font-size: 13px;
+		margin-top: 4px;
 }
 
-	/*衣橱和搭配入口*/
-.enter-container.data-v-4f50ca8f {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-
-		justify-items: center;
-		margin: 30px 30px;
+	/* 内容区域卡片容器 */
+.content.data-v-4f50ca8f {
+		flex: 1;
+		background: #f9f9f9;
+		padding: 10px 0 40px 0;
 }
-.module-enter.data-v-4f50ca8f {
+
+	/* 卡片基础样式 */
+.card.data-v-4f50ca8f {
 		border-radius: 5px;
-		background-color: #ffffff;
-		width: 45%;
+		margin: 5px 10px;
+		background: rgba(255, 255, 255, 0.2);
+		/* border : 1px solid #9f9f9f; */
+		box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.05);
+		padding: 10px 0;
+}
+
+	/* 卡片内容 */
+.card-header.data-v-4f50ca8f {
 		display: flex;
-		flex-direction: column;
-		justify-items: center;
+		padding: 10px 0;
 		align-items: center;
-		border: none;
-		box-shadow: 2px 4px 4px rgba(0, 0, 0, 0.1);
+		justify-content: space-between;
+		margin-bottom: 12px;
 }
-.wardrobe-icon.data-v-4f50ca8f {
-		width: 50px;
-		height: 50px;
-		margin-top: 20px;
+.card-title.data-v-4f50ca8f {
+		font-size: 18px;
+		color: #0d0d0d;
+		margin: 5px 12px;
 }
-.wardrobe-name.data-v-4f50ca8f {
-		color: #343434;
-		font-size: 15px;
-		word-wrap: break-word;
-		/* 让长文本自动换行 */
-		white-space: normal;
-		/* 允许换行 */
-		text-align: center;
-		/* 让文本居中 */
-		margin-bottom: 20px;
+.weather-icon.data-v-4f50ca8f {
+		width: 32px;
+		height: 32px;
 }
-.suit-icon.data-v-4f50ca8f {
-		width: 50px;
-		height: 50px;
-		margin-top: 20px;
-}
-.suit-name.data-v-4f50ca8f {
-		color: #343434;
-		font-size: 15px;
-		margin-bottom: 20px;
-		word-wrap: break-word;
-		/* 让长文本自动换行 */
-		white-space: normal;
-		/* 允许换行 */
-		text-align: center;
-}
-.words-container.data-v-4f50ca8f{
+.card-body.data-v-4f50ca8f {
+		line-height: 1.6;
 		display: flex;
 		flex-direction: column;
+		margin: 12px;
+}
+.temp.data-v-4f50ca8f {
+		font-size: 15px;
+		color: #0d0d0d;
+		margin-bottom: 6px;
+}
+.tips.data-v-4f50ca8f {
+		font-size: 13px;
+		color: #323232;
+}
+
+	/* slogan 区域 */
+.slogan-wrapper.data-v-4f50ca8f {
+		position: absolute;
+		bottom: 20px;
+		width: 100%;
+		margin-top: 24px;
+		/* background: #f9f9f9; */
+		/* border-radius: 12px; */
+		padding: 12px 0;
+}
+.slogan.data-v-4f50ca8f {
+		display: flex;
 		justify-content: center;
-		margin-top: 100px;
 }
-.words-text.data-v-4f50ca8f{
-		color: #2f2f2f;
-		font-size: 18px;
-		text-align: center;
+.slogan text.data-v-4f50ca8f {
+		font-size: 14px;
+		color: #1f1f1f;
 }
+.banner-swiper.data-v-4f50ca8f {
+	  width: 100vw;
+	  height: calc(100vw * 0.67);
+	  overflow: hidden;
+}
+.banner-image.data-v-4f50ca8f {
+	  width: 100%;
+	  height: 100%;
+}
+.scroll-view.data-v-4f50ca8f {
+	  flex: 1;
+	  background: #fff;
+	  border-top-left-radius: 24px;
+	  border-top-right-radius: 24px;
+	  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+.user-info.data-v-4f50ca8f {
+	  padding: 20px 0 0;
+	  text-align: center;
+}
+

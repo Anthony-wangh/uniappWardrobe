@@ -15,12 +15,6 @@
 			}
 		},
 		{
-			"path": "pages/personal/personal",
-			"style": {
-				"navigationBarTitleText": "我的"
-			}
-		},
-		{
 			"path": "pages/addClothes/addClothes",
 			"style": {
 				"navigationBarTitleText": ""
@@ -31,6 +25,27 @@
 			"style": {
 				"navigationBarTitleText": ""
 			}
+		},
+		{
+			"path" : "pages/community/community",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/publishPost/publishPost",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/settings/settings",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
 		}
 
 	],
@@ -40,32 +55,45 @@
 		"navigationBarBackgroundColor": "#ccd3ff",
 		"backgroundColor": "#ccd3ff",
 		"navigationStyle": "custom"
+	},
+	"tabBar": {
+	  "list": [
+		  {
+		    "pagePath": "pages/main/main",
+		    "text": "主页",
+		    "iconPath": "/static/tabBarIcons/personal.png",
+		    "selectedIconPath": "/static/tabBarIcons/personal-select.png"
+		  },
+	    {
+	      "pagePath": "pages/wardrobe/wardrobe",
+	      "text": "衣橱",
+	      "iconPath": "/static/tabBarIcons/wardrode.png",
+		  
+	      "selectedIconPath": "/static/tabBarIcons/wardrode-select.png"
+	    },
+	    {
+	      "pagePath": "pages/matching/matching",
+	      "text": "搭配",
+	      "iconPath": "/static/tabBarIcons/matching.png",
+	      "selectedIconPath": "/static/tabBarIcons/matching-select.png"
+	    },
+		{
+		  "pagePath": "pages/community/community",
+		  "text": "社区",
+		  "iconPath": "/static/tabBarIcons/community.png",
+		  "selectedIconPath": "/static/tabBarIcons/community-select.png"
+		},
+		{
+		  "pagePath": "pages/settings/settings",
+		  "text": "设置",
+		  "iconPath": "/static/tabBarIcons/setting.png",
+		  "selectedIconPath": "/static/tabBarIcons/setting-select.png"
+		}
+	    
+	  ],
+	  "color": "#a9b7b7",
+	  "selectedColor": "#8a8a8a",
+	  "backgroundColor": "#ffffff",
+	  "borderStyle": "black"	
 	}
-	// "tabBar": {
-	//   "list": [
-	//     {
-	//       "pagePath": "pages/wardrobe/wardrobe",
-	//       "text": "衣橱",
-	//       "iconPath": "/static/tabBarIcons/wardrode.png",
-	//       "selectedIconPath": "/static/tabBarIcons/wardrode-select.png"
-	//     },
-	//     {
-	//       "pagePath": "pages/matching/matching",
-	//       "text": "搭配",
-	//       "iconPath": "/static/tabBarIcons/matching.png",
-	//       "selectedIconPath": "/static/tabBarIcons/matching-select.png"
-
-	//     },
-	//     {
-	//       "pagePath": "pages/personal/personal",
-	//       "text": "我的",
-	//       "iconPath": "/static/tabBarIcons/personal.png",
-	//       "selectedIconPath": "/static/tabBarIcons/personal-select.png"
-	//     }
-	//   ],
-	//   "color": "#a9b7b7",
-	//   "selectedColor": "#8a8a8a",
-	//   "backgroundColor": "#ffffff",
-	//   "borderStyle": "black"	
-	// }
 }

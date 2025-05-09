@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "",
   "usingComponents": {
-    "category-picker": "../../components/CategoryPickerModal"
+    "category-picker": "../../components/CategoryPickerModal",
+    "image-cropper": "../../components/nice-cropper/cropper"
   }
 }

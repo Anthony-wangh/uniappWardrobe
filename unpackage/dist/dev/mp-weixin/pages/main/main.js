@@ -1,22 +1,29 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const common_assets = require("../../common/assets.js");
-const PrivacyCheck = () => "../../components/PrivacyCheck.js";
+const components_theme = require("../../components/theme.js");
 const _sfc_main = {
-  components: {
-    PrivacyCheck
-  },
   data() {
     return {
       nickName: "帅哥",
       usingDate: 99,
+      weatherInfo: {},
+      clothingAdvice: {},
       weatherDetail: "",
       weatherTips: "",
-      weatherInfo: {},
-      clothingAdvice: {}
+      weatherIcon: "",
+      theme: components_theme.themes[0],
+      themes: components_theme.themes,
+      banners: [
+        "/static/banners/banner1.jpeg",
+        "/static/banners/banner2.jpeg",
+        "/static/banners/banner3.jpeg",
+        "/static/banners/banner4.jpeg"
+      ]
     };
   },
   onShow() {
+    const saved = common_vendor.index.getStorageSync("theme") || this.themes[0];
+    this.theme = saved;
     this.getWeather();
   },
   methods: {
@@ -27,68 +34,48 @@ const _sfc_main = {
       return target.getFullYear() === today.getFullYear() && target.getMonth() === today.getMonth() && target.getDate() === today.getDate();
     },
     async getWeather() {
-      const weather = common_vendor.index.getStorageSync("weatherInfo");
-      if (weather) {
-        if (this.isToday(weather.fxDate)) {
-          this.weatherInfo = weather;
-          this.updateWeather(weather);
-          return;
-        }
+      const cache = common_vendor.index.getStorageSync("weatherInfo");
+      if (cache && this.isToday(cache.fxDate)) {
+        this.weatherInfo = cache;
+        this.updateWeather(cache);
+        return;
       }
       common_vendor.index.getLocation({
         type: "wgs84",
         success: (res) => {
-          const latitude = res.latitude;
-          const longitude = res.longitude;
-          const location = `${longitude},${latitude}`;
+          const loc = `${res.longitude},${res.latitude}`;
           common_vendor.wx$1.request({
             url: "https://nd3tefcedt.re.qweatherapi.com/v7/weather/3d",
             data: {
-              location,
+              location: loc,
               key: "38c34a465f6f4afa9e15de9954fc542c"
             },
-            success: (res2) => {
-              const data = res2.data.daily[0];
-              common_vendor.index.setStorageSync("weatherInfo", data);
-              this.weatherInfo = data;
-              this.updateWeather(data);
-              common_vendor.index.__f__("log", "at pages/main/main.vue:100", data);
+            success: ({
+              data
+            }) => {
+              const today = data.daily[0];
+              common_vendor.index.setStorageSync("weatherInfo", today);
+              this.weatherInfo = today;
+              this.updateWeather(today);
             },
-            fail: (err) => {
-              common_vendor.index.__f__("error", "at pages/main/main.vue:103", "获取天气失败:", err);
-            }
+            fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:104", "获取天气失败:", err)
           });
         },
-        fail: (err) => {
-          common_vendor.index.__f__("error", "at pages/main/main.vue:108", "获取位置信息失败", err);
-        }
+        fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:107", "获取位置失败:", err)
       });
     },
-    updateWeather(weather) {
-      const tempreture = weather.textDay + "  " + weather.tempMin + "℃ ~ " + weather.tempMax + "℃";
-      const wind = `${weather.windDirDay}  ${weather.windScaleDay}级  紫外线等级: ${weather.uvIndex}`;
-      this.weatherDetail = `${tempreture}
-${wind}`;
-      this.clothingAdvice = this.getClothingAdvice(weather);
+    updateWeather(w) {
+      const tempText = `${w.textDay}  ${w.tempMin}℃ ~ ${w.tempMax}℃`;
+      const windText = `${w.windDirDay} ${w.windScaleDay}级 紫外线: ${w.uvIndex}`;
+      this.weatherDetail = `${tempText}
+${windText}`;
+      this.weatherIcon = `/static/weather_icons/${w.textDay}.png`;
+      this.clothingAdvice = this.getClothingAdvice(w);
       this.weatherTips = this.clothingAdvice.summary;
     },
-    clickWardrobe() {
-      common_vendor.index.navigateTo({
-        url: "/pages/wardrobe/wardrobe"
-      });
-    },
-    clickSuit() {
-      common_vendor.index.navigateTo({
-        url: "/pages/matching/matching"
-      });
-    },
-    // 在Vue组件的methods中添加以下方法
     getClothingAdvice(weatherData) {
-      const tempMax = parseInt(weatherData.tempMax) || 0;
-      const tempMin = parseInt(weatherData.tempMin) || 0;
-      const avgTemp = (tempMax + tempMin) / 2;
-      const tempDiff = tempMax - tempMin;
-      const tempLevel = [
+      const tMax = parseInt(weatherData.tempMax), tMin = parseInt(weatherData.tempMin), avg = (tMax + tMin) / 2, diff = tMax - tMin;
+      const levelMap = [
         {
           max: -10,
           level: "extremeCold",
@@ -129,132 +116,103 @@ ${wind}`;
           level: "hot",
           name: "酷热"
         }
-      ].find((l) => avgTemp <= l.max);
-      let recommendation = {
-        level: tempLevel.name,
+      ];
+      const lvl = levelMap.find((l) => avg <= l.max);
+      const rec = {
+        level: lvl.name,
         upper: [],
         lower: [],
         accessories: [],
         tips: [],
         specialNotes: []
       };
-      switch (tempLevel.level) {
+      switch (lvl.level) {
         case "extremeCold":
-          recommendation.upper = ["加厚羽绒服", "防风冲锋衣", "高领羊毛衫", "保暖内衣"];
-          recommendation.lower = ["加绒加厚棉裤", "保暖秋裤", "羊毛裤"];
-          recommendation.accessories = ["毛线帽", "围巾", "加厚手套", "雪地靴"];
-          recommendation.tips.push("避免皮肤直接暴露在空气中");
+          rec.upper = ["加厚羽绒服", "高领羊毛衫"];
+          rec.lower = ["加绒棉裤"];
+          rec.accessories = ["毛线帽", "围巾"];
+          rec.tips.push("注意保暖");
           break;
         case "severeCold":
-          recommendation.upper = ["长款羽绒服", "毛衣+大衣", "抓绒内搭"];
-          recommendation.lower = ["加厚毛呢裤", "保暖打底裤"];
-          recommendation.accessories = ["针织帽", "围巾", "保暖手套"];
+          rec.upper = ["长款羽绒服", "毛衣+大衣"];
+          rec.lower = ["保暖打底裤"];
+          rec.accessories = ["针织帽"];
           break;
         case "cold":
-          recommendation.upper = ["短款羽绒服", "羊毛大衣", "厚卫衣"];
-          recommendation.lower = ["加绒牛仔裤", "灯芯绒裤子"];
-          recommendation.accessories = ["薄围巾", "耳罩"];
-          recommendation.tips.push("注意手脚保暖");
+          rec.upper = ["短款羽绒服", "厚卫衣"];
+          rec.lower = ["加绒牛仔裤"];
+          rec.accessories = ["薄围巾"];
           break;
         case "chilly":
-          recommendation.upper = ["风衣", "针织开衫", "薄毛衣"];
-          recommendation.lower = ["普通牛仔裤", "休闲裤"];
-          recommendation.accessories = ["薄外套备用"];
+          rec.upper = ["风衣", "薄毛衣"];
+          rec.lower = ["休闲裤"];
+          rec.accessories = ["便携外套"];
           break;
         case "cool":
-          recommendation.upper = ["长袖衬衫", "卫衣", "薄外套"];
-          recommendation.lower = ["卡其裤", "薄款牛仔裤"];
-          recommendation.accessories = ["丝巾装饰"];
-          recommendation.tips.push("适合叠穿搭配");
+          rec.upper = ["长袖衬衫", "薄外套"];
+          rec.lower = ["薄款牛仔裤"];
+          rec.accessories = ["丝巾"];
+          rec.tips.push("适合叠穿");
           break;
         case "comfortable":
-          recommendation.upper = ["短袖T恤", "POLO衫", "薄衬衫"];
-          recommendation.lower = ["九分裤", "短裙+打底袜"];
-          recommendation.accessories = ["防晒衣备用"];
+          rec.upper = ["短袖T恤", "POLO衫"];
+          rec.lower = ["九分裤"];
+          rec.accessories = ["防晒衣"];
           break;
         case "warm":
-          recommendation.upper = ["透气短袖", "背心", "雪纺上衣"];
-          recommendation.lower = ["短裤", "薄款连衣裙"];
-          recommendation.accessories = ["遮阳帽", "太阳镜"];
-          recommendation.tips.push("选择透气速干面料");
+          rec.upper = ["透气短袖", "雪纺上衣"];
+          rec.lower = ["短裤"];
+          rec.accessories = ["遮阳帽"];
+          rec.tips.push("选透气面料");
           break;
         case "hot":
-          recommendation.upper = ["吊带衫", "无袖上衣", "真丝衬衫"];
-          recommendation.lower = ["超短裤", "凉感面料裙装"];
-          recommendation.accessories = ["UV防晒伞", "冰袖"];
-          recommendation.tips.push("尽量避免正午外出");
+          rec.upper = ["无袖上衣", "真丝衬衫"];
+          rec.lower = ["凉感裙装"];
+          rec.accessories = ["防晒伞"];
+          rec.tips.push("避免正午外出");
           break;
       }
-      this.applyWeatherEffects(recommendation, weatherData);
-      if (tempDiff > 8) {
-        recommendation.specialNotes.push(`昼夜温差大（${tempDiff}℃），建议采用洋葱式穿衣法`);
-        recommendation.accessories.push("便携外套");
+      if (weatherData.textDay.includes("雨")) {
+        rec.accessories.push("雨伞");
+        if (parseInt(weatherData.windScaleDay) > 3)
+          rec.specialNotes.push("风雨较大，穿防滑鞋");
       }
-      return {
-        ...recommendation,
-        summary: this.generateAdviceSummary(recommendation, weatherData)
-      };
-    },
-    // 天气影响处理
-    applyWeatherEffects(recommendation, weather) {
-      if (weather.textDay.includes("雨")) {
-        recommendation.accessories.push("雨伞");
-        recommendation.upper.unshift("防水外套");
-        if (parseInt(weather.windScaleDay) > 3) {
-          recommendation.specialNotes.push("风雨较大，建议穿防滑鞋");
-        }
+      if (parseInt(weatherData.windScaleDay) >= 4) {
+        rec.specialNotes.push("注意防风");
       }
-      if (parseInt(weather.windScaleDay) >= 4) {
-        recommendation.upper = recommendation.upper.map(
-          (item) => item.includes("外套") ? `防风${item}` : item
-        );
-        recommendation.accessories.push("防风眼镜");
+      if (diff > 8) {
+        rec.specialNotes.push(`昼夜温差${diff}℃，建议洋葱式穿搭`);
       }
-      if (weather.textDay.includes("晴")) {
-        recommendation.accessories.push("防晒霜");
-        if (parseInt(weather.tempMax) > 25) {
-          recommendation.tips.push("建议选择浅色系衣物");
-        }
-      }
-    },
-    // 生成自然语言建议
-    generateAdviceSummary(recommendation, weather) {
       const parts = [];
-      `${weather.tempMin}~${weather.tempMax}℃`;
-      if (recommendation.upper.length) {
-        parts.push(`- 上衣：${recommendation.upper.join(" / ")}`);
-      }
-      if (recommendation.lower.length) {
-        parts.push(`- 下装：${recommendation.lower.join(" / ")}`);
-      }
-      if (recommendation.accessories.length) {
-        parts.push(`-️ 配饰：${recommendation.accessories.join("、")}`);
-      }
-      if (recommendation.specialNotes.length) {
-        parts.push(`- 注意：${recommendation.specialNotes.join("；")}`);
-      }
-      if (recommendation.tips.length) {
-        parts.push(`- 小贴士：${recommendation.tips.join("；")}`);
-      }
-      return `天气${recommendation.level}
+      if (rec.upper.length)
+        parts.push(`- 上衣：${rec.upper.join(" / ")}`);
+      if (rec.lower.length)
+        parts.push(`- 下装：${rec.lower.join(" / ")}`);
+      if (rec.accessories.length)
+        parts.push(`- 配饰：${rec.accessories.join("、")}`);
+      if (rec.specialNotes.length)
+        parts.push(`- 注意：${rec.specialNotes.join("；")}`);
+      if (rec.tips.length)
+        parts.push(`- 小贴士：${rec.tips.join("；")}`);
+      rec.summary = `天气${rec.level}
 ${parts.join("\n")}`;
+      return rec;
     }
   }
 };
-if (!Array) {
-  const _component_PrivacyCheck = common_vendor.resolveComponent("PrivacyCheck");
-  _component_PrivacyCheck();
-}
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return {
-    a: common_vendor.t($data.nickName),
-    b: common_vendor.t($data.usingDate),
-    c: common_assets._imports_0,
-    d: common_vendor.o((...args) => $options.clickWardrobe && $options.clickWardrobe(...args)),
-    e: common_assets._imports_1,
-    f: common_vendor.o((...args) => $options.clickSuit && $options.clickSuit(...args)),
-    g: common_vendor.t($data.weatherDetail),
-    h: common_vendor.t($data.weatherTips)
+    a: common_vendor.f($data.banners, (item, index, i0) => {
+      return {
+        a: item,
+        b: index
+      };
+    }),
+    b: $data.theme.textColor,
+    c: $data.theme.primaryColor,
+    d: common_vendor.t($data.weatherDetail),
+    e: common_vendor.t($data.weatherTips),
+    f: `linear-gradient(135deg, ${$data.theme.primaryColor}, ${$data.theme.secondaryColor})`
   };
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-4f50ca8f"]]);

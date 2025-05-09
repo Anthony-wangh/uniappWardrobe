@@ -5,19 +5,14 @@ if (!Math) {
   "./pages/main/main.js";
   "./pages/wardrobe/wardrobe.js";
   "./pages/matching/matching.js";
-  "./pages/personal/personal.js";
   "./pages/addClothes/addClothes.js";
   "./pages/addMatching/addMatching.js";
+  "./pages/community/community.js";
+  "./pages/publishPost/publishPost.js";
+  "./pages/settings/settings.js";
 }
 const _sfc_main = {
-  onLaunch: function() {
-    common_vendor.index.__f__("log", "at App.vue:5", "App Launch");
-  },
-  onShow: function() {
-    common_vendor.index.__f__("log", "at App.vue:8", "App Show");
-  },
-  onHide: function() {
-    common_vendor.index.__f__("log", "at App.vue:11", "App Hide");
+  onLaunch() {
   }
 };
 function createApp() {

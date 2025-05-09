@@ -110,7 +110,7 @@ const _sfc_main = {
     zoom: {
       // initial scaling factor
       type: Number,
-      default: 1
+      default: 2
     },
     offset: {
       // initial offset relative to the cutter left border
@@ -282,7 +282,6 @@ const _sfc_main = {
       offset[1] += this.offset[1] || 0;
       this.setTranslate(offset);
       this.setZoom(this.zoom);
-      common_vendor.index.__f__("log", "at components/nice-cropper/cropper.js:269", "initImage****");
       this.transform.angle = this.freeBoundDetect || !this.disableRotate ? this.angle : 0;
       this.setBoundary();
       this.preview();
@@ -420,7 +419,6 @@ const _sfc_main = {
     setTransform(x, y, angle, scale) {
       this.setTranslate([x, y]);
       this.setZoom(scale);
-      common_vendor.index.__f__("log", "at components/nice-cropper/cropper.js:408", "setTransform***");
       this.setRotate(angle);
     },
     setCutMode(type) {

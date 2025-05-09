@@ -14,19 +14,19 @@ const _sfc_main = {
         id: "",
         image: "",
         name: "",
-        primaryCategory: "",
-        secondaryCategory: "",
+        primaryCategory: "上衣",
+        secondaryCategory: "T恤",
         value: "",
         notes: "",
         purchaseDate: "",
         brand: ""
       },
       categories: {
-        "上衣": ["T恤", "衬衫", "外套", "羽绒服"],
-        "裤子": ["牛仔裤", "运动裤", "休闲裤", "裙子"],
-        "鞋": ["运动鞋", "高跟鞋", "靴子", "皮鞋", "休闲鞋", "拖鞋"],
-        "配饰": ["帽子", "眼镜", "丝巾"],
-        "包": ["单肩包", "双肩包"]
+        上衣: ["T恤", "衬衫", "外套", "羽绒服"],
+        裤子: ["牛仔裤", "运动裤", "休闲裤", "裙子"],
+        鞋: ["运动鞋", "板鞋", "高跟鞋", "靴子"],
+        配饰: ["帽子", "眼镜", "丝巾"],
+        包: ["单肩包", "双肩包"]
       },
       errorMsg: "",
       isEdit: false,
@@ -38,7 +38,11 @@ const _sfc_main = {
       //缓存裁剪图片，当前裁剪图
     };
   },
-  onLoad() {
+  onLoad(options) {
+    if (options.primaryCategory && options.secondaryCategory) {
+      this.form.primaryCategory = decodeURIComponent(options.primaryCategory);
+      this.form.secondaryCategory = decodeURIComponent(options.secondaryCategory);
+    }
     this.statusBarHeight = common_vendor.index.getSystemInfoSync().statusBarHeight;
   },
   methods: {
@@ -49,7 +53,6 @@ const _sfc_main = {
     onCategoryConfirm(e) {
       this.form.primaryCategory = e.main;
       this.form.secondaryCategory = e.sub;
-      common_vendor.index.__f__("log", "at pages/addClothes/addClothes.vue:129", "用户选择了：", e);
     },
     chooseImage() {
       common_vendor.index.chooseImage({
@@ -70,14 +73,11 @@ const _sfc_main = {
       this.tempCropperSrc = "";
     },
     beforeDraw(context, transform) {
-      context.setFillStyle("yellow");
-      transform.zoom = 2;
+      context.setFillStyle("white");
     },
     afterDraw(ctx, info) {
-      common_vendor.index.__f__("log", "at pages/addClothes/addClothes.vue:156", `当前画布大小：${info.width}*${info.height}`);
     },
     cropped(imagePath, imageInfo) {
-      common_vendor.index.__f__("log", "at pages/addClothes/addClothes.vue:159", imagePath, imageInfo);
       this.tempCropperSrc = imagePath;
     },
     selectPurchaseDate(e) {
@@ -89,8 +89,6 @@ const _sfc_main = {
     submitForm() {
       if (!this.form.image)
         return this.errorMsg = "请上传衣服图片";
-      if (!this.form.name)
-        return this.errorMsg = "请输入衣服名称";
       if (!this.form.primaryCategory)
         return this.errorMsg = "请选择一级类目";
       if (!this.form.secondaryCategory)
@@ -144,10 +142,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     c: $data.form.image
   } : {}, {
     d: common_vendor.o((...args) => $options.chooseImage && $options.chooseImage(...args)),
-    e: $data.form.name,
-    f: common_vendor.o(($event) => $data.form.name = $event.detail.value),
-    g: common_vendor.t($data.form.primaryCategory && $data.form.secondaryCategory ? $data.form.primaryCategory + " / " + $data.form.secondaryCategory : "请选择类目（必选）"),
-    h: common_vendor.o((...args) => $options.openCategoryPicker && $options.openCategoryPicker(...args)),
+    e: common_vendor.t($data.form.primaryCategory && $data.form.secondaryCategory ? $data.form.primaryCategory + " / " + $data.form.secondaryCategory : "请选择类目"),
+    f: common_vendor.o((...args) => $options.openCategoryPicker && $options.openCategoryPicker(...args)),
+    g: $data.form.name,
+    h: common_vendor.o(($event) => $data.form.name = $event.detail.value),
     i: $data.form.notes,
     j: common_vendor.o(($event) => $data.form.notes = $event.detail.value),
     k: common_vendor.t($data.showSubFromgroup ? "收起" : "更多"),
@@ -170,7 +168,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     y: common_vendor.o($options.onCategoryConfirm),
     z: common_vendor.p({
       data: $data.categories,
-      defaultValue: ["上衣", "T恤"],
+      defaultValue: [$data.form.primaryCategory, $data.form.secondaryCategory],
       cancelText: "关闭",
       confirmText: "选择"
     }),
