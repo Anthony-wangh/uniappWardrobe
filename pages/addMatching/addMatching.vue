@@ -1,53 +1,33 @@
 <template>
-
 	<view class="container">
-
 		<view class="header-container">
-			<!-- 状态栏占位 -->
 			<view class="status-bar"></view>
-			<!-- 页面标题 -->
 			<view class="header">
+				<image class="back-icon" src="/static/back.png" @click="goBack" />
 				<text class="header-title">搭配</text>
 			</view>
-
 		</view>
 
 		<view class="main-container">
-
 			<!-- 搭配模块 -->
-			<view class="outfit-preview" @click="clearSelection">
-				<view class="clothes-item" v-for="(item, index) in selectedClothes" :key="index" 
-				:id="'clothesItem' + index" 
-				:ref="'clothesItem' + index" 
-				:style="getStyle(item)">
-					<image class="clothes-image" :src="item.image" @touchstart.stop="startDrag(index,$event)" @touchmove.stop="handleMove($event)"></image>
-
-					<!-- 只有选中的衣服才显示操作按钮 -->
+			<view class="outfit-preview"
+				:style="{backgroundSize: 'cover' }"
+				@click="clearSelection">
+				<view class="clothes-item" v-for="(item, index) in selectedClothes" :key="index"
+					:id="'clothesItem' + index" :ref="'clothesItem' + index" :style="getStyle(item)">
+					<image class="clothes-image" :src="item.image" @touchstart.stop="startDrag(index, $event)"
+						@touchmove.stop="handleMove($event)" />
 					<view v-if="activeIndex === index">
-						<!-- 旋转按钮 -->
-						<image src="/static/rotateBtn.png" class="rotate-btn" @touchstart.stop="startRotate($event)"
-							@touchmove.stop="rotateDrag($event)"></image>
-
-						<!-- 缩放按钮 -->
-						<image src="/static/scaleBtn.png" class="resize-btn" @touchstart.stop="startResize( $event)"
-							@touchmove.stop="resizeDrag($event)"></image>
-
-						<!-- 删除按钮 -->
+						<image src="/static/scaleBtn.png" class="resize-btn" @touchstart.stop="startTransform($event)"
+							@touchmove.stop="handleTransform($event)"></image>
 						<view class="remove-btn" @click.stop="removeClothes(index)">×</view>
 					</view>
-
-
 				</view>
 
-				<view v-if="selectedClothes.length === 0" class="empty-text">请选择衣物</view>
-				<view class="floating-btn" @click="navigateToSelectClothes">
-					<image class="floating-btn-image" src="/static/plus-l.png" mode="aspectFit"></image>
-				</view>
 				<canvas canvas-id="outfitCanvas" class="hidden-canvas"></canvas>
 			</view>
 
-			<!-- 添加衣物按钮 -->
-			<!-- <button class="add-clothes-btn" @click="navigateToSelectClothes">+ 添加衣物</button> -->
+			
 
 			<!-- 套装详情模块 -->
 			<view class="details-section">
@@ -56,16 +36,16 @@
 					<input class="input-box" v-model="outfitName" placeholder="请输入套装名称" />
 				</view>
 
-
-				<view class="input-row">
-					<text class="label">备注</text>
-					<input class="input-box" v-model="note" placeholder="请输入备注（可选）" />
+				<view class="note-input-row">
+					<label class="label">备注</label>
+					<textarea class="textarea-field" v-model="note" placeholder="请输入备注（可选）"></textarea>
 				</view>
 
 				<button class="save-btn" @click="saveOutfit">保存套装</button>
 			</view>
-
 		</view>
+		
+
 	</view>
 </template>
 
@@ -89,7 +69,7 @@
 				startY: 0,
 				startDistance: null,
 				startRotateX: 0,
-				startRotateY: 0
+				startRotateY: 0,
 			};
 		},
 		onLoad(options) {
@@ -158,99 +138,70 @@
 					this.selectedClothes[this.activeIndex].y = y;
 				}
 			},
-
-			startRotate(event) {
+			startTransform(event) {
 				if (this.activeIndex === null) return;
 
 				const item = this.selectedClothes[this.activeIndex];
 
-				// 获取衣物的中心点
+				// 记录中心点
 				const query = uni.createSelectorQuery().in(this);
 				query.select(`#clothesItem${this.activeIndex}`).boundingClientRect((rect) => {
 					if (!rect) return;
 
-					// 计算衣物的中心坐标
 					this.centerX = rect.left + rect.width / 2;
 					this.centerY = rect.top + rect.height / 2;
 
-					// 记录初始触摸点位置
 					const touchX = event.touches[0].clientX;
 					const touchY = event.touches[0].clientY;
 
-					// 计算初始旋转角度
 					this.startAngle = Math.atan2(touchY - this.centerY, touchX - this.centerX) * (180 / Math.PI);
-					this.startRotation = item.rotation; // 记录当前旋转角度
+					this.startRotation = item.rotation;
+
+					this.startDistance = Math.hypot(touchX - this.centerX, touchY - this.centerY);
+					this.startScale = item.scale;
 				}).exec();
 			},
 
-
-			rotateDrag(event) {
+			handleTransform(event) {
 				if (this.activeIndex === null) return;
+
+				const item = this.selectedClothes[this.activeIndex];
 
 				const touchX = event.touches[0].clientX;
 				const touchY = event.touches[0].clientY;
 
-				// 计算当前手指与旋转中心的角度
+				// 当前角度
 				const currentAngle = Math.atan2(touchY - this.centerY, touchX - this.centerX) * (180 / Math.PI);
-
-				// 计算旋转角度变化量
 				const angleDelta = currentAngle - this.startAngle;
-				
-				// console.log('/*****/'+this.startRotation+'**'+angleDelta);
+				item.rotation = this.startRotation + angleDelta;
 
-				// 更新衣物的旋转角度
-				this.selectedClothes[this.activeIndex].rotation = this.startRotation + angleDelta;
+				// 当前距离
+				const currentDistance = Math.hypot(touchX - this.centerX, touchY - this.centerY);
+				let scaleRatio = currentDistance / this.startDistance;
+				scaleRatio = Math.max(0.5, Math.min(scaleRatio, 2));
+				item.scale = this.startScale * scaleRatio;
 			},
 
-
-			startResize(event) {
-				if (this.activeIndex === null)
-					return;
-				this.startDistance = Math.hypot(
-					event.touches[0].clientX - this.selectedClothes[this.activeIndex].x,
-					event.touches[0].clientY - this.selectedClothes[this.activeIndex].y
-				);
-			},
-
-			resizeDrag(event) {
-				if (this.activeIndex === null)
-					return;
-				const newDistance = Math.hypot(
-					event.touches[0].clientX - this.selectedClothes[this.activeIndex].x,
-					event.touches[0].clientY - this.selectedClothes[this.activeIndex].y
-				);
-
-				let scale = newDistance / this.startDistance;
-				scale = Math.max(0.5, Math.min(scale, 2));
-				this.selectedClothes[this.activeIndex].scale = scale;
-			},
 
 			removeClothes(index) {
 				uni.showModal({
-				  title: '确认删除？', // 标题文字，支持字符串或空值
-				  showCancel: true, // 是否显示取消按钮（默认true）
-				  cancelText: '取消', // 取消按钮文字（默认"取消"）
-				  cancelColor: '#999', // 取消按钮文字颜色（默认#000）
-				  confirmText: '确定', // 确认按钮文字（默认"确定"）
-				  confirmColor: '#212121', // 确认按钮颜色（默认#3CC51F）
-				  success: res => {
-				    if (res.confirm) {
-						this.selectedClothes.splice(index, 1);
-				    } 
-				  }
-				});				
+					title: '确认删除？', // 标题文字，支持字符串或空值
+					showCancel: true, // 是否显示取消按钮（默认true）
+					cancelText: '取消', // 取消按钮文字（默认"取消"）
+					cancelColor: '#999', // 取消按钮文字颜色（默认#000）
+					confirmText: '确定', // 确认按钮文字（默认"确定"）
+					confirmColor: '#212121', // 确认按钮颜色（默认#3CC51F）
+					success: res => {
+						if (res.confirm) {
+							this.selectedClothes.splice(index, 1);
+						}
+					}
+				});
 			},
 
-			navigateToSelectClothes() {
-				// uni.navigateTo({
-				// 	url: "/pages/selectClothes/selectClothes"
-				// });
-			},
-			
 			generateUniqueId() {
 				return 'id_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 			},
-
 			async generateThumbnail() {
 				return new Promise((resolve, reject) => {
 					const ctx = uni.createCanvasContext("outfitCanvas", this);
@@ -258,7 +209,6 @@
 					ctx.fillRect(0, 0, 300, 300);
 
 					this.selectedClothes.forEach((item) => {
-						console.log('********'+item.rotation);
 						ctx.save();
 						ctx.translate(150 + item.x, 150 + item.y);
 						ctx.rotate((item.rotation * Math.PI) / 180);
@@ -266,14 +216,14 @@
 						ctx.drawImage(item.image, -40, -40, 80, 80);
 						ctx.restore();
 					});
-
+					
 					ctx.draw(false, () => {
 						uni.canvasToTempFilePath({
 							canvasId: "outfitCanvas",
 							success: (res) => resolve(res.tempFilePath),
 							fail: (err) => reject(err),
 						}, this);
-					});
+					});	
 				});
 			},
 
@@ -287,8 +237,8 @@
 				}
 
 				try {
-					const thumbnail = await this.generateThumbnail();
-					this.saveToStorage(thumbnail);
+					const path = await this.generateThumbnail();
+					this.saveToStorage(path);
 				} catch (err) {
 					uni.showToast({
 						title: "缩略图生成失败",
@@ -297,13 +247,20 @@
 				}
 			},
 
+			goBack() {
+				uni.navigateBack();
+			},
+			getTime() {
+				const date = new Date()
+				return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+			},
 			saveToStorage(imagePath) {
-
 				const outfit = {
 					id: this.generateUniqueId(),
 					name: this.outfitName,
 					note: this.note,
-					thumbnail: imagePath
+					thumbnail: imagePath,
+					time : this.getTime()
 				};
 
 				let outfits = uni.getStorageSync("outfits") || [];
@@ -347,21 +304,29 @@
 		background-color: #ffffff;
 	}
 
+
+	/* 顶部栏 */
 	.header {
 		width: 100%;
-		height: 44px;
-		background-color: #ffffff;
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		padding: 12px 0px;
+		background-color: #fff;
+	}
+
+	.back-icon {
+		width: 24px;
+		height: 24px;
+		margin-right: 12px;
+		margin-left: 20px;
 	}
 
 	.header-title {
 		font-size: 18px;
 		font-weight: bold;
-		text-align: center;
-		margin-left: 20px;
+		color: #333;
 	}
+
 
 	.main-container {
 		width: 100%;
@@ -371,8 +336,6 @@
 		justify-items: center;
 		justify-content: center;
 	}
-
-
 
 	/* 套装搭配模块 */
 	.outfit-preview {
@@ -389,11 +352,7 @@
 		position: relative;
 	}
 
-	/* 空白提示文字 */
-	.empty-text {
-		font-size: 16px;
-		color: #aaa;
-	}
+	
 
 	/* 衣服卡片 */
 	.clothes-item {
@@ -417,18 +376,7 @@
 	}
 
 
-	/* 旋转按钮 */
-	.rotate-btn {
-		position: absolute;
-		bottom: -12px;
-		left: -12px;
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		cursor: pointer;
-		border: 1px solid #fff;
-	}
-
+	
 	/* 缩放按钮 */
 	.resize-btn {
 		position: absolute;
@@ -446,7 +394,7 @@
 	.remove-btn {
 		position: absolute;
 		top: -12px;
-		right: -12px;
+		left: -12px;
 		width: 24px;
 		height: 24px;
 		background-color: red;
@@ -460,27 +408,13 @@
 		border: 2px solid #fff;
 	}
 
-	/* 添加衣物按钮 */
-	.add-clothes-btn {
-		width: 90%;
-		height: 45px;
-		margin: 15px 0;
-		background-color: #3e4faf;
-		color: white;
-		font-size: 16px;
-		text-align: center;
-		line-height: 45px;
-		border-radius: 10px;
-		cursor: pointer;
-		font-weight: bold;
-		box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-	}
-
+	
 	/* 套装详情 */
 	.details-section {
+		width: calc(100vw - 20px);
 		margin: 0 10px;
 		background: white;
-		padding: 15px;
+		padding: 15px 0;
 		border-radius: 10px;
 		box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
 	}
@@ -490,9 +424,14 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-bottom: 12px;
+		margin: 10px;
 	}
-
+.note-input-row{
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	margin: 10px;
+}
 	/* 输入框/选择框名称 */
 	.label {
 		font-size: 16px;
@@ -503,12 +442,13 @@
 
 	/* 输入框/选择框 */
 	.input-box {
-		width: 65%;
+		width: 75%;
 		height: 40px;
 		padding: 5px;
 		border-bottom: 1px solid #cbcbcb;
-		font-size: 14px;
-		text-align: center;
+		font-size: 16px;
+		font-weight: bold;
+		color: #333;
 	}
 
 	/* 选择框样式 */
@@ -520,9 +460,9 @@
 
 	/* 保存按钮 */
 	.save-btn {
-		width: 100%;
+		width: 90%;
 		height: 45px;
-		background-color: #1e1e1e;
+		background-color: #8A6FDF;
 		color: white;
 		font-size: 16px;
 		text-align: center;
@@ -542,22 +482,19 @@
 		height: 300px;
 	}
 
-	.floating-btn {
-		position: absolute;
-		right: 5px;
-		bottom: 5px;
-		width: 30px;
-		height: 30px;
-		background-color: #1e1e1e;
-		border-radius: 25px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	}
-
-	.floating-btn-image {
-		width: 30px;
-		height: 30px;
+	
+	
+	.textarea-field {
+		width: 100%;
+		height: 80px;
+		padding: 10px;
+		border: 1px solid #e0e0e0;
+		border-radius: 8px;
+		background-color: #ffffff;
+		font-size: 14px;
+		color: #333;
+		resize: none;
+		box-sizing: border-box;
+		margin-top: 10px;
 	}
 </style>

@@ -1,41 +1,71 @@
 <template>
-  <view class="page" :style="{ background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.secondaryColor})` }">
-    <!-- 顶部轮播 -->
-    <swiper class="banner-swiper" indicator-dots autoplay circular>
-      <swiper-item v-for="(item, index) in banners" :key="index">
-        <image class="banner-image" :src="item" mode="aspectFill" />
-      </swiper-item>
-    </swiper>
+	<view class="home-page">
+		<!-- 状态栏占位 -->
+		<view class="status-safe-area"></view>
 
-    <!-- 内容区域可滚动 -->
-    <scroll-view class="content" scroll-y>
-      <!-- 用户信息（移入滚动区） -->
-      <!-- <view class="user-info">
-        <text class="mp-name" :style="{ color: theme.textColor }">我的衣橱管家</text>
-      </view> -->
+		<!-- 头部 欢迎 & 头像 -->
+		<view class="header">
+			<image class="avatar" :src="avatarUrl" mode="aspectFill" />
+			<view class="greeting">
+				<text class="welcome-text">欢迎回来，{{ nickName }}</text>
+				<text class="subtitle">为每天搭配精致穿搭</text>
+			</view>
+		</view>
 
-      <!-- 穿衣建议卡片 -->
-      <view class="card">
-        <view class="card-header" :style="{ background: theme.primaryColor }">
-          <text class="card-title" :style="{ color: theme.textColor }">今日穿衣建议</text>
-        </view>
-        <view class="card-body">
-          <text class="temp" >{{ weatherDetail }}</text>
-          <text class="tips" >{{ weatherTips }}</text>
-        </view>
-      </view>
+		<!-- 天气卡片 -->
+		<view class="weather-card">
+			<view class="weather-main">
+				<!-- 左侧 温度 & 图标 -->
+				<view class="weather-left">
+					<text class="temperature">{{ weatherDetail}}</text>
+					<text class="advice">{{ windText }}</text>
+				</view>
+				<!-- 右侧 天气说明 & 日期 -->
+				<view class="weather-right">
+					<text class="weather-desc">{{ weatherTips}}</text>
+					<text class="date">{{ currentDate }} {{ weekDay }}</text>
+				</view>
+			</view>
+		</view>
 
-      <!-- slogan -->
-      <view class="slogan-wrapper">
-        <view class="slogan">
-          <text>让穿搭变得简单</text>
-        </view>
-      </view>
-    </scroll-view>
-  </view>
+		<!-- 功能入口 -->
+		<view class="actions">
+			<view class="action-btn" @click="upload">
+				<image class="action-icon" src="/static/main/Upload.png" />
+				<text class="action-text">上传衣物</text>
+			</view>
+			<view class="action-btn" @click="startMatch">
+				<image class="action-icon" src="/static/main/Shuffle.png" />
+				<text class="action-text">开始搭配</text>
+			</view>
+		</view>
+		<!-- 推荐模块 -->
+		<section class="recommendation-section">
+			<h2 class="section-title">最近上传</h2>
+			<view class="empty-state-text" v-if="recentlyClothes.length===0">
+				还没有上传任何衣服哦，快去上传一件吧~
+			</view>
+			<div class="recommendation-list" v-else>
+				<div v-for="(item, index) in recentlyClothes" :key="index" class="recommendation-card">
+					<image :src="item.image" mode="aspectFit" class="item-icon" />
+					<view class="item-info">
+						<text class="item-name">{{ item.name }}</text>
+						<text class="item-category">{{ item.primaryCategory }}/{{item.secondaryCategory}}</text>
+					</view>
+				</div>
+			</div>
+		</section>
+
+<!-- <view class="login-container">
+	
+	<view class="login-btn">
+		一键登录		
+	</view>
+	
+</view> -->
+
+	</view>
 </template>
-
-
 
 <script>
 	import {
@@ -45,29 +75,73 @@
 
 		data() {
 			return {
-				nickName: '帅哥',
-				usingDate: 99,
 				weatherInfo: {},
-				clothingAdvice: {},
+				clothingAdvice: {
+					upper: [],
+					lower: [],
+					accessories: [],
+					tips: [],
+					specialNotes: [],
+					summary: ''
+				},
 				weatherDetail: '',
 				weatherTips: '',
+				windText: '',
 				weatherIcon: '',
 				theme: themes[0],
 				themes,
 				banners: [
-				      '/static/banners/banner1.jpeg',
-				      '/static/banners/banner2.jpeg',
-				      '/static/banners/banner3.jpeg',
-					  '/static/banners/banner4.jpeg'
-				    ],
+					'/static/banners/banner1.png',
+					'/static/banners/banner2.png',
+					'/static/banners/banner3.png'
+				],
+				nickName: '',
+				isLoggedIn: false,
+				slogan: '让穿搭变得简单',
+
+				nickName: 'Sarah',
+				avatarUrl: '/static/theme.png',
+				weatherIcon: '/static/weather_icons/theme.png',
+				currentDate: '',
+				weekDay: '',
+				recentlyClothes: []
 			};
 		},
 		onShow() {
+			uni.setNavigationBarColor({
+			  frontColor:  '#000000',
+			  backgroundColor: '#ffffff' 
+			});
+			
+			
 			const saved = uni.getStorageSync('theme') || this.themes[0];
 			this.theme = saved;
+			const clothes = uni.getStorageSync("clothes") || [];
+			if (clothes.length > 0) {
+				//取最近五个上传的衣服
+				this.recentlyClothes = clothes.length > 5 ? clothes.slice(-5) : clothes;
+			}			
+
+			this.getTime();
 			this.getWeather();
 		},
 		methods: {
+			getTime() {
+				const date = new Date()
+				this.currentDate = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+				const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+				this.weekDay = days[date.getDay()]
+			},
+			upload() {
+				uni.navigateTo({
+					url: "/pages/addClothes/addClothes"
+				});
+			},
+			startMatch() {
+				uni.switchTab({
+					url: "/pages/matching/matching"
+				});
+			},
 			isToday(dateStr) {
 				const [y, m, d] = dateStr.split('-').map(Number);
 				const target = new Date(y, m - 1, d);
@@ -75,6 +149,9 @@
 				return target.getFullYear() === today.getFullYear() &&
 					target.getMonth() === today.getMonth() &&
 					target.getDate() === today.getDate();
+			},
+			refreshWeather() {
+				this.getWeather();
 			},
 			async getWeather() {
 				const cache = uni.getStorageSync('weatherInfo');
@@ -108,12 +185,12 @@
 				});
 			},
 			updateWeather(w) {
-				const tempText = `${w.textDay}  ${w.tempMin}℃ ~ ${w.tempMax}℃`;
-				const windText = `${w.windDirDay} ${w.windScaleDay}级 紫外线: ${w.uvIndex}`;
-				this.weatherDetail = `${tempText}\n${windText}`;
+				const tempText = `${w.tempMin}℃ ~ ${w.tempMax}℃`;
+				this.windText = `${w.windDirDay} ${w.windScaleDay}级  紫外线: ${w.uvIndex}`;
+				this.weatherDetail = `${tempText} ${w.textDay}`;
 				this.weatherIcon = `/static/weather_icons/${w.textDay}.png`;
 				this.clothingAdvice = this.getClothingAdvice(w);
-				this.weatherTips = this.clothingAdvice.summary;
+				this.weatherTips = `${this.clothingAdvice.summary}`;
 			},
 			getClothingAdvice(weatherData) {
 				const tMax = parseInt(weatherData.tempMax),
@@ -239,143 +316,228 @@
 	};
 </script>
 
-<style scoped>
-	.page {
+<style scoped lang="scss">
+	.home-page {
 		display: flex;
 		flex-direction: column;
+		background: #F9F9F9;
 		height: 100vh;
-		width: 100vw;
+		position: relative;
 	}
-
-	.hero {
+	.login-container{
+		position: absolute;
+		background-color: #C09AFF;
+		top: 0;
+		left: 0;
 		width: 100%;
-		height: 150px;
-		padding-top: calc(var(--status-bar-height) + 24px);
-		display: flex;
-		justify-content: center;
-	}
-
-	.user-info {
-		display: flex;
-		flex-direction: column;
+		height: 100%;
+		
+		justify-content: space-around;
 		align-items: center;
+		justify-items: center;
+		display: flex;
+	}
+	
+	.login-btn{
+		background-color: #161616;
+		border-radius: 20px;
+		font-size: 16px;
+		padding: 10px 20px;
+		color: #F9F9F9;
 		text-align: center;
-		color: #fff;
 	}
 
-	.mp-name {
-		font-size: 22px;
-		font-weight: bold;
+	.status-safe-area {
+		height: calc(var(--status-bar-height) + 30px);
+	}
+
+	.header {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 20px;
+		padding-bottom: 10px;
+	}
+
+	.avatar {
+		width: 50px;
+		height: 50px;
+		border-radius: 25px;
 	}
 
 	.greeting {
-		font-size: 15px;
-		margin-top: 30px;
-	}
-
-	.date {
-		font-size: 13px;
-		margin-top: 4px;
-	}
-
-	/* 内容区域卡片容器 */
-	.content {
-		flex: 1;
-		background: #f9f9f9;
-		padding: 10px 0 40px 0;
-	}
-
-	/* 卡片基础样式 */
-	.card {
-		border-radius: 5px;
-		margin: 5px 10px;
-		background: rgba(255, 255, 255, 0.2);
-		/* border : 1px solid #9f9f9f; */
-		box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.05);
-		padding: 10px 0;
-	}
-
-	/* 卡片内容 */
-	.card-header {
+		margin-left: 15px;
 		display: flex;
-		padding: 10px 0;
+		flex-direction: column;
+	}
+
+	.welcome-text {
+		font-size: 16px;
+		color: #1D1D1D;
+		font-weight: bold;
+	}
+
+	.subtitle {
+		margin-top: 4px;
+		font-size: 14px;
+		color: #666666;
+	}
+
+	.weather-card {
+		margin: 20px;
+		padding: 15px;
+		border-radius: 10px;
+		background: linear-gradient(170deg, #ece2ff, #F9F9F9);
+		display: flex;
+		flex-direction: column;
+	}
+
+	.weather-main {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	.weather-left {
 		align-items: center;
 		justify-content: space-between;
-		margin-bottom: 12px;
+		display: flex;
+		margin-left: 6px;
+		margin-bottom: 10px;
 	}
 
-	.card-title {
+	.temperature {
 		font-size: 18px;
-		color: #0d0d0d;
-		margin: 5px 12px;
+		font-weight: bold;
+		color: #333333;
+
 	}
 
 	.weather-icon {
-		width: 32px;
-		height: 32px;
+		width: 40px;
+		height: 40px;
+		margin-top: 5px;
 	}
 
-	.card-body {
-		line-height: 1.6;
+	.weather-right {
+		flex: 1;
+		margin-left: 6px;
 		display: flex;
 		flex-direction: column;
-		margin: 12px;
 	}
 
-	.temp {
-		font-size: 15px;
-		color: #0d0d0d;
-		margin-bottom: 6px;
-	}
-
-	.tips {
-		font-size: 13px;
-		color: #323232;
-	}
-
-	/* slogan 区域 */
-	.slogan-wrapper {
-		position: absolute;
-		bottom: 20px;
-		width: 100%;
-		margin-top: 24px;
-		/* background: #f9f9f9; */
-		/* border-radius: 12px; */
-		padding: 12px 0;
-	}
-
-	.slogan {
-		display: flex;
-		justify-content: center;
-	}
-
-	.slogan text {
+	.weather-desc {
 		font-size: 14px;
-		color: #1f1f1f;
-	}
-	
-	.banner-swiper {
-	  width: 100vw;
-	  height: calc(100vw * 0.67);
-	  overflow: hidden;
-	}
-	
-	.banner-image {
-	  width: 100%;
-	  height: 100%;
-	}
-	
-	.scroll-view {
-	  flex: 1;
-	  background: #fff;
-	  border-top-left-radius: 24px;
-	  border-top-right-radius: 24px;
-	  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-	}
-	
-	.user-info {
-	  padding: 20px 0 0;
-	  text-align: center;
+		color: #333333;
 	}
 
+	.weather-tip {
+		margin-top: 6px;
+		font-size: 12px;
+		color: #888888;
+	}
+
+	.date {
+		margin-top: 8px;
+		font-size: 10px;
+		color: #AAAAAA;
+	}
+
+	.advice {
+		margin-top: 10px;
+		font-size: 14px;
+		color: #444444;
+	}
+
+	.actions {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+
+	.action-btn {
+		width: 40%;
+		border-radius: 8px;
+		padding: 15px 0;
+		align-items: center;
+		background: linear-gradient(135deg, #8E7AFF, #C09AFF);
+		display: flex;
+		flex-direction: column;
+		justify-items: center;
+	}
+
+	.action-icon {
+		width: 40px;
+		height: 40px;
+	}
+
+	.action-text {
+		margin-top: 8px;
+		font-size: 13px;
+		color: #FFFFFF;
+		font-weight: bold;
+	}
+
+	.empty-state-text {
+		font-size: 14px;
+		color: #C09AFF;
+		text-align: center;
+		margin-top: 20px;
+	}
+
+	.recommendation-section {
+		margin-top: 20px;
+
+		.section-title {
+			font-size: 16px;
+			font-weight: 600;
+			margin-bottom: 12px;
+			margin-left: 20px;
+		}
+
+		.recommendation-list {
+			display: flex;
+			overflow-x: auto;
+			margin: 0 20px;
+
+			.recommendation-card {
+				min-width: 150px;
+				margin-right: 10px;
+				// border-radius: 12px;
+				// background: #f8f8f8;
+				// padding: 10px;
+				// box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.05);
+				display: flex;
+				flex-direction: column;
+				// align-items: center;
+				// justify-items: center;
+
+				.item-icon {
+					width: 150px;
+					height: 150px;
+					object-fit: contain;
+					border-radius: 20px;
+				}
+
+				.item-info {
+					margin: 10px;
+				}
+
+				.item-name {
+					font-size: 15px;
+					color: #161616;
+				}
+
+				.item-category {
+					margin-left: 10px;
+					font-size: 10px;
+					color: #ffffff;
+					background: #8E7AFF;
+					border-radius: 10px;
+					padding: 2px 5px;
+				}
+
+			}
+		}
+	}
 </style>

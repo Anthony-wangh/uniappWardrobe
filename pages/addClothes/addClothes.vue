@@ -3,8 +3,9 @@
 		<!-- 状态栏占位 -->
 		<view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 		<!-- 页面标题 -->
-		<view class="header">
-			<text class="header-title">添加衣物</text>
+		<view class="navbar">
+			<image class="back-icon" src="/static/back.png" @click="goBack">‹</image>
+			<text class="title-text">添加衣物</text>
 		</view>
 
 		<view class="add-clothes-container">
@@ -13,6 +14,16 @@
 				<image v-if="form.image" :src="form.image" mode="aspectFit" class="selected-image" />
 				<text v-else class="upload-text">点击选择图片</text>
 			</view>
+
+			<!-- 季节选择（支持多选） -->
+			<view class="season-selector">
+				<view v-for="season in seasons" :key="season"
+					:class="['season-card', form.seasons?.includes(season) ? 'selected' : '']"
+					@click="toggleSeason(season)">
+					{{ season }}
+				</view>
+			</view>
+
 
 			<view class="main-form-group">
 				<label>类目</label>
@@ -26,10 +37,10 @@
 			<!-- 名称输入 -->
 			<view class="main-form-group">
 				<label>名称</label>
-				<input class="input-field" v-model="form.name" placeholder="请输入衣服名称（选填）" />
+				<input class="input-field" v-model="form.name" placeholder="请输入衣服名称（必填）" />
 			</view>
 
-			
+
 			<view class="main-form-group">
 				<label>备注</label>
 				<textarea class="textarea-field" v-model="form.notes" placeholder="请输入备注（可选）"></textarea>
@@ -63,18 +74,15 @@
 		</view>
 	</view>
 
-	<category-picker ref="categoryPicker" :data="categories" :defaultValue="[form.primaryCategory, form.secondaryCategory]" :cancelText="'关闭'"
-		:confirmText="'选择'" @confirm="onCategoryConfirm" />
+	<category-picker ref="categoryPicker" :data="categories"
+		:defaultValue="[form.primaryCategory, form.secondaryCategory]" :cancelText="'关闭'" :confirmText="'选择'"
+		@confirm="onCategoryConfirm" />
 
 
 	<view class="cropper-container" v-if="cropperSrc !==''">
 		<view class="cropper-wrap">
-			<image-cropper id="image-cropper" :zoom="1" :angle="0" :src="cropperSrc" canvasBackground="red"
-				@cropped="cropped" @afterDraw="afterDraw" @beforeDraw="beforeDraw" />
-		</view>
-		<view class="cropper-handle">
-			<text class="cropper-handle-btn" @click="quitCropper">退出</text>
-			<text class="cropper-handle-btn" @click="comfireCropper">确定</text>
+			<ksp-cropper mode="free" :width="512" :height="512" :maxWidth="1024" :maxHeight="1024" :url="cropperSrc"
+				@cancel="oncancel" @ok="onok"></ksp-cropper>
 		</view>
 	</view>
 
@@ -83,16 +91,15 @@
 
 <script>
 	import CategoryPicker from "../../components/CategoryPickerModal.vue";
-	import ImageCropper from '../../components/nice-cropper/cropper.vue';
 
 	export default {
 		components: {
-			CategoryPicker,
-			ImageCropper
+			CategoryPicker
 		},
 		data() {
 			return {
 				statusBarHeight: 0,
+				seasons: ['春', '夏', '秋', '冬'],
 				form: {
 					id: '',
 					image: '',
@@ -102,30 +109,38 @@
 					value: '',
 					notes: '',
 					purchaseDate: '',
-					brand: ''
+					brand: '',
+					seasons: []
 				},
-				categories:{
+				categories: {
 					上衣: ["T恤", "衬衫", "外套", "羽绒服"],
 					裤子: ["牛仔裤", "运动裤", "休闲裤", "裙子"],
-					鞋: ["运动鞋","板鞋", "高跟鞋", "靴子"],
+					鞋: ["运动鞋", "板鞋", "高跟鞋", "靴子"],
 					配饰: ["帽子", "眼镜", "丝巾"],
 					包: ["单肩包", "双肩包"]
 				},
 				errorMsg: '',
 				isEdit: false,
 				showSubFromgroup: false, //显示详细表单项
-				cropperSrc: '' ,//裁剪图片路径，底图
-				tempCropperSrc:''//缓存裁剪图片，当前裁剪图
+				cropperSrc: '', //裁剪图片路径，底图
 			};
 		},
 		onLoad(options) {
-			if (options.primaryCategory&&options.secondaryCategory) {
-				this.form.primaryCategory= decodeURIComponent(options.primaryCategory);
-				this.form.secondaryCategory=decodeURIComponent(options.secondaryCategory);				
-			}			
+			if (options.primaryCategory && options.secondaryCategory) {
+				this.form.primaryCategory = decodeURIComponent(options.primaryCategory);
+				this.form.secondaryCategory = decodeURIComponent(options.secondaryCategory);
+			}
 			this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
 		},
 		methods: {
+			onok(ev) {
+				this.cropperSrc = "";
+				this.form.image = ev.path;
+			},
+			oncancel() {
+				// url设置为空，隐藏控件
+				this.cropperSrc = "";
+			},
 			openCategoryPicker() {
 				this.$refs.categoryPicker?.open();
 			},
@@ -144,36 +159,23 @@
 					}
 				});
 			},
-			quitCropper() {
-				this.cropperSrc = '';
-				this.tempCropperSrc = '';
-			},
-			comfireCropper() {
-				this.cropperSrc = '';
-				this.form.image = this.tempCropperSrc;
-				this.tempCropperSrc = '';
-			},
-			beforeDraw(context, transform) {
-				context.setFillStyle('white')
-				// transform.zoom = 2
-			},
-			afterDraw(ctx, info) {
-				// ctx.fillText('我是一行文字水印', 20, 20)
-				// console.log(`当前画布大小：${info.width}*${info.height}`)
-			},
-			cropped(imagePath, imageInfo) {
-				// console.log(imagePath, imageInfo)
-				this.tempCropperSrc = imagePath;
-			},
 			selectPurchaseDate(e) {
 				this.form.purchaseDate = e.detail.value;
 			},
 			generateUniqueId() {
 				return 'id_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 			},
+			toggleSeason(season) {
+				const index = this.form.seasons.indexOf(season);
+				if (index === -1) {
+					this.form.seasons.push(season);
+				} else {
+					this.form.seasons.splice(index, 1);
+				}
+			},
 			submitForm() {
 				if (!this.form.image) return (this.errorMsg = '请上传衣服图片');
-				// if (!this.form.name) return (this.errorMsg = '请输入衣服名称');
+				if (!this.form.name) return (this.errorMsg = '请输入衣服名称');
 				if (!this.form.primaryCategory) return (this.errorMsg = '请选择一级类目');
 				if (!this.form.secondaryCategory) return (this.errorMsg = '请选择二级类目');
 
@@ -198,7 +200,9 @@
 				});
 
 				this.resetForm();
-				setTimeout(() => uni.navigateBack(), 100);
+				setTimeout(() => uni.switchTab({
+					url: "/pages/wardrobe/wardrobe"
+				}), 10);
 			},
 			resetForm() {
 				this.form = {
@@ -212,6 +216,9 @@
 					brand: ''
 				};
 				this.errorMsg = '';
+			},
+			goBack() {
+				uni.navigateBack();
 			}
 		}
 	}
@@ -229,17 +236,26 @@
 		background-color: #ffffff;
 	}
 
-	.header {
+	/* 顶部栏 */
+	.navbar {
 		width: 100%;
-		height: 44px;
-		background-color: #ffffff;
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		border-bottom: 1px solid #eee;
+		padding: 12px 0px;
+		background-color: #fff;
+		border-bottom: 1px solid #e5e5e5;
+
+		padding-top: calc(var(--status-bar-height));
 	}
 
-	.header-title {
+	.back-icon {
+		width: 24px;
+		height: 24px;
+		margin-right: 12px;
+		margin-left: 20px;
+	}
+
+	.title-text {
 		font-size: 18px;
 		font-weight: bold;
 		color: #333;
@@ -250,6 +266,8 @@
 		padding: 20px 30px;
 		box-sizing: border-box;
 		background-color: #f5f5f5;
+		overflow-y: auto;
+		height: calc(100vh - 120px);
 	}
 
 	.image-picker {
@@ -301,7 +319,7 @@
 	}
 
 	.upload-text {
-		color: #6668ff;
+		color: #8A6FDF;
 		font-size: 16px;
 	}
 
@@ -345,21 +363,23 @@
 		display: flex;
 		align-items: center;
 	}
-	
-	.categoryPicker{
-		border:1px solid #868686;
+
+	.categoryPicker {
+		border: 1px solid #868686;
 		background-color: #fff;
 		border-radius: 5px;
 	}
-	
+
 
 	.picker-text {
 		color: #747474;
 	}
-	.category-picker-text{
-		color: #6668ff;
+
+	.category-picker-text {
+		color: #8A6FDF;
 		font-weight: bold;
 	}
+
 	.textarea-field {
 		width: 100%;
 		height: 80px;
@@ -383,8 +403,8 @@
 	}
 
 	.submit-btn {
-		width: 50%;
-		background-color: #1a1a1a;
+		width: 80%;
+		background-color: #8A6FDF;
 		// border: 3px solid #ccd3ff;
 		color: #ffffff;
 		font-size: 16px;
@@ -399,5 +419,33 @@
 		font-size: 14px;
 		text-align: center;
 		margin-top: 10px;
+	}
+
+	.season-selector {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 10px;
+		margin-bottom: 20px;
+	}
+
+	.season-card {
+		width: 60px;
+		height: 35px;
+		line-height: 35px;
+		text-align: center;
+		background-color: #f9f9f9;
+		border-radius: 8px;
+		font-size: 14px;
+		color: #333;
+		border: 1px solid #414141;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.season-card.selected {
+		background-color: #8A6FDF;
+		color: #fff;
+		border-color: #8A6FDF;
 	}
 </style>

@@ -1,0 +1,48 @@
+
+.privacy-container.data-v-b41dbc0d {
+	background-color: #f9f9f9;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+.navbar.data-v-b41dbc0d {
+	display: flex;
+	align-items: center;
+	padding: 12px 20px;
+	background-color: #fff;
+	border-bottom: 1px solid #e5e5e5;
+	padding-top: calc(var(--status-bar-height) + 40px);
+}
+.back-icon.data-v-b41dbc0d {
+	width: 24px;
+	height: 24px;
+	margin-right: 12px;
+}
+.title.data-v-b41dbc0d {
+	font-size: 18px;
+	font-weight: bold;
+	color: #333;
+}
+
+/* 内容滚动区域 */
+.content.data-v-b41dbc0d {
+	flex: 1;
+	padding: 16px 0;
+	background-color: #fff;
+	margin: 10px;
+}
+.section.data-v-b41dbc0d {
+	margin-bottom: 20px;
+}
+.section-title.data-v-b41dbc0d {
+	font-size: 16px;
+	font-weight: bold;
+	color: #1a1a1a;
+	margin-bottom: 10px;
+	display: block;
+}
+.section-text.data-v-b41dbc0d {
+	font-size: 14px;
+	color: #555;
+	line-height: 1.8;
+}

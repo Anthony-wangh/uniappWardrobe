@@ -1,5 +1,13 @@
 {
-	"pages": [{
+	"pages": [
+		{
+			"path" : "pages/login/login",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
 			"path": "pages/main/main",
 			"style": {
 				"navigationBarTitleText": ""
@@ -46,16 +54,61 @@
 			{
 				"navigationBarTitleText" : ""
 			}
+		},
+		{
+			"path" : "pages/community/PostDetail",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/settings/themeSetting",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/settings/faqSetting",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/settings/privacyPolicy",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/settings/categorySetting",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/settings/messageList",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
 		}
+		
 
 	],
 	"globalStyle": {
-		"navigationBarTextStyle": "white",
+		"navigationBarTextStyle": "black",
+		"navigationBarBackgroundColor": "#ffffff",
 		"navigationBarTitleText": "我的衣橱",
-		"navigationBarBackgroundColor": "#ccd3ff",
-		"backgroundColor": "#ccd3ff",
+		"backgroundColor": "#ffffff",
 		"navigationStyle": "custom"
 	},
+	
+	
 	"tabBar": {
 	  "list": [
 		  {
@@ -77,12 +130,12 @@
 	      "iconPath": "/static/tabBarIcons/matching.png",
 	      "selectedIconPath": "/static/tabBarIcons/matching-select.png"
 	    },
-		{
-		  "pagePath": "pages/community/community",
-		  "text": "社区",
-		  "iconPath": "/static/tabBarIcons/community.png",
-		  "selectedIconPath": "/static/tabBarIcons/community-select.png"
-		},
+		// {
+		//   "pagePath": "pages/community/community",
+		//   "text": "社区",
+		//   "iconPath": "/static/tabBarIcons/community.png",
+		//   "selectedIconPath": "/static/tabBarIcons/community-select.png"
+		// },
 		{
 		  "pagePath": "pages/settings/settings",
 		  "text": "设置",
@@ -92,7 +145,7 @@
 	    
 	  ],
 	  "color": "#a9b7b7",
-	  "selectedColor": "#8a8a8a",
+	  "selectedColor": "#8A6FDF",
 	  "backgroundColor": "#ffffff",
 	  "borderStyle": "black"	
 	}

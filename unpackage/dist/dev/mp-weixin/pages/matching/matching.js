@@ -20,8 +20,23 @@ const _sfc_main = {
         }
       ],
       theme: components_theme.themes[0],
-      themes: components_theme.themes
+      themes: components_theme.themes,
+      searchKeyword: ""
     };
+  },
+  computed: {
+    filteredOutfits() {
+      if (!this.searchKeyword.trim())
+        return this.outfits;
+      const keyword = this.searchKeyword.toLowerCase();
+      return this.outfits.filter(
+        (item) => item.name.toLowerCase().includes(keyword)
+      );
+    },
+    getTime() {
+      const date = /* @__PURE__ */ new Date();
+      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    }
   },
   onShow() {
     const saved = common_vendor.index.getStorageSync("theme") || this.themes[0];
@@ -40,23 +55,21 @@ const _sfc_main = {
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: $data.theme.textColor,
-    b: `linear-gradient(135deg, ${$data.theme.primaryColor}, ${$data.theme.secondaryColor})`,
-    c: $data.outfits.length > 0
-  }, $data.outfits.length > 0 ? {
-    d: common_vendor.f($data.outfits, (item, index, i0) => {
+    b: common_assets._imports_0$2,
+    c: $data.searchKeyword,
+    d: common_vendor.o(($event) => $data.searchKeyword = $event.detail.value),
+    e: $options.filteredOutfits.length > 0
+  }, $options.filteredOutfits.length > 0 ? {
+    f: common_vendor.f($options.filteredOutfits, (item, index, i0) => {
       return {
         a: item.thumbnail,
         b: common_vendor.t(item.name),
-        c: common_vendor.t(item.note),
+        c: common_vendor.t(item.time ? item.time : $options.getTime),
         d: index
       };
     })
   } : {
-    e: common_assets._imports_0$1
-  }, {
-    f: common_assets._imports_1$1,
-    g: common_vendor.o((...args) => $options.goAddOutfit && $options.goAddOutfit(...args)),
-    h: $data.theme.secondaryColor
+    g: common_assets._imports_1$3
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-5d3d730d"]]);

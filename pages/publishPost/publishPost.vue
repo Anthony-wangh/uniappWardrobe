@@ -1,48 +1,70 @@
-// PublishPost.vue
+<!-- PublishPost.vue -->
 <template>
 	<view class="publish-container">
+		<!-- Header -->
 		<view class="header">
-			<text class="header-back" @click="goBack">返回</text>
+			<image class="back-btn" src="/static/back.png" @click="goBack">‹</image>
 			<text class="header-title">发布动态</text>
 			<text class="header-empty"></text>
 		</view>
-		<view class="publish-section">
-			<textarea v-model="newPost.content" placeholder="说点什么..." class="publish-input" />
+
+		<!-- Publish Form -->
+		<scroll-view class="publish-section" scroll-y>
+
+			<!-- 图片选择 -->
 			<view class="image-picker">
-				<image v-for="(img, idx) in newPost.images" :key="idx" :src="img" class="picked-image"
-					mode="aspectFill" />
+				<view v-for="(img, idx) in newPost.images" :key="idx" class="picked-image-wrapper">
+					<image :src="img" class="picked-image" mode="aspectFill" />
+					<text class="remove-btn" @click="removeImage(idx)">×</text>
+				</view>
 				<view v-if="newPost.images.length < 9" class="add-image-btn" @click="chooseImage">
 					+
 				</view>
 			</view>
-			<button class="publish-btn" @click="publishPost" :style="{ background: theme.primaryColor}">发布</button>
-		</view>
+
+
+			<!-- 标题输入 -->
+			<input v-model="newPost.title" placeholder="添加标题 (可选)" class="publish-title" maxlength="50" />
+
+			<!-- 内容输入 -->
+			<textarea v-model="newPost.content" placeholder="说点什么..." class="publish-input" autoHeight />
+
+			<!-- 发布按钮 -->
+			<button class="publish-btn" @click="publishPost" :style="{ background: theme.primaryColor }">
+				发布
+			</button>
+		</scroll-view>
 	</view>
 </template>
 
 <script>
 	import {
 		themes
-	} from '@/components/theme.js'
+	} from '@/components/theme.js';
 	export default {
 		data() {
 			return {
 				newPost: {
+					id: '',
 					user: '我',
+					avatar: '',
+					title: '',
 					content: '',
 					images: [],
 					likeCount: 0,
 					commentCount: 0,
 					liked: false,
-					favorited: false,					
+					favorited: false
 				},
 				theme: themes[0],
-				themes,
+				themes
 			};
 		},
 		onLoad() {
-			const saved = uni.getStorageSync('theme') || this.themes[0];
-			this.theme = saved;
+			this.theme = uni.getStorageSync('theme') || this.themes[0];
+			// 假设头像存储在用户信息中
+			const profile = uni.getStorageSync('userProfile') || {};
+			this.newPost.avatar = profile.avatar || '/static/tabBarIcons/personal.png';
 		},
 		methods: {
 			goBack() {
@@ -56,17 +78,34 @@
 					}
 				});
 			},
+			removeImage(index) {
+				this.newPost.images.splice(index, 1);
+			},
 			publishPost() {
-				if (!this.newPost.content && this.newPost.images.length === 0) {
+				if (!this.newPost.content.trim() && this.newPost.images.length === 0) {
 					uni.showToast({
 						title: '请输入内容或选择图片',
 						icon: 'none'
 					});
 					return;
 				}
+				// 生成唯一ID
+				this.newPost.id = Date.now().toString();
 				const posts = uni.getStorageSync('posts') || [];
-				posts.unshift(JSON.parse(JSON.stringify(this.newPost)));
+				// 预设 title 为 content 的前20字
+				if (!this.newPost.title) {
+					this.newPost.title = this.newPost.content
+						.trim()
+						.slice(0, 20);
+				}
+				posts.unshift({
+					...this.newPost
+				});
 				uni.setStorageSync('posts', posts);
+				uni.showToast({
+					title: '发布成功',
+					icon: 'success'
+				});
 				uni.navigateBack();
 			}
 		}
@@ -75,61 +114,99 @@
 
 <style scoped>
 	.publish-container {
-		display: flex;
-		flex-direction: column;
-		height: 100vh;
+		flex: 1;
 		background: #f5f5f5;
+		position: relative;
+		height: 100vh;
 	}
 
 	.header {
-		background-color: #ffffff;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-		padding-top: calc(var(--status-bar-height) + 30px);
+		padding-top: calc(var(--status-bar-height) + 40px);
 		padding-bottom: 10px;
+		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		position: relative;
-		height: 40px;
+		text-align: center;
+		background-color: #f5f5f5;
+	}
+	
+	.back-btn {
+		width: 20px;
+		height: 20px;
+		margin-left: 10px;
 	}
 
-	.header-back,
 	.header-empty {
-		color: #fff;
 		width: 50px;
-		text-align: center;
+		color: #fff;
 	}
 
 	.header-title {
 		font-size: 18px;
 		font-weight: bold;
-		text-align: center;
-		position: absolute;
-		left: 50%;
-		transform: translateX(-50%);
 	}
 
 	.publish-section {
+		padding: 10px 0;
 		background: #fff;
-		padding: 10px;
-		flex: 1;
+		height: calc(100vh - var(--status-bar-height) - 60px);
+		margin: 2px 0px;
+		position: relative;
+	}
+
+	.publish-title {
+		height: 36px;
+		border-radius: 4px;
+		padding: 0 8px;
+		margin-bottom: 8px;
+		font-size: 14px;
 	}
 
 	.publish-input {
-		width: 100%;
 		min-height: 80px;
-		border: 1px solid #ddd;
 		border-radius: 4px;
 		padding: 8px;
 		box-sizing: border-box;
+		font-size: 14px;
 	}
 
 	.image-picker {
 		display: flex;
 		flex-wrap: wrap;
-		margin-top: 8px;
+		margin: 8px;
 	}
 
-	.picked-image,
+	.picked-image-wrapper {
+		position: relative;
+		width: 60px;
+		height: 60px;
+		margin-right: 8px;
+		margin-bottom: 8px;
+		border-radius: 4px;
+		overflow: hidden;
+	}
+
+	.picked-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.remove-btn {
+		position: absolute;
+		top: 2px;
+		right: 2px;
+		background: rgba(0, 0, 0, 0.5);
+		color: #fff;
+		width: 16px;
+		height: 16px;
+		line-height: 16px;
+		text-align: center;
+		border-radius: 8px;
+		font-size: 12px;
+	}
+
 	.add-image-btn {
 		width: 60px;
 		height: 60px;
@@ -139,14 +216,21 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		font-size: 24px;
+		color: #999;
+		border-radius: 4px;
 	}
 
 	.publish-btn {
-		margin-top: 6px;
-		background: #4b5bb4;
+		width: 70%;
+		height: 40px;
+		border-radius: 15px;
 		color: #fff;
-		padding: 8px;
-		border-radius: 4px;
+		font-size: 16px;
 		text-align: center;
+		position: fixed;
+		bottom: 15px;
+		left: 15%;
+		
 	}
 </style>

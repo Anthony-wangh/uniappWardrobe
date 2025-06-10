@@ -1,0 +1,127 @@
+<template>
+	<view class="faq-container">
+		<!-- 顶部导航 -->
+		<view class="navbar">
+			<image class="back-icon" src="/static/back.png" @click="goBack" />
+			<text class="title">常见问题</text>
+		</view>
+
+		<!-- 问题列表 -->
+		<view class="faq-list">
+			<view
+				v-for="(item, index) in faqList"
+				:key="index"
+				class="faq-item"
+				@click="toggleItem(index)"
+			>
+				<view class="faq-question">
+					<text>{{ item.question }}</text>
+					<text class="arrow" :class="{ rotated: openIndex === index }">▶</text>
+				</view>
+				<view v-if="openIndex === index" class="faq-answer">
+					{{ item.answer }}
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+export default {
+	data() {
+		return {
+			openIndex: null,
+			faqList: [
+				{
+					question: '如何更换主题颜色？',
+					answer: '请前往“设置”页中的“主题选择”进行切换，切换后将自动保存。'
+				},
+				{
+					question: '如何联系客服？',
+					answer: '请在“我的”页面底部点击“联系客服”按钮，我们会在工作时间尽快回复。'
+				},
+				{
+					question: '使用数据会同步吗？',
+					answer: '是的，登录账户后，您的搭配和设置将自动同步至云端。'
+				}
+			]
+		};
+	},
+	methods: {
+		toggleItem(index) {
+			this.openIndex = this.openIndex === index ? null : index;
+		},
+		goBack() {
+			uni.navigateBack();
+		}
+	}
+};
+</script>
+
+<style scoped>
+.faq-container {
+	background-color: #f9f9f9;
+	min-height: 100vh;
+}
+
+/* 顶部栏 */
+.navbar {
+	display: flex;
+	align-items: center;
+	padding: 12px 20px;
+	background-color: #fff;
+	border-bottom: 1px solid #e5e5e5;
+	
+	padding-top: calc(var(--status-bar-height) + 40px);
+}
+
+.back-icon {
+	width: 24px;
+	height: 24px;
+	margin-right: 12px;
+}
+
+.title {
+	font-size: 18px;
+	font-weight: bold;
+	color: #333;
+}
+
+/* FAQ 列表 */
+.faq-list {
+	padding: 20px;
+}
+
+.faq-item {
+	background-color: #fff;
+	border-radius: 10px;
+	margin-bottom: 12px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+	padding: 14px 16px;
+	transition: all 0.3s ease;
+}
+
+.faq-question {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 16px;
+	color: #333;
+}
+
+.arrow {
+	transition: transform 0.3s ease;
+	color: #666;
+}
+
+.arrow.rotated {
+	transform: rotate(90deg);
+}
+
+.faq-answer {
+	margin-top: 10px;
+	font-size: 14px;
+	color: #666;
+	line-height: 1.6;
+}
+</style>

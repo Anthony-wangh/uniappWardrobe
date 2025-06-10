@@ -1,3 +1,4 @@
+<!-- CommentInputPopup.vue -->
 <template>
   <view v-if="visible" class="popup-overlay" @click.self="close">
     <view class="popup-container" @click.stop>

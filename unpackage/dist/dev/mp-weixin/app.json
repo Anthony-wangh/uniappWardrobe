@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/login/login",
     "pages/main/main",
     "pages/wardrobe/wardrobe",
     "pages/matching/matching",
@@ -7,13 +8,19 @@
     "pages/addMatching/addMatching",
     "pages/community/community",
     "pages/publishPost/publishPost",
-    "pages/settings/settings"
+    "pages/settings/settings",
+    "pages/community/PostDetail",
+    "pages/settings/themeSetting",
+    "pages/settings/faqSetting",
+    "pages/settings/privacyPolicy",
+    "pages/settings/categorySetting",
+    "pages/settings/messageList"
   ],
   "window": {
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTitleText": "我的衣橱",
-    "navigationBarBackgroundColor": "#ccd3ff",
-    "backgroundColor": "#ccd3ff",
+    "backgroundColor": "#ffffff",
     "navigationStyle": "custom"
   },
   "tabBar": {
@@ -37,12 +44,6 @@
         "selectedIconPath": "/static/tabBarIcons/matching-select.png"
       },
       {
-        "pagePath": "pages/community/community",
-        "text": "社区",
-        "iconPath": "/static/tabBarIcons/community.png",
-        "selectedIconPath": "/static/tabBarIcons/community-select.png"
-      },
-      {
         "pagePath": "pages/settings/settings",
         "text": "设置",
         "iconPath": "/static/tabBarIcons/setting.png",
@@ -50,7 +51,7 @@
       }
     ],
     "color": "#a9b7b7",
-    "selectedColor": "#8a8a8a",
+    "selectedColor": "#8A6FDF",
     "backgroundColor": "#ffffff",
     "borderStyle": "black"
   },

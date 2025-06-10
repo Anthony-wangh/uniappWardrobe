@@ -1,154 +1,231 @@
 <template>
-	<view class="container">
-		<!-- 顶部标题栏和一级类目 -->
-		<view class="header-container" :style="{ background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.secondaryColor})` }">
-			<text class="title-text" :style="{ color: theme.textColor }">我的衣橱</text>
-			<text class="edit-btn" @click="toggleEditMode" :style="{ color: theme.highlightTextColor }">{{ isEditMode ? '完成' : '选择'  }}</text>
-			<view class="category-level-1">
-				<view v-for="(category, index) in categories" :key="index" class="category-tab"
-					:class="{ active: currentMainCategoryIndex === index }" @click="selectMainCategory(index)" :style="getTabStyle(index)">
-					{{ category }}({{ getClothesForMain(category).length }})
+	<view class="container" @click="seasonDropdownVisible=false">
+		<!-- 顶部标题栏 -->
+		<view class="header-container">
+			<view class="header">
+				<text class="title-text" :style="{ color: theme.textColor }">我的衣橱</text>
+			</view>
+
+			<view class="search-filter-area">
+				<view class="search-container">
+					<view class="search-area">
+						<image class="search-btn" src="/static/search.png" mode="aspectFit"></image>
+						<input v-model="searchKeyword" class="search-input" placeholder="搜索衣物名称" />
+					</view>				
+					
+					<view :class="['edit-btn-inline', isEditMode ? 'finish' : 'edit']" @click="toggleEditMode">
+						<text
+							:class="['edit-btn-text',isEditMode ? 'finish' : 'edit']">{{ isEditMode ? '完成' : '管理' }}</text>
+						<image class="edit-btn-image" :src="isEditMode ? '/static/Fnish.png':'/static/Edit.png'"
+							mode="aspectFit"></image>
+					</view>					
+				</view>
+
+				<!-- 季节选择下拉 -->
+				<view class="search-options-container">
+					<view class="season-dropdown" >
+						<text class="edit-btn-text" @click.stop="toggleSeasonDropdown">季节</text>
+						<image src="/static/Filter.png" class="arrow-icon" mode="aspectFit" @click.stop="toggleSeasonDropdown"/>
+						<view v-if="selectSeasonText!==''" class="season-selection">
+							<text class="season-selection-text">{{selectSeasonText}}</text>
+							<text class="clear-select-season" @click="clearSelectSeason">×</text>
+						</view>
+					</view>
+					
+					<view class="fold-all" @click="clickFoldall">
+						<text class="edit-btn-text">{{ isExpand ? '全部收起' : '全部展开' }}</text>
+						<image :class="['arrow', isExpand ? '' : 'open']" src='/static/Expend.png' mode="aspectFit">
+						</image>
+					</view>			
+
+					<view class="dropdown-panel" v-if="seasonDropdownVisible">
+						<view class="dropdown-option" v-for="season in allSeasons" :key="season"
+							@click.stop="toggleSeason(season)">
+							<image
+								:src="selectedSeasons.includes(season) ? '/static/checked.png' : '/static/unChecked.png'"
+								class="checkbox-icon" />
+							<text>{{ season }}</text>
+						</view>
+					</view>
 				</view>
 			</view>
 		</view>
 
-		<!-- 主体区域 -->
-		<view class="main-content">
-			<scroll-view scroll-y class="list-area">
-				<view v-for="subCat in currentSubCategories" :key="subCat" class="subcategory-section">
-					<!-- 小节头 -->
-					<view class="subcategory-header" @click="toggleSubCollapse(subCat)">
-						<text class="subcategory-title">
-							{{ subCat }} ({{ getClothesForSub(subCat).length }})
-						</text>
-						<text class="toggle-btn" :style="{ color: theme.highlightTextColor }">
-							{{ isSubCollapsed[subCat] ? '展开' : '收起' }}
-						</text>
-					</view>
+		<!-- 主体区域：左侧类目+右侧内容 -->
+		<view class="main-body">
+			<!-- 左侧主类目 -->
+			<view class="main-category-vertical">
+				<view v-for="(category, index) in categories" :key="index" class="category-tab-vertical"
+					:class="{ active: currentMainCategoryIndex === index }" @click="selectMainCategory(index)">
+					{{ category.name }}({{ getClothesForMain(category.name).length }})
+				</view>
+			</view>
 
-					<view v-if="!isSubCollapsed[subCat]">
-						<!-- 空态：显示空状态＋添加按钮 -->
-						<view v-if="getClothesForSub(subCat).length === 0" class="empty-state-wrapper">
+			<!-- 主体内容 -->
+			<view class="main-content">
+				<scroll-view scroll-y class="list-area">
+					<view v-for="subCat in currentSubCategories" :key="subCat" class="subcategory-section">
+						<view class="subcategory-header" @click="toggleSubCollapse(subCat)">
+							<view class="subcategory-left">
+								<text class="subcategory-title">
+									{{ subCat }} ({{ getClothesForSub(subCat).length }})
+								</text>
+								<view class="add-btn" @click.stop="onAddItemClick(subCat)">
+									<text class="add-text">上传 +</text>
+									<!-- <image src="/static/add.png" mode="aspectFit" class="add-icon" /> -->
+								</view>
+
+							</view>
+							<text class="toggle-btn" :style="{ color: '#8A6FDF' }">
+								{{ isSubCollapsed[subCat] ? '收起' : '展开' }}
+							</text>
+						</view>
+
+						<view v-if="isSubCollapsed[subCat]">
 							<view class="clothes-section">
-								<view class="clothes-row">
-									<view class="clothes-item add-item"
-										@click="onAddItemClick({ primaryCategory: categories[currentMainCategoryIndex], secondaryCategory: subCat })">
-										<image src="/static/add.png" mode="aspectFit" class="add-icon" />
+								<view class="clothes-row" v-for="(row, rowIndex) in getRows(getAllItemsWithAdd(subCat))"
+									:key="rowIndex">
+									<view v-for="(item, itemIndex) in row" :key="itemIndex" class="clothes-item"
+										@click.stop="toggleSelectClothes(item)">
+										<template>
+											<view class="checkbox" v-if="isEditMode">
+												<image
+													:src="selectedClothes.includes(item) ? '/static/checked.png' : '/static/unChecked.png'"
+													class="clothes-checkbox-icon" mode="aspectFit" />
+											</view>
+											<image class="clothes-image" :src="item.image" mode="aspectFit" />
+											<text class="clothes-name">{{ item.name }}</text>
+										</template>
 									</view>
 								</view>
 							</view>
 						</view>
-
-						<!-- 正常态：数据＋添加按钮，统一分行 -->
-						<view v-else class="clothes-section">
-							<view class="clothes-row" v-for="(row, rowIndex) in getRows(getAllItemsWithAdd(subCat))"
-								:key="rowIndex">
-								<view v-for="(item, itemIndex) in row" :key="itemIndex" class="clothes-item"
-									:class="{ 'add-item': item.isAdd }"
-									@click="item.isAdd ? onAddItemClick(item) : null">
-									<template v-if="item.isAdd">
-										<image src="/static/add.png" mode="aspectFit" class="add-icon" />
-										<!-- <text class="clothes-name">添加</text> -->
-									</template>
-									<template v-else>
-										<view class="checkbox" v-if="isEditMode" @click.stop="toggleSelectClothes(item)">
-										  <image
-										    :src="selectedClothes.includes(item) ? '/static/checked.png' : '/static/unChecked.png'"
-										    class="checkbox-icon"
-										    mode="aspectFit"
-										  />
-										</view>
-
-										<image class="clothes-image" :src="item.image" mode="aspectFit" />
-										<text class="clothes-name">{{ item.name }}</text>
-									</template>
-								</view>
-							</view>
-						</view>
 					</view>
-				</view>
-			</scroll-view>
-			<!-- 编辑模式底部按钮 -->
-			<view class="bottom-action-bar" v-if="isEditMode">
-				<view class="action-btn" @click="deleteSelected">
-					<image class="action-icon" src="/static/shanchu.png" mode="aspectFit" />
-					<text class="action-text">删除</text>
-				</view>
-				<view class="action-btn" @click="matchSelected">
-					<image class="action-icon" src="/static/dapei.png" mode="aspectFit" />
-					<text class="action-text">搭配</text>
-				</view>
+				</scroll-view>
+
 			</view>
-
-
-			<!-- 右下角浮动按钮 -->
-			<!-- <view v-if="!this.isEditMode" class="floating-btn" @click="onFloatingButtonClick">
-				<image class="floating-btn-image" src="/static/plus-l.png" mode="aspectFit"></image>
-			</view> -->
 		</view>
+		<view class="bottom-action-bar" v-if="isEditMode">
+			<view class="action-btn" @click="deleteSelected">
+				<image class="action-icon" src="/static/shanchu.png" mode="aspectFit" />
+				<text class="action-text">删除</text>
+			</view>
+			<view class="action-btn" @click="matchSelected">
+				<image class="action-icon" src="/static/dapei.png" mode="aspectFit" />
+				<text class="action-text">搭配</text>
+			</view>
+		</view>
+
 	</view>
 </template>
 
 
 <script>
-	import {themes} from '@/components/theme.js'
+	import {
+		themes
+	} from '@/components/theme.js';
+
 	export default {
 		data() {
 			return {
 				currentMainCategoryIndex: 0,
-				categories: ["上衣", "裤子", "鞋", "配饰", "包"],
-				subCategories: {
-					上衣: ["T恤", "衬衫", "外套", "羽绒服"],
-					裤子: ["牛仔裤", "运动裤", "休闲裤", "裙子"],
-					鞋: ["运动鞋", "板鞋", "高跟鞋", "靴子"],
-					配饰: ["帽子", "眼镜", "丝巾"],
-					包: ["单肩包", "双肩包"]
-				},
+				categories: [{
+						name: "上衣",
+						subCategories: ["T恤", "衬衫", "外套", "羽绒服"]
+					},
+					{
+						name: "裤子",
+						subCategories: ["牛仔裤", "运动裤", "休闲裤", "裙子"]
+					},
+					{
+						name: "鞋",
+						subCategories: ["运动鞋", "板鞋", "高跟鞋", "靴子"]
+					},
+					{
+						name: "配饰",
+						subCategories: ["帽子", "眼镜", "丝巾"]
+					},
+					{
+						name: "包",
+						subCategories: ["单肩包", "双肩包"]
+					}
+				],
 				clothes: [],
 				isSubCollapsed: {},
 				isEditMode: false,
 				selectedClothes: [],
 				theme: themes[0],
-				themes
+				themes,
+				searchKeyword: '', //确定搜索关键词
+				selectedSeasons: [],
+				allSeasons: ['春', '夏', '秋', '冬'],
+				seasonDropdownVisible: false,
+				selectSeasonText: '',
+				isExpand: false
+
 			};
 		},
 		computed: {
 			currentSubCategories() {
-				const mainCat = this.categories[this.currentMainCategoryIndex];
-				return this.subCategories[mainCat] || [];
-			},
+				return this.categories[this.currentMainCategoryIndex].subCategories || [];
+			}
 		},
 		onShow() {
+			uni.setNavigationBarColor({
+				frontColor: '#000000',
+				backgroundColor: '#ffffff'
+			});
+
 			const saved = uni.getStorageSync('theme') || this.themes[0];
-			this.theme=saved;
-			
+			this.theme = saved;
+
 			this.clothes = uni.getStorageSync("clothes") || [];
-			this.currentSubCategories.forEach(sub => {
+			this.categories[this.currentMainCategoryIndex].subCategories.forEach(sub => {
 				this.$set(this.isSubCollapsed, sub, false);
 			});
 		},
-		watch: {
-			currentMainCategoryIndex() {
-				const subCats = this.currentSubCategories;
-				this.isSubCollapsed = {};
-				subCats.forEach(sub => {
-					this.$set(this.isSubCollapsed, sub, false);
+		methods: {
+
+			toggleSeasonDropdown() {
+				this.seasonDropdownVisible = !this.seasonDropdownVisible;
+			},
+
+			toggleSeason(season) {
+				const index = this.selectedSeasons.indexOf(season);
+				if (index === -1) {
+					this.selectedSeasons.push(season);
+				} else {
+					this.selectedSeasons.splice(index, 1);
+				}
+				this.selectSeasonText = this.selectedSeasons.join('，');
+			},
+			clearSelectSeason() {
+				this.selectedSeasons = [];
+				this.selectSeasonText = '';
+			},
+
+			clickFoldall() {
+				this.isExpand = !this.isExpand;
+				this.categories.forEach(main => {
+					main.subCategories.forEach(sub => {
+						this.$set(this.isSubCollapsed, sub, this.isExpand);
+					});
 				});
 			},
-		},
-		methods: {
+
+
 			getTabStyle(id) {
-			      const base = {
-			        padding: '10px',
-			        fontSize: '14px',
-			        color: this.theme.textColor,
-			      };
-			      if (id === this.currentMainCategoryIndex) {
-			        base.color = this.theme.highlightTextColor;
-			        base.fontWeight = 'bold';
-			      }
-			      return base;
-			    },
+				const base = {
+					padding: '5px',
+					fontSize: '16px',
+					color: '#1b1b1b',
+				};
+				if (id === this.currentMainCategoryIndex) {
+					base.color = '#8A6FDF';
+					base.fontWeight = 'bold';
+				}
+				return base;
+			},
 			selectMainCategory(index) {
 				this.currentMainCategoryIndex = index;
 			},
@@ -156,23 +233,29 @@
 				this.$set(this.isSubCollapsed, subCat, !this.isSubCollapsed[subCat]);
 			},
 			getClothesForSub(subCat) {
-				const main = this.categories[this.currentMainCategoryIndex];
-				return this.clothes.filter(item => item.primaryCategory === main && item.secondaryCategory === subCat);
+				const main = this.categories[this.currentMainCategoryIndex].name;
+				return this.clothes.filter(item =>
+					item.primaryCategory === main &&
+					item.secondaryCategory === subCat &&
+					(this.searchKeyword.trim() === '' || item.name.includes(this.searchKeyword.trim())) &&
+					(this.selectedSeasons.length === 0 || this.selectedSeasons.some(season => item.seasons?.includes(
+						season)))
+				);
 			},
-			getClothesForMain(mainCat){
-				return this.clothes.filter(item => item.primaryCategory === mainCat);
+			getClothesForMain(mainCat) {
+				return this.clothes.filter(item =>
+					item.primaryCategory === mainCat &&
+					(this.searchKeyword.trim() === '' || item.name.includes(this.searchKeyword.trim())) &&
+					(this.selectedSeasons.length === 0 || this.selectedSeasons.some(season => item.seasons?.includes(
+						season)))
+				);
 			},
 			getRows(clothesList) {
 				const rows = [];
-				for (let i = 0; i < clothesList.length; i += 3) {
-					rows.push(clothesList.slice(i, i + 3));
+				for (let i = 0; i < clothesList.length; i += 2) {
+					rows.push(clothesList.slice(i, i + 2));
 				}
 				return rows;
-			},
-			onFloatingButtonClick() {
-				uni.navigateTo({
-					url: "/pages/addClothes/addClothes"
-				});
 			},
 			toggleEditMode() {
 				this.isEditMode = !this.isEditMode;
@@ -185,6 +268,8 @@
 				}
 			},
 			toggleSelectClothes(item) {
+				if (!this.isEditMode)
+					return;
 				const index = this.selectedClothes.indexOf(item);
 				if (index > -1) {
 					this.selectedClothes.splice(index, 1);
@@ -208,8 +293,7 @@
 				}
 
 				const clothesParam = encodeURIComponent(JSON.stringify(this.selectedClothes));
-				if (this.isEditMode)
-					this.toggleEditMode();
+				if (this.isEditMode) this.toggleEditMode();
 
 				setTimeout(() => {
 					uni.navigateTo({
@@ -221,80 +305,75 @@
 				uni.setStorageSync("clothes", this.clothes);
 			},
 			getAllItemsWithAdd(subCat) {
-				const mainCat = this.categories[this.currentMainCategoryIndex];
+				const mainCat = this.categories[this.currentMainCategoryIndex].name;
 				const clothesList = this.clothes
-					.filter(item => item.primaryCategory === mainCat && item.secondaryCategory === subCat);
-				return [{
-					isAdd: true,
-					primaryCategory: mainCat,
-					secondaryCategory: subCat
-				}, ...clothesList];
+					.filter(item => item.primaryCategory === mainCat && item.secondaryCategory === subCat &&
+						(this.searchKeyword.trim() === '' || item.name.includes(this.searchKeyword.trim())) &&
+						(this.selectedSeasons.length === 0 || this.selectedSeasons.some(season => item.seasons?.includes(
+							season))));
+
+
+				return [...clothesList];
 			},
-			// 统一添加跳转
-			onAddItemClick(item) {
+			onAddItemClick(subCat) {
 				if (this.isEditMode)
 					this.toggleEditMode();
-				setTimeout(()=>{
+
+				const mainCat = this.categories[this.currentMainCategoryIndex].name;
+				setTimeout(() => {
 					uni.navigateTo({
-						url: `/pages/addClothes/addClothes?primaryCategory=${encodeURIComponent(item.primaryCategory)}&secondaryCategory=${encodeURIComponent(item.secondaryCategory)}`
+						url: `/pages/addClothes/addClothes?primaryCategory=${encodeURIComponent(mainCat)}&secondaryCategory=${encodeURIComponent(subCat)}`
 					});
-				},100);
-				
-			},
+				}, 100);
+			}
 		}
 	};
 </script>
 
 <style scoped>
 	.container {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		height: 100vh;
-		background-color: #f8f8f8;
+		background-color: #fff;
 	}
 
+	/* 顶部栏 */
 	.header-container {
-		background-color: #ffffff;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		width: 100%;
+		padding: 12px 0px;
 		padding-top: calc(var(--status-bar-height) + 30px);
-		padding-bottom: 10px;
+		box-shadow: 0px 4px 12rpx rgba(0, 0, 0, 0.05);
+		border-bottom: #ccc solid 1px;
+	}
+
+	.header {
+		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		position: relative;
+		padding-bottom: 15px;
+	}
+
+	.edit-btn {
+		font-size: 16px;
+		margin-right: 15px;
+		min-width: 40px;
 	}
 
 	.title-text {
-		position: absolute;
-		  left: 50%;
-		  transform: translateX(-50%);
 		font-size: 18px;
 		font-weight: bold;
-		text-align: center;		
+		color: #333;
+		margin-left: 20px;
 	}
 
-	.category-level-1 {
-		display: flex;
-		justify-content: space-around;
-		margin-top: 50px;
-		/* border-bottom: 0.5px solid #939393; */
-	}
-
-	.category-tab {
-		padding: 10px;
-		font-size: 14px;
-		color: #666;
-	}
-
-	.category-tab.active {
-		color: #4b5bb4;
-		font-weight: bold;
-	}
 
 	.main-content {
-		margin-top: 5px;
-		height: calc(100vh - 160px);
 		flex: 1;
-		position: relative;
+		height: calc(100vh - 210px);
+		width: calc(100% - 20px);
+		margin: 5px 10px 0 10px;
+		/* background-color: #f8f8f8; */
 	}
 
 	.list-area {
@@ -304,192 +383,381 @@
 
 	.subcategory-section {
 		background: #fcfcfc;
-		margin-bottom: 10px;
-		padding: 10px;
+		margin-bottom: 5px;
+		padding: 5px 0;
 	}
 
 	.subcategory-header {
 		display: flex;
 		justify-content: space-between;
-		font-size: 16px;
-		margin-bottom: 8px;
+		align-items: center;
+		margin: 5px 0;
+	}
+
+	.subcategory-left {
+		display: flex;
+		align-items: center;
 	}
 
 	.subcategory-title {
 		margin-left: 15px;
-		color: #666;
+		font-size: 14px;
+		color: #1b1b1b;
 	}
 
 	.toggle-btn {
-		color: #4b5bb4;
 		font-size: 14px;
 		margin-right: 10px;
 	}
 
-
 	.clothes-section {
 		display: flex;
 		flex-direction: column;
+		width: 100%;
 	}
 
 	.clothes-row {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: flex-start;
+		justify-content: space-between;
 		width: 100%;
 		gap: 2%;
-		padding: 5px 10px;
+		padding: 5px 0px;
+
 	}
-
-
-
 
 	.clothes-item {
 		position: relative;
-		width: 30%;
-		padding: 10px;
-		box-sizing: border-box;
-		background: #fff;
-		border-radius: 5px;
-		border: 1px solid #dddddd;
-		text-align: center;
+		width: 46%;
+		height: 180px;
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-	}
-
-
-	/* 每行第3个不要 margin-right */
-	.clothes-row .clothes-item:nth-child(3n) {
-		margin-right: 0;
+		justify-content: space-between;
+		box-shadow: 2px 4px 12rpx rgba(0, 0, 0, 0.05);
+		/* border: #999 solid 1px; */
+		border-radius: 10px;
+		overflow: hidden;
 	}
 
 	.clothes-image {
 		width: 100%;
-		height: 100px;
-		object-fit: cover;
-		border-radius: 6px;
+		height: 160px;
+
+		object-fit: contain;
 	}
 
 	.clothes-name {
-		margin-top: 5px;
+		margin-left: 5px;
+		margin-bottom: 5px;
 		font-size: 14px;
-		color: #333;
+		color: #1d1d1d;
 	}
-	.empty-state {
-		display: flex;
-		flex-direction: column;
+
+
+	.add-btn {
+		margin-left: 20px;
+		background: #8A6FDF;
+		border-radius: 15px;
+		justify-content: space-around;
 		align-items: center;
-		padding: 30px 0;
-	}
-
-	.emptyIcon {
-		width: 120px;
-		height: 120px;
-		margin-bottom: 10px;
-	}
-
-	.empty-state-text {
-		color: #bbb;
-		font-size: 14px;
-	}
-
-	.floating-btn {
-		position: fixed;
-		right: 20px;
-		bottom: 40px;
-		width: 50px;
-		height: 50px;
-		background-color: #ccd3ff;
-		border-radius: 25px;
+		justify-items: center;
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		padding: 3px 8px;
 	}
 
-	.floating-btn-image {
-		width: 30px;
-		height: 30px;
+	.add-text {
+		color: #f9f9f9;
+		font-size: 12px;
 	}
 
-	.edit-btn {
-		position: absolute;
-		left: 20px;
-		/* top: calc(var(--status-bar-height) + 40px); */
-		font-size: 14px;
-		color: #4b5bb4;
+	.add-icon {
+		width: 20px;
+		height: 20px;
+		/* object-fit: contain; */
+		margin-left: 10px;
 	}
 
 	.checkbox {
-	  position: absolute;
-	  top: 2px;
-	  right: 2px;
-	  z-index: 10;
-	  width: 24px;
-	  height: 24px;
+		position: absolute;
+		top: 2px;
+		right: 2px;
+		z-index: 10;
+		width: 24px;
+		height: 24px;
 	}
-	
+
 	.checkbox-icon {
-	  width: 100%;
-	  height: 100%;
+		width: 100%;
+		height: 100%;
 	}
 
-
+	.clothes-checkbox-icon {
+		width: 25px;
+		height: 25px;
+	}
 
 	.bottom-action-bar {
 		position: fixed;
-		bottom: 0;
-		left: 0;
-		width: 100%;
+		bottom: 20px;
+		width: calc(100% - 40px);
+		height: 100rpx;
+		margin: 0 20px;
+		border-radius: 10px;
+		background-color: #fff;
 		display: flex;
 		justify-content: space-around;
-		padding: 8px 0;
-		background-color: #ffffff;
-		box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
-		z-index: 99;
+		align-items: center;
+		box-shadow: 4px 4px 12rpx rgba(0, 0, 0, 0.05);
 	}
 
 	.action-btn {
-		width: 50%;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		color: #999;
+		font-size: 24rpx;
 	}
 
 	.action-icon {
-		width: 28px;
-		height: 28px;
+		width: 16px;
+		height: 16px;
 		margin-bottom: 4px;
 	}
 
 	.action-text {
-		font-size: 14px;
+		font-size: 10px;
 		color: #707070;
 	}
 
 
-	.clothes-item.add-item {
-		background: #fff;
-		border: 1px dashed #ccc;
+
+	.search-container {
+		width: 100%;		
+		align-items: center;
+		display: flex;
+		flex-direction: row;		
+		margin: 5px 10px;
+	}
+	
+	.search-area{
+		width: calc(100% - 70px);
+		display: flex;
+		flex-direction: row;
+		border-radius: 8px;
+		border: 1px solid #e3e3e3;
+		box-shadow: 4px 4px 12rpx rgba(0, 0, 0, 0.05);
+		background-color: #f8f8f8;
+		margin-right: 20px;
+		align-items: center;
+	}
+
+
+
+	.search-input {
+		width: 100%;
+		margin-left: 10px;
+		padding: 8px 0;
+		font-size: 14px;
+	}
+
+	.search-btn {
+		width: 20px;
+		height: 20px;
+		margin-left: 10px;
+		/* flex-wrap: wrap; */
+	}
+
+	/* 新增：主区域左右布局 */
+	.main-body {
+		display: flex;
+		flex: 1;
+		height: calc(100vh - 290px);
+	}
+
+	/* 左侧类目栏 */
+	.main-category-vertical {
+		width: 80px;
+		background-color: #f8f8f8;
+		border-right: 1px solid #ddd;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		padding-top: 10px;
 	}
 
-	.add-icon {
-		width: 40px !important;
-		height: 40px !important;
-		object-fit: contain;
-		padding: 30px 0;
+	.category-tab-vertical {
+		padding: 10px 5px;
+		font-size: 14px;
+		color: #333;
+		text-align: center;
+	}
+
+	.category-tab-vertical.active {
+		color: #8A6FDF;
+		font-weight: bold;
+	}
+
+	/* 搜索+下拉+按钮区域 */
+	.search-filter-area {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin: 0 20px;
+		gap: 10px;
+		position: relative;
+	}
+
+	.search-options-container {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		position: relative;
+		justify-content: space-between;
+	}
+	
+	.edit-option{
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		justify-items: center;
+		width: 100%;
+		margin: 5px 10px;
+	}
+
+	.season-selection {
+		margin-left: 10px;
+		text-align: center;
+		align-items: center;
+	}
+
+	.season-selection-text {
+		font-size: 12px;
+		color: #8A6FDF;
+	}
+
+	.clear-select-season {
+		font-size: 16px;
+		font-weight: bold;
+		color: #6f5bdc;
+		margin-left: 5px;
+	}
+
+	.season-dropdown {
+		height: 20px;
+		display: flex;
+		align-items: center;
+		font-size: 14px;
+		color: #333;
+		background-color: #f8f8f8;
+		padding: 6px 12px;
+		border-radius: 8px;
+		border: 1px solid #f1f1f1;
+		justify-content: space-around;
+	}
+
+	.arrow-icon {
+		width: 16px;
+		height: 16px;
+		margin-left: 5px;
+	}
+
+	.fold-all {		
+		height: 20px;
+		display: flex;
+		align-items: center;
+		font-size: 14px;
+		color: #333;
+		background-color: #f8f8f8;
+		padding: 6px 8px;
+		border-radius: 8px;
+		border: 1px solid #f1f1f1;
+		justify-content: space-around;
+	}
+
+	.edit-btn-inline {
+		width: 70px;
+		height: 25px;
+		display: flex;
+		align-items: center;
+		font-size: 14px;
+		color: #333;
+		/* background-color: #f8f8f8; */
+		padding: 6px;
+		border-radius: 8px;
+		justify-content: space-around;
+	}
+
+	.edit-btn-inline.finish {
+		border: 1px solid #8A6FDF;
+		background-color: #fff;
+	}
+
+	.edit-btn-inline.edit {
+		border: 1px solid #f1f1f1;
+		background-color: #f8f8f8;
+	}
+	
+	.edit-btn-text{
+		font-size: 14px;
+		padding: 0 3px;
 	}
 
 
-	/* 你可以额外给空态的 wrapper 加点距离 */
-	.empty-state-wrapper {
-		padding-bottom: 10px;
+	.edit-btn-text.finish {
+		
+		color: #8A6FDF;
+	}
+
+	.edit-btn-text.edit {
+		color: #707070;
+	}
+
+
+	.edit-btn-image {
+		width: 18px;
+		height: 18px;
+		margin-left: 5px;
+	}
+
+	.arrow {
+		width: 14px;
+		height: 14px;
+		margin-left: 5px;
+		transition: transform 0.2s ease;
+		transform: rotate(180deg);
+	}
+
+	.arrow.open {
+		transform: rotate(0deg);
+	}
+
+	.dropdown-panel {
+		position: absolute;
+		top: 35px;
+		left: -10px;
+		margin: 0 15px;
+		padding: 10px;
+		border: 1px solid #ccc;
+		background-color: #fff;
+		border-radius: 8px;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		z-index: 100;
+	}
+
+	.dropdown-option {
+		display: flex;
+		align-items: center;
+		font-size: 14px;
+		padding: 4px 8px;
+		border-radius: 6px;
+		background-color: #f0f0f0;
+	}
+
+	.checkbox-icon {
+		width: 16px;
+		height: 16px;
+		margin-right: 6px;
 	}
 </style>

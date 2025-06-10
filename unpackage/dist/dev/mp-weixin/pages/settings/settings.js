@@ -10,72 +10,53 @@ const _sfc_main = {
   data() {
     return {
       user: {
-        avatar: "/static/tabBarIcons/personal.png",
+        avatar: "/static/tabBarIcons/setting.png",
         nickname: "小明"
       },
       usageTime: 22,
-      currentTheme: "theme-pure",
-      collapsed: true,
       theme: components_theme.themes[0],
       themes: components_theme.themes,
-      //天气信息
-      weatherInfo: {},
-      clothingAdvice: {},
-      weatherDetail: "",
-      weatherTips: ""
+      messages: ["qweqwe", "fffff"],
+      pushCount: 10
     };
   },
   onShow() {
+    common_vendor.index.setNavigationBarColor({
+      frontColor: "#000000",
+      backgroundColor: "#ffffff"
+    });
     const saved = common_vendor.index.getStorageSync("theme") || this.themes[0];
-    this.currentTheme = saved.id;
     this.theme = saved;
   },
   methods: {
-    toggleList() {
-      this.collapsed = !this.collapsed;
-    },
-    selectTheme(item) {
-      this.currentTheme = item.id;
-      this.theme = item;
-      common_vendor.index.setStorageSync("theme", item);
-      common_vendor.index.showToast({
-        title: `已切换到 ${item.name}`,
-        icon: "none"
+    openMessage() {
+      common_vendor.index.navigateTo({
+        url: "/pages/settings/messageList"
       });
+    },
+    userNameInput(e) {
+      common_vendor.index.__f__("log", "at pages/settings/settings.vue:111", "修改昵称：" + e.detail.value);
+      this.user.nickname = e.detail.value;
+    },
+    onChooseAvatar(e) {
+      this.user.avatar = e.detail.avatarUrl;
     }
   }
 };
-if (!Array) {
-  const _component_transition = common_vendor.resolveComponent("transition");
-  const _component_PrivacyCheck = common_vendor.resolveComponent("PrivacyCheck");
-  (_component_transition + _component_PrivacyCheck)();
-}
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: $data.user.avatar,
-    b: common_vendor.t($data.user.nickname),
-    c: $data.theme.textColor,
-    d: common_vendor.t($data.usageTime),
-    e: $data.theme.textColor,
-    f: `linear-gradient(100deg, ${$data.theme.primaryColor}, ${$data.theme.secondaryColor})`,
-    g: !$data.collapsed ? 1 : "",
-    h: common_vendor.o((...args) => $options.toggleList && $options.toggleList(...args)),
-    i: !$data.collapsed
-  }, !$data.collapsed ? {
-    j: common_vendor.f($data.themes, (item, k0, i0) => {
-      return {
-        a: `linear-gradient(135deg, ${item.primaryColor}, ${item.secondaryColor})`,
-        b: common_vendor.t(item.name),
-        c: item.id,
-        d: $data.currentTheme === item.id ? 1 : "",
-        e: common_vendor.o(($event) => $options.selectTheme(item), item.id)
-      };
-    }),
-    k: common_assets._imports_0$4
+    a: $data.user.avatar
+  }, $data.user.avatar ? {
+    b: $data.user.avatar
   } : {}, {
-    l: common_vendor.p({
-      name: "collapse"
-    })
+    c: common_vendor.o((...args) => $options.onChooseAvatar && $options.onChooseAvatar(...args)),
+    d: $data.user.nickname,
+    e: common_vendor.o((...args) => $options.userNameInput && $options.userNameInput(...args)),
+    f: common_assets._imports_0$4,
+    g: common_assets._imports_1$5,
+    h: common_assets._imports_2$2,
+    i: common_assets._imports_3$1,
+    j: common_assets._imports_4$2
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-7fad0a1c"]]);

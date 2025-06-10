@@ -32,16 +32,24 @@
   width: 100%;
   background-color: #ffffff;
 }
-.header.data-v-f0dbcc2f {
+
+/* 顶部栏 */
+.navbar.data-v-f0dbcc2f {
   width: 100%;
-  height: 44px;
-  background-color: #ffffff;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid #eee;
+  padding: 12px 0px;
+  background-color: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  padding-top: calc(var(--status-bar-height));
 }
-.header-title.data-v-f0dbcc2f {
+.back-icon.data-v-f0dbcc2f {
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  margin-left: 20px;
+}
+.title-text.data-v-f0dbcc2f {
   font-size: 18px;
   font-weight: bold;
   color: #333;
@@ -51,6 +59,8 @@
   padding: 20px 30px;
   box-sizing: border-box;
   background-color: #f5f5f5;
+  overflow-y: auto;
+  height: calc(100vh - 120px);
 }
 .image-picker.data-v-f0dbcc2f {
   width: calc(100vw - 60px);
@@ -94,7 +104,7 @@
   object-fit: cover;
 }
 .upload-text.data-v-f0dbcc2f {
-  color: #6668ff;
+  color: #8A6FDF;
   font-size: 16px;
 }
 .form-group.data-v-f0dbcc2f {
@@ -137,7 +147,7 @@
   color: #747474;
 }
 .category-picker-text.data-v-f0dbcc2f {
-  color: #6668ff;
+  color: #8A6FDF;
   font-weight: bold;
 }
 .textarea-field.data-v-f0dbcc2f {
@@ -161,8 +171,8 @@
   padding-bottom: 30px;
 }
 .submit-btn.data-v-f0dbcc2f {
-  width: 50%;
-  background-color: #1a1a1a;
+  width: 80%;
+  background-color: #8A6FDF;
   color: #ffffff;
   font-size: 16px;
   text-align: center;
@@ -175,4 +185,29 @@
   font-size: 14px;
   text-align: center;
   margin-top: 10px;
+}
+.season-selector.data-v-f0dbcc2f {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.season-card.data-v-f0dbcc2f {
+  width: 60px;
+  height: 35px;
+  line-height: 35px;
+  text-align: center;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  border: 1px solid #414141;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.season-card.selected.data-v-f0dbcc2f {
+  background-color: #8A6FDF;
+  color: #fff;
+  border-color: #8A6FDF;
 }

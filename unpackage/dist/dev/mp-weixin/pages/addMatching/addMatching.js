@@ -27,7 +27,7 @@ const _sfc_main = {
     if (options.clothes) {
       let selectItems = JSON.parse(decodeURIComponent(options.clothes));
       if (selectItems.length === 0) {
-        common_vendor.index.__f__("log", "at pages/addMatching/addMatching.vue:99", "未选中任何衣物！！");
+        common_vendor.index.__f__("log", "at pages/addMatching/addMatching.vue:79", "未选中任何衣物！！");
         return;
       }
       const {
@@ -77,7 +77,7 @@ const _sfc_main = {
         this.selectedClothes[this.activeIndex].y = y;
       }
     },
-    startRotate(event) {
+    startTransform(event) {
       if (this.activeIndex === null)
         return;
       const item = this.selectedClothes[this.activeIndex];
@@ -91,35 +91,23 @@ const _sfc_main = {
         const touchY = event.touches[0].clientY;
         this.startAngle = Math.atan2(touchY - this.centerY, touchX - this.centerX) * (180 / Math.PI);
         this.startRotation = item.rotation;
+        this.startDistance = Math.hypot(touchX - this.centerX, touchY - this.centerY);
+        this.startScale = item.scale;
       }).exec();
     },
-    rotateDrag(event) {
+    handleTransform(event) {
       if (this.activeIndex === null)
         return;
+      const item = this.selectedClothes[this.activeIndex];
       const touchX = event.touches[0].clientX;
       const touchY = event.touches[0].clientY;
       const currentAngle = Math.atan2(touchY - this.centerY, touchX - this.centerX) * (180 / Math.PI);
       const angleDelta = currentAngle - this.startAngle;
-      this.selectedClothes[this.activeIndex].rotation = this.startRotation + angleDelta;
-    },
-    startResize(event) {
-      if (this.activeIndex === null)
-        return;
-      this.startDistance = Math.hypot(
-        event.touches[0].clientX - this.selectedClothes[this.activeIndex].x,
-        event.touches[0].clientY - this.selectedClothes[this.activeIndex].y
-      );
-    },
-    resizeDrag(event) {
-      if (this.activeIndex === null)
-        return;
-      const newDistance = Math.hypot(
-        event.touches[0].clientX - this.selectedClothes[this.activeIndex].x,
-        event.touches[0].clientY - this.selectedClothes[this.activeIndex].y
-      );
-      let scale = newDistance / this.startDistance;
-      scale = Math.max(0.5, Math.min(scale, 2));
-      this.selectedClothes[this.activeIndex].scale = scale;
+      item.rotation = this.startRotation + angleDelta;
+      const currentDistance = Math.hypot(touchX - this.centerX, touchY - this.centerY);
+      let scaleRatio = currentDistance / this.startDistance;
+      scaleRatio = Math.max(0.5, Math.min(scaleRatio, 2));
+      item.scale = this.startScale * scaleRatio;
     },
     removeClothes(index) {
       common_vendor.index.showModal({
@@ -142,8 +130,6 @@ const _sfc_main = {
         }
       });
     },
-    navigateToSelectClothes() {
-    },
     generateUniqueId() {
       return "id_" + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     },
@@ -153,7 +139,6 @@ const _sfc_main = {
         ctx.setFillStyle("#ffffff");
         ctx.fillRect(0, 0, 300, 300);
         this.selectedClothes.forEach((item) => {
-          common_vendor.index.__f__("log", "at pages/addMatching/addMatching.vue:261", "********" + item.rotation);
           ctx.save();
           ctx.translate(150 + item.x, 150 + item.y);
           ctx.rotate(item.rotation * Math.PI / 180);
@@ -179,8 +164,8 @@ const _sfc_main = {
         return;
       }
       try {
-        const thumbnail = await this.generateThumbnail();
-        this.saveToStorage(thumbnail);
+        const path = await this.generateThumbnail();
+        this.saveToStorage(path);
       } catch (err) {
         common_vendor.index.showToast({
           title: "缩略图生成失败",
@@ -188,12 +173,20 @@ const _sfc_main = {
         });
       }
     },
+    goBack() {
+      common_vendor.index.navigateBack();
+    },
+    getTime() {
+      const date = /* @__PURE__ */ new Date();
+      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    },
     saveToStorage(imagePath) {
       const outfit = {
         id: this.generateUniqueId(),
         name: this.outfitName,
         note: this.note,
-        thumbnail: imagePath
+        thumbnail: imagePath,
+        time: this.getTime()
       };
       let outfits = common_vendor.index.getStorageSync("outfits") || [];
       outfits.push(outfit);
@@ -211,39 +204,34 @@ const _sfc_main = {
   }
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return common_vendor.e({
-    a: common_vendor.f($data.selectedClothes, (item, index, i0) => {
+  return {
+    a: common_assets._imports_0$3,
+    b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
+    c: common_vendor.f($data.selectedClothes, (item, index, i0) => {
       return common_vendor.e({
         a: item.image,
         b: common_vendor.o(($event) => $options.startDrag(index, $event), index),
         c: common_vendor.o(($event) => $options.handleMove($event), index),
         d: $data.activeIndex === index
       }, $data.activeIndex === index ? {
-        e: common_assets._imports_0$2,
-        f: common_vendor.o(($event) => $options.startRotate($event), index),
-        g: common_vendor.o(($event) => $options.rotateDrag($event), index),
-        h: common_assets._imports_1$2,
-        i: common_vendor.o(($event) => $options.startResize($event), index),
-        j: common_vendor.o(($event) => $options.resizeDrag($event), index),
-        k: common_vendor.o(($event) => $options.removeClothes(index), index)
+        e: common_assets._imports_1$4,
+        f: common_vendor.o(($event) => $options.startTransform($event), index),
+        g: common_vendor.o(($event) => $options.handleTransform($event), index),
+        h: common_vendor.o(($event) => $options.removeClothes(index), index)
       } : {}, {
-        l: index,
-        m: "clothesItem" + index,
-        n: "clothesItem" + index,
-        o: common_vendor.s($options.getStyle(item))
+        i: index,
+        j: "clothesItem" + index,
+        k: "clothesItem" + index,
+        l: common_vendor.s($options.getStyle(item))
       });
     }),
-    b: $data.selectedClothes.length === 0
-  }, $data.selectedClothes.length === 0 ? {} : {}, {
-    c: common_assets._imports_1$1,
-    d: common_vendor.o((...args) => $options.navigateToSelectClothes && $options.navigateToSelectClothes(...args)),
-    e: common_vendor.o((...args) => $options.clearSelection && $options.clearSelection(...args)),
-    f: $data.outfitName,
-    g: common_vendor.o(($event) => $data.outfitName = $event.detail.value),
-    h: $data.note,
-    i: common_vendor.o(($event) => $data.note = $event.detail.value),
-    j: common_vendor.o((...args) => $options.saveOutfit && $options.saveOutfit(...args))
-  });
+    d: common_vendor.o((...args) => $options.clearSelection && $options.clearSelection(...args)),
+    e: $data.outfitName,
+    f: common_vendor.o(($event) => $data.outfitName = $event.detail.value),
+    g: $data.note,
+    h: common_vendor.o(($event) => $data.note = $event.detail.value),
+    i: common_vendor.o((...args) => $options.saveOutfit && $options.saveOutfit(...args))
+  };
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-cfe86fb7"]]);
 wx.createPage(MiniProgramPage);

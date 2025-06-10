@@ -1,38 +1,74 @@
 <template>
-	<view class="container" >
+	<view class="container">
 		<!-- 用户信息 -->
-		<view class="user-info" :style="{ background: `linear-gradient(100deg, ${theme.primaryColor}, ${theme.secondaryColor})` }"
-			>
-			<image class="avatar" :src="user.avatar" mode="aspectFill" />
-			<view class="user-details">
-				<text class="nickname" :style="{ color: theme.textColor }">{{ user.nickname }}</text>
-				<text class="usage-time" :style="{ color: theme.textColor }">已陪伴：{{ usageTime }} 天</text>
-			</view>
+		<view class="user-profile">
+		  <view class="user-info">
+		    <button open-type="chooseAvatar" class="avatar-btn" @chooseavatar="onChooseAvatar">
+		      <image v-if="user.avatar" :src="user.avatar" class="avatar"></image>
+		    </button>
+		    <view class="user-meta">
+		      <input type="nickname" class="nickname-input" :value="user.nickname" @blur="userNameInput"
+		        placeholder="请输入昵称" />
+		      <text class="user-desc">时尚搭配达人</text>
+		    </view>
+		  </view>
+		
+		  <view class="quota-section">
+		    <view class="quota-box">
+		      <text class="quota-title">衣橱额度</text>
+		      <text class="quota-count pink">10/50</text>
+		      <view class="quota-bar">
+		        <view class="quota-bar-fill pink-bar" :style="{ width: '20%' }"></view>
+		      </view>
+		      <text class="expand-text">+扩容</text>
+		    </view>
+		    <view class="quota-box">
+		      <text class="quota-title">搭配额度</text>
+		      <text class="quota-count blue">25/100</text>
+		      <view class="quota-bar">
+		        <view class="quota-bar-fill blue-bar" :style="{ width: '25%' }"></view>
+		      </view>
+		      <text class="expand-text">+扩容</text>
+		    </view>
+		  </view>
 		</view>
-		<view class="settings-container">		
-			<!-- 主题列表 -->
-			<view class="theme-group">
-				<view class="theme-header" @click="toggleList">
-					<text class="group-title" >主题选择</text>
-					<view class="toggle-icon" :class="{ rotated: !collapsed }">▶
-					</view>
-				</view>
-				<transition name="collapse">
-					<view class="theme-list" v-if="!collapsed">
-						<view v-for="item in themes" :key="item.id" class="theme-item"
-							:class="{ active: currentTheme === item.id }" @click="selectTheme(item)">
-							<view class="theme-icon"
-								:style="{ background: `linear-gradient(135deg, ${item.primaryColor}, ${item.secondaryColor})` }">
-								<image class="icon-text" src='/static/theme.png'></image>
-							</view>
-							<text class="theme-name">{{ item.name }}</text>
-						</view>
-					</view>
-				</transition>
-			</view>
+
+		<!-- 设置项 -->
+		<view class="settings-list">
+			<navigator url="/pages/settings/messageList" class="setting-item">
+				<image src="/static/settingIcons/message.png" class="icon" />
+				<text class="label">消息</text>
+				<text class="arrow">›</text>
+			</navigator>
+
+			<navigator url="/pages/settings/categorySetting" class="setting-item">
+				<image src="/static/settingIcons/category.png" class="icon" />
+				<text class="label">类目设置</text>
+				<text class="arrow">›</text>
+			</navigator>
+
+			<navigator url="/pages/settings/themeSetting" class="setting-item">
+				<image src="/static/settingIcons/theme.png" class="icon" />
+				<text class="label">主题设置</text>
+				<text class="arrow">›</text>
+			</navigator>
+
+			<navigator url="/pages/settings/faqSetting" class="setting-item">
+				<image src="/static/settingIcons/faq.png" class="icon" />
+				<text class="label">常见问题</text>
+				<text class="arrow">›</text>
+			</navigator>
+
+			<navigator url="/pages/settings/privacyPolicy" class="setting-item">
+				<image src="/static/settingIcons/privacy.png" class="icon" />
+				<text class="label">用户隐私协议</text>
+				<text class="arrow">›</text>
+			</navigator>
 		</view>
+
+		<!-- 版本信息 -->
+		<view class="version-text">版本 1.0.0</view>
 	</view>
-	<PrivacyCheck />
 </template>
 
 <script>
@@ -47,40 +83,37 @@
 		data() {
 			return {
 				user: {
-					avatar: '/static/tabBarIcons/personal.png',
+					avatar: '/static/tabBarIcons/setting.png',
 					nickname: '小明'
 				},
 				usageTime: 22,
-				currentTheme: 'theme-pure',
-				collapsed: true,
 				theme: themes[0],
 				themes,
-				//天气信息
-				weatherInfo: {},
-				clothingAdvice: {},
-				weatherDetail: '',
-				weatherTips: '',
+				messages: ["qweqwe", "fffff"],
+				pushCount: 10
 			};
 		},
 		onShow() {
+			uni.setNavigationBarColor({
+			  frontColor:  '#000000',
+			  backgroundColor: '#ffffff' 
+			});
 			const saved = uni.getStorageSync('theme') || this.themes[0];
-			this.currentTheme = saved.id;
 			this.theme = saved;
 		},
 		methods: {
-			toggleList() {
-				this.collapsed = !this.collapsed;
-			},
-			selectTheme(item) {
-				this.currentTheme = item.id;
-				this.theme = item;
-				uni.setStorageSync('theme', item);
-
-				uni.showToast({
-					title: `已切换到 ${item.name}`,
-					icon: 'none'
+			openMessage() {
+				uni.navigateTo({
+					url: "/pages/settings/messageList"
 				});
-			}
+			},
+			userNameInput(e){
+				console.log("修改昵称："+e.detail.value)
+				this.user.nickname = e.detail.value;
+			},
+			onChooseAvatar(e) {
+				this.user.avatar = e.detail.avatarUrl;
+			},
 		}
 
 	};
@@ -88,145 +121,175 @@
 
 <style scoped>
 	.container {
-		flex: 1;
-		background-color: #eee;
-		min-height:  100vh;
+		background-color: #fcfcfc;
+		min-height: 100vh;
 	}
 
-	.settings-container {
-		min-height: calc(100vh -100px);
-		flex: 1;
-		margin-top: 10px;
-		/* background: #f4f4f4; */
-		/* border-top-left-radius: 24px;
-		border-top-right-radius: 24px; */
-		padding: 10px 0 40px 0;
-		/* box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); */
+	.user-profile {	
+		display: flex;
+		flex-direction: column;
+		padding: 10px 0 15px 0;
+		padding-top: calc(var(--status-bar-height) + 40px);
 	}
 
 	.user-info {
-		display: flex;
-		align-items: center;
-		padding-top: calc(var(--status-bar-height) + 30px);
-		border-bottom-left-radius: 24px;
-		border-bottom-right-radius: 24px;
-		padding-bottom: 20px;
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+	  display: flex;
+	  align-items: center;
+	  padding: 20px 16px 10px 16px;
+	  position: relative;
 	}
-
+	
+	.avatar-btn {
+	  width: 60px;
+	  height: 60px;
+	  border-radius: 50%;
+	  overflow: hidden;
+	  margin-right: 12px;
+	}
+	
 	.avatar {
-		width: 60px;
-		height: 60px;
-		border-radius: 50%;
-		margin-right: 16px;
-		margin-left: 12px;
+		position: absolute;
+		left: 0;
+		top: 0;
+	  width: 60px;
+	  height: 60px;
+	  border-radius: 50%;
+	}
+	
+	.user-meta {
+	  flex: 1;
+	  display: flex;
+	  flex-direction: column;
+	  justify-content: center;
+	}
+	
+	.nickname-input {
+	  font-size: 16px;
+	  font-weight: bold;
+	  color: #111;
+	}
+	
+	.user-desc {
+	  font-size: 13px;
+	  color: #888;
+	  margin-top: 2px;
+	}
+	
+	.edit-btn {
+	  font-size: 14px;
+	  color: #5e80ff;
+	  background: #edf0ff;
+	  padding: 4px 10px;
+	  border-radius: 12px;
+	}
+	
+	.quota-section {
+	  display: flex;
+	  justify-content: space-around;
+	  padding: 16px 16px 8px 16px;
+	}
+	
+	.quota-box {
+	  background: #fff;
+	  border-radius: 12px;
+	  padding: 12px;
+	  flex: 1;
+	  margin: 0 4px;
+	  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+	  display: flex;
+	  flex-direction: column;
+	}
+	
+	.quota-title {
+	  font-size: 14px;
+	  color: #333;
+	  margin-bottom: 4px;
+	}
+	
+	.quota-count {
+	  font-size: 16px;
+	  font-weight: bold;
+	}
+	
+	.pink {
+	  color: #ff6783;
+	}
+	
+	.blue {
+	  color: #3c82ff;
+	}
+	
+	.quota-bar {
+	  width: 100%;
+	  height: 6px;
+	  background: #eee;
+	  border-radius: 3px;
+	  margin: 6px 0;
+	  overflow: hidden;
+	}
+	
+	.quota-bar-fill {
+	  height: 100%;
+	  border-radius: 3px;
+	}
+	
+	.pink-bar {
+	  background-color: #ff9ca7;
+	}
+	
+	.blue-bar {
+	  background-color: #93b8ff;
+	}
+	
+	.expand-text {
+	  font-size: 12px;
+	  color: #505cff;
+	  text-align: left;
 	}
 
-	.user-details {
-		display: flex;
-		flex-direction: column;
-	}
+	
 
-	.nickname {
-		font-size: 16px;
-		font-weight: bold;
-		margin-bottom: 6px;
-	}
-
-	.usage-time {
-		font-size: 14px;
-		color: #666;
-	}
-
-	.theme-group {
-		margin: 10px;
-		/* background: #fff; */
-		/* border-radius: 8px; */
+	.settings-list {
+		margin: 0 16px;
+		border-radius: 20px;
+		border: 1px solid #e5e5e5;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 		overflow: hidden;
-		border-bottom : 1px solid #616161;
 	}
 
-	.theme-header {
+	.setting-item {
+		background-color: #fff;
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
-		padding: 12px 16px;
-		/* border-bottom: 1px solid #616161; */
-		cursor: pointer;
+		padding: 12px;
+		border-bottom: 1px solid #e5e5e5;
 	}
 
-	.group-title {
-		font-size: 15px;
+	.setting-item:last-child {
+		border-bottom: none;
+	}
+
+	.icon {
+		width: 22px;
+		height: 22px;
+		margin-right: 16px;
+	}
+
+	.label {
+		flex: 1;
+		font-size: 14px;
 		color: #333;
 	}
 
-	.toggle-icon {
-		color: #333333;
-		transition: transform 0.3s;
+	.arrow {
+		color: #999;
+		font-size: 20px;
 	}
 
-	.toggle-icon.rotated {
-		transform: rotate(90deg);
-	}
-
-	/* 折叠动画 */
-	.collapse-enter-active,
-	.collapse-leave-active {
-		transition: height 0.3s, opacity 0.3s;
-	}
-
-	.collapse-enter,
-	.collapse-leave-to {
-		height: 0;
-		opacity: 0;
-		overflow: hidden;
-	}
-
-	.theme-list {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: flex-start;
-		padding: 12px 16px;
-	}
-
-	.theme-item {
-		width: 25%;
-		box-sizing: border-box;
-		padding: 4px;
+	.version-text {
+		color: #999;
+		font-size: 12px;
 		text-align: center;
-		transition: transform 0.2s, background 0.2s;
-	}
-
-	.theme-item:nth-child(4n) {
-		padding-right: 0;
-	}
-
-	.theme-item.active {
-		background: rgba(0, 0, 0, 0.05);
-		transform: scale(1.05);
-	}
-
-	.theme-item.active .theme-icon {
-		border: 2px solid #007AFF;
-	}
-
-	.theme-icon {
-		width: 60px;
-		height: 60px;
-		border-radius: 12px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin: 0 auto 8px;
-	}
-
-	.icon-text {
-		width: 30px;
-		height: 30px;
-	}
-
-	.theme-name {
-		font-size: 14px;
-		color: #555;
+		margin-top: 20px;
 	}
 </style>

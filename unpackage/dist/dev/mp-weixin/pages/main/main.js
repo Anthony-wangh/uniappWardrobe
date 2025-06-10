@@ -1,37 +1,80 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const components_theme = require("../../components/theme.js");
+const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   data() {
     return {
-      nickName: "帅哥",
-      usingDate: 99,
       weatherInfo: {},
-      clothingAdvice: {},
+      clothingAdvice: {
+        upper: [],
+        lower: [],
+        accessories: [],
+        tips: [],
+        specialNotes: [],
+        summary: ""
+      },
       weatherDetail: "",
       weatherTips: "",
+      windText: "",
       weatherIcon: "",
       theme: components_theme.themes[0],
       themes: components_theme.themes,
       banners: [
-        "/static/banners/banner1.jpeg",
-        "/static/banners/banner2.jpeg",
-        "/static/banners/banner3.jpeg",
-        "/static/banners/banner4.jpeg"
-      ]
+        "/static/banners/banner1.png",
+        "/static/banners/banner2.png",
+        "/static/banners/banner3.png"
+      ],
+      nickName: "",
+      isLoggedIn: false,
+      slogan: "让穿搭变得简单",
+      nickName: "Sarah",
+      avatarUrl: "/static/theme.png",
+      weatherIcon: "/static/weather_icons/theme.png",
+      currentDate: "",
+      weekDay: "",
+      recentlyClothes: []
     };
   },
   onShow() {
+    common_vendor.index.setNavigationBarColor({
+      frontColor: "#000000",
+      backgroundColor: "#ffffff"
+    });
     const saved = common_vendor.index.getStorageSync("theme") || this.themes[0];
     this.theme = saved;
+    const clothes = common_vendor.index.getStorageSync("clothes") || [];
+    if (clothes.length > 0) {
+      this.recentlyClothes = clothes.length > 5 ? clothes.slice(-5) : clothes;
+    }
+    this.getTime();
     this.getWeather();
   },
   methods: {
+    getTime() {
+      const date = /* @__PURE__ */ new Date();
+      this.currentDate = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+      const days = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+      this.weekDay = days[date.getDay()];
+    },
+    upload() {
+      common_vendor.index.navigateTo({
+        url: "/pages/addClothes/addClothes"
+      });
+    },
+    startMatch() {
+      common_vendor.index.switchTab({
+        url: "/pages/matching/matching"
+      });
+    },
     isToday(dateStr) {
       const [y, m, d] = dateStr.split("-").map(Number);
       const target = new Date(y, m - 1, d);
       const today = /* @__PURE__ */ new Date();
       return target.getFullYear() === today.getFullYear() && target.getMonth() === today.getMonth() && target.getDate() === today.getDate();
+    },
+    refreshWeather() {
+      this.getWeather();
     },
     async getWeather() {
       const cache = common_vendor.index.getStorageSync("weatherInfo");
@@ -58,20 +101,19 @@ const _sfc_main = {
               this.weatherInfo = today;
               this.updateWeather(today);
             },
-            fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:104", "获取天气失败:", err)
+            fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:181", "获取天气失败:", err)
           });
         },
-        fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:107", "获取位置失败:", err)
+        fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:184", "获取位置失败:", err)
       });
     },
     updateWeather(w) {
-      const tempText = `${w.textDay}  ${w.tempMin}℃ ~ ${w.tempMax}℃`;
-      const windText = `${w.windDirDay} ${w.windScaleDay}级 紫外线: ${w.uvIndex}`;
-      this.weatherDetail = `${tempText}
-${windText}`;
+      const tempText = `${w.tempMin}℃ ~ ${w.tempMax}℃`;
+      this.windText = `${w.windDirDay} ${w.windScaleDay}级  紫外线: ${w.uvIndex}`;
+      this.weatherDetail = `${tempText} ${w.textDay}`;
       this.weatherIcon = `/static/weather_icons/${w.textDay}.png`;
       this.clothingAdvice = this.getClothingAdvice(w);
-      this.weatherTips = this.clothingAdvice.summary;
+      this.weatherTips = `${this.clothingAdvice.summary}`;
     },
     getClothingAdvice(weatherData) {
       const tMax = parseInt(weatherData.tempMax), tMin = parseInt(weatherData.tempMin), avg = (tMax + tMin) / 2, diff = tMax - tMin;
@@ -201,19 +243,30 @@ ${parts.join("\n")}`;
   }
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return {
-    a: common_vendor.f($data.banners, (item, index, i0) => {
-      return {
-        a: item,
-        b: index
-      };
-    }),
-    b: $data.theme.textColor,
-    c: $data.theme.primaryColor,
-    d: common_vendor.t($data.weatherDetail),
+  return common_vendor.e({
+    a: $data.avatarUrl,
+    b: common_vendor.t($data.nickName),
+    c: common_vendor.t($data.weatherDetail),
+    d: common_vendor.t($data.windText),
     e: common_vendor.t($data.weatherTips),
-    f: `linear-gradient(135deg, ${$data.theme.primaryColor}, ${$data.theme.secondaryColor})`
-  };
+    f: common_vendor.t($data.currentDate),
+    g: common_vendor.t($data.weekDay),
+    h: common_assets._imports_0$1,
+    i: common_vendor.o((...args) => $options.upload && $options.upload(...args)),
+    j: common_assets._imports_1$1,
+    k: common_vendor.o((...args) => $options.startMatch && $options.startMatch(...args)),
+    l: $data.recentlyClothes.length === 0
+  }, $data.recentlyClothes.length === 0 ? {} : {
+    m: common_vendor.f($data.recentlyClothes, (item, index, i0) => {
+      return {
+        a: item.image,
+        b: common_vendor.t(item.name),
+        c: common_vendor.t(item.primaryCategory),
+        d: common_vendor.t(item.secondaryCategory),
+        e: index
+      };
+    })
+  });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-4f50ca8f"]]);
 wx.createPage(MiniProgramPage);

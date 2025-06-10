@@ -36,7 +36,6 @@ const _sfc_main = {
       if (common_vendor.wx$1.getPrivacySetting) {
         common_vendor.wx$1.getPrivacySetting({
           success: (res) => {
-            common_vendor.index.__f__("log", "at components/PrivacyCheck.vue:59", res, "getPrivacySetting");
             if (res.needAuthorization) {
               this.privacyContractName = res.privacyContractName;
               this.showPrivacy = true;

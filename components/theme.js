@@ -2,8 +2,8 @@
 export const themes = [{
 		id: 'light',
 		name: '雪映纯白',
-		primaryColor: '#fffccc',
-		secondaryColor: '#ccd3ff',
+		primaryColor: '#ccd3ff',
+		secondaryColor: '#fffccc',
 		backgroundColor: '#FFFFFF',
 		textColor: '#333333',
 		highlightTextColor: '#4b5bb4' // 苹果蓝，作为选中强调色
@@ -15,7 +15,7 @@ export const themes = [{
 		secondaryColor: '#FFD3B6',
 		backgroundColor: '#F6F9F4',
 		textColor: '#4A4A4A',
-		highlightTextColor: '#FFD3B6'
+		highlightTextColor: '#75988e'
 	},
 	{
 		id: 'peach',
@@ -24,7 +24,7 @@ export const themes = [{
 		secondaryColor: '#FFD1A9',
 		backgroundColor: '#FFFBF0',
 		textColor: '#4A4A4A',
-		highlightTextColor: '#FFB3BA'
+		highlightTextColor: '#9e5e62'
 	},
 	{
 		id: 'lavender',
@@ -33,7 +33,7 @@ export const themes = [{
 		secondaryColor: '#AEDFF7',
 		backgroundColor: '#F3F4FA',
 		textColor: '#4A4A4A',
-		highlightTextColor: '#C3A4DE'
+		highlightTextColor: '#786593'
 	},
 	{
 		id: 'lemon',
@@ -42,7 +42,7 @@ export const themes = [{
 		secondaryColor: '#C3E0DD',
 		backgroundColor: '#FFFFFB',
 		textColor: '#4A4A4A',
-		highlightTextColor: '#FFF9C4'
+		highlightTextColor: '#aca770'
 	},
 	{
 		id: 'seabreeze',
@@ -51,7 +51,7 @@ export const themes = [{
 		secondaryColor: '#F9E1DC',
 		backgroundColor: '#F0F6FF',
 		textColor: '#4A4A4A',
-		highlightTextColor: '#A3DFFB'
+		highlightTextColor: '#6380aa'
 	},
 	{
 		id: 'candy',
@@ -60,14 +60,14 @@ export const themes = [{
 		secondaryColor: '#E8C1E9',
 		backgroundColor: '#FFF4F7',
 		textColor: '#4A4A4A',
-		highlightTextColor: '#FFC4DE'
+		highlightTextColor: '#bc7d9c'
 	},
 
 	{
 		id: 'dark',
 		name: '夜幕黑曜',
-		primaryColor: '#121212',
-		secondaryColor: '#1E1E1E',
+		primaryColor: '#1e1e1e',
+		secondaryColor: '#3f3f3f',
 		backgroundColor: '#000000',
 		textColor: '#EEEEEE',
 		highlightTextColor: '#4b5bb4' // 深色背景上的亮蓝

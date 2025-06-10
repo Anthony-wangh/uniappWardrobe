@@ -1,15 +1,15 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
+const common_assets = require("../../common/assets.js");
 const CategoryPicker = () => "../../components/CategoryPickerModal.js";
-const ImageCropper = () => "../../components/nice-cropper/cropper.js";
 const _sfc_main = {
   components: {
-    CategoryPicker,
-    ImageCropper
+    CategoryPicker
   },
   data() {
     return {
       statusBarHeight: 0,
+      seasons: ["春", "夏", "秋", "冬"],
       form: {
         id: "",
         image: "",
@@ -19,7 +19,8 @@ const _sfc_main = {
         value: "",
         notes: "",
         purchaseDate: "",
-        brand: ""
+        brand: "",
+        seasons: []
       },
       categories: {
         上衣: ["T恤", "衬衫", "外套", "羽绒服"],
@@ -32,10 +33,8 @@ const _sfc_main = {
       isEdit: false,
       showSubFromgroup: false,
       //显示详细表单项
-      cropperSrc: "",
+      cropperSrc: ""
       //裁剪图片路径，底图
-      tempCropperSrc: ""
-      //缓存裁剪图片，当前裁剪图
     };
   },
   onLoad(options) {
@@ -46,6 +45,13 @@ const _sfc_main = {
     this.statusBarHeight = common_vendor.index.getSystemInfoSync().statusBarHeight;
   },
   methods: {
+    onok(ev) {
+      this.cropperSrc = "";
+      this.form.image = ev.path;
+    },
+    oncancel() {
+      this.cropperSrc = "";
+    },
     openCategoryPicker() {
       var _a;
       (_a = this.$refs.categoryPicker) == null ? void 0 : _a.open();
@@ -63,32 +69,25 @@ const _sfc_main = {
         }
       });
     },
-    quitCropper() {
-      this.cropperSrc = "";
-      this.tempCropperSrc = "";
-    },
-    comfireCropper() {
-      this.cropperSrc = "";
-      this.form.image = this.tempCropperSrc;
-      this.tempCropperSrc = "";
-    },
-    beforeDraw(context, transform) {
-      context.setFillStyle("white");
-    },
-    afterDraw(ctx, info) {
-    },
-    cropped(imagePath, imageInfo) {
-      this.tempCropperSrc = imagePath;
-    },
     selectPurchaseDate(e) {
       this.form.purchaseDate = e.detail.value;
     },
     generateUniqueId() {
       return "id_" + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     },
+    toggleSeason(season) {
+      const index = this.form.seasons.indexOf(season);
+      if (index === -1) {
+        this.form.seasons.push(season);
+      } else {
+        this.form.seasons.splice(index, 1);
+      }
+    },
     submitForm() {
       if (!this.form.image)
         return this.errorMsg = "请上传衣服图片";
+      if (!this.form.name)
+        return this.errorMsg = "请输入衣服名称";
       if (!this.form.primaryCategory)
         return this.errorMsg = "请选择一级类目";
       if (!this.form.secondaryCategory)
@@ -112,7 +111,9 @@ const _sfc_main = {
         icon: "success"
       });
       this.resetForm();
-      setTimeout(() => common_vendor.index.navigateBack(), 100);
+      setTimeout(() => common_vendor.index.switchTab({
+        url: "/pages/wardrobe/wardrobe"
+      }), 10);
     },
     resetForm() {
       this.form = {
@@ -126,66 +127,82 @@ const _sfc_main = {
         brand: ""
       };
       this.errorMsg = "";
+    },
+    goBack() {
+      common_vendor.index.navigateBack();
     }
   }
 };
 if (!Array) {
   const _component_category_picker = common_vendor.resolveComponent("category-picker");
-  const _component_image_cropper = common_vendor.resolveComponent("image-cropper");
-  (_component_category_picker + _component_image_cropper)();
+  const _easycom_ksp_cropper2 = common_vendor.resolveComponent("ksp-cropper");
+  (_component_category_picker + _easycom_ksp_cropper2)();
+}
+const _easycom_ksp_cropper = () => "../../uni_modules/ksp-cropper/components/ksp-cropper/ksp-cropper.js";
+if (!Math) {
+  _easycom_ksp_cropper();
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: $data.statusBarHeight + "px",
-    b: $data.form.image
+    b: common_assets._imports_0$3,
+    c: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
+    d: $data.form.image
   }, $data.form.image ? {
-    c: $data.form.image
+    e: $data.form.image
   } : {}, {
-    d: common_vendor.o((...args) => $options.chooseImage && $options.chooseImage(...args)),
-    e: common_vendor.t($data.form.primaryCategory && $data.form.secondaryCategory ? $data.form.primaryCategory + " / " + $data.form.secondaryCategory : "请选择类目"),
-    f: common_vendor.o((...args) => $options.openCategoryPicker && $options.openCategoryPicker(...args)),
-    g: $data.form.name,
-    h: common_vendor.o(($event) => $data.form.name = $event.detail.value),
-    i: $data.form.notes,
-    j: common_vendor.o(($event) => $data.form.notes = $event.detail.value),
-    k: common_vendor.t($data.showSubFromgroup ? "收起" : "更多"),
-    l: common_vendor.o(($event) => $data.showSubFromgroup = !$data.showSubFromgroup),
-    m: $data.showSubFromgroup
+    f: common_vendor.o((...args) => $options.chooseImage && $options.chooseImage(...args)),
+    g: common_vendor.f($data.seasons, (season, k0, i0) => {
+      var _a;
+      return {
+        a: common_vendor.t(season),
+        b: season,
+        c: common_vendor.n(((_a = $data.form.seasons) == null ? void 0 : _a.includes(season)) ? "selected" : ""),
+        d: common_vendor.o(($event) => $options.toggleSeason(season), season)
+      };
+    }),
+    h: common_vendor.t($data.form.primaryCategory && $data.form.secondaryCategory ? $data.form.primaryCategory + " / " + $data.form.secondaryCategory : "请选择类目"),
+    i: common_vendor.o((...args) => $options.openCategoryPicker && $options.openCategoryPicker(...args)),
+    j: $data.form.name,
+    k: common_vendor.o(($event) => $data.form.name = $event.detail.value),
+    l: $data.form.notes,
+    m: common_vendor.o(($event) => $data.form.notes = $event.detail.value),
+    n: common_vendor.t($data.showSubFromgroup ? "收起" : "更多"),
+    o: common_vendor.o(($event) => $data.showSubFromgroup = !$data.showSubFromgroup),
+    p: $data.showSubFromgroup
   }, $data.showSubFromgroup ? {
-    n: common_vendor.t($data.form.purchaseDate || "请选择购买时间"),
-    o: common_vendor.o((...args) => $options.selectPurchaseDate && $options.selectPurchaseDate(...args)),
-    p: $data.form.value,
-    q: common_vendor.o(($event) => $data.form.value = $event.detail.value),
-    r: $data.form.brand,
-    s: common_vendor.o(($event) => $data.form.brand = $event.detail.value)
+    q: common_vendor.t($data.form.purchaseDate || "请选择购买时间"),
+    r: common_vendor.o((...args) => $options.selectPurchaseDate && $options.selectPurchaseDate(...args)),
+    s: $data.form.value,
+    t: common_vendor.o(($event) => $data.form.value = $event.detail.value),
+    v: $data.form.brand,
+    w: common_vendor.o(($event) => $data.form.brand = $event.detail.value)
   } : {}, {
-    t: common_vendor.o((...args) => $options.submitForm && $options.submitForm(...args)),
-    v: $data.errorMsg
+    x: common_vendor.o((...args) => $options.submitForm && $options.submitForm(...args)),
+    y: $data.errorMsg
   }, $data.errorMsg ? {
-    w: common_vendor.t($data.errorMsg)
+    z: common_vendor.t($data.errorMsg)
   } : {}, {
-    x: common_vendor.sr("categoryPicker", "f0dbcc2f-0"),
-    y: common_vendor.o($options.onCategoryConfirm),
-    z: common_vendor.p({
+    A: common_vendor.sr("categoryPicker", "f0dbcc2f-0"),
+    B: common_vendor.o($options.onCategoryConfirm),
+    C: common_vendor.p({
       data: $data.categories,
       defaultValue: [$data.form.primaryCategory, $data.form.secondaryCategory],
       cancelText: "关闭",
       confirmText: "选择"
     }),
-    A: $data.cropperSrc !== ""
+    D: $data.cropperSrc !== ""
   }, $data.cropperSrc !== "" ? {
-    B: common_vendor.o($options.cropped),
-    C: common_vendor.o($options.afterDraw),
-    D: common_vendor.o($options.beforeDraw),
-    E: common_vendor.p({
-      id: "image-cropper",
-      zoom: 1,
-      angle: 0,
-      src: $data.cropperSrc,
-      canvasBackground: "red"
-    }),
-    F: common_vendor.o((...args) => $options.quitCropper && $options.quitCropper(...args)),
-    G: common_vendor.o((...args) => $options.comfireCropper && $options.comfireCropper(...args))
+    E: common_vendor.o($options.oncancel),
+    F: common_vendor.o($options.onok),
+    G: common_vendor.p({
+      mode: "free",
+      width: 512,
+      height: 512,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      url: $data.cropperSrc
+    })
   } : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-f0dbcc2f"]]);

@@ -2,6 +2,6 @@
   "navigationBarTitleText": "",
   "usingComponents": {
     "category-picker": "../../components/CategoryPickerModal",
-    "image-cropper": "../../components/nice-cropper/cropper"
+    "ksp-cropper": "../../uni_modules/ksp-cropper/components/ksp-cropper/ksp-cropper"
   }
 }

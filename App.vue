@@ -2,6 +2,7 @@
 
 export default {
   onLaunch() {
+	  
   },
 }
 </script>
