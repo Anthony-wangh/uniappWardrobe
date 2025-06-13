@@ -10,14 +10,13 @@
 
 		<view class="main-container">
 			<!-- 搭配模块 -->
-			<view class="outfit-preview"
-				:style="{backgroundSize: 'cover' }"
-				@click="clearSelection">
+			<view class="outfit-preview" :style="{backgroundSize: 'cover' }" @click="clearSelection">
 				<view class="clothes-item" v-for="(item, index) in selectedClothes" :key="index"
 					:id="'clothesItem' + index" :ref="'clothesItem' + index" :style="getStyle(item)">
 					<image class="clothes-image" :src="item.image" @touchstart.stop="startDrag(index, $event)"
 						@touchmove.stop="handleMove($event)" />
 					<view v-if="activeIndex === index">
+						<view class="zindex-btn" @click.stop="bringToFront(index)">↑</view>
 						<image src="/static/scaleBtn.png" class="resize-btn" @touchstart.stop="startTransform($event)"
 							@touchmove.stop="handleTransform($event)"></image>
 						<view class="remove-btn" @click.stop="removeClothes(index)">×</view>
@@ -27,13 +26,18 @@
 				<canvas canvas-id="outfitCanvas" class="hidden-canvas"></canvas>
 			</view>
 
-			
 
 			<!-- 套装详情模块 -->
 			<view class="details-section">
 				<view class="input-row">
 					<text class="label">套装名称</text>
 					<input class="input-box" v-model="outfitName" placeholder="请输入套装名称" />
+				</view>
+				<view class="input-row">
+					<text class="label">类目</text>
+					<picker class="picker-category" mode="selector" :range="categories" @change="onCategoryChange">
+						<view class="input-box-category">{{ category }}</view>
+					</picker>
 				</view>
 
 				<view class="note-input-row">
@@ -44,7 +48,7 @@
 				<button class="save-btn" @click="saveOutfit">保存套装</button>
 			</view>
 		</view>
-		
+
 
 	</view>
 </template>
@@ -70,6 +74,9 @@
 				startDistance: null,
 				startRotateX: 0,
 				startRotateY: 0,
+				category: '日常通勤',
+				categories: ['日常通勤', '春日出游', '周末约会', '正式场合'],
+
 			};
 		},
 		onLoad(options) {
@@ -109,13 +116,28 @@
 				this.selectedClothes = clothesItems;
 			}
 		},
+		onShow() {
+			const match = uni.getStorageSync('matchCategories');
+			if (match && Array.isArray(match)) {
+				this.categories = match;
+				this.category = this.categories[0];
+			}
+		},
 		methods: {
 			getStyle(item) {
 				return {
-					transform: `translate(${item.x}px, ${item.y}px) rotate(${item.rotation}deg) scale(${item.scale})`
+					transform: `translate(${item.x}px, ${item.y}px) rotate(${item.rotation}deg) scale(${item.scale})`,
+					transformOrigin: 'center center',
+					zIndex: item.z || 1
 				};
 			},
-
+			bringToFront(index) {
+				const maxZ = Math.max(...this.selectedClothes.map(item => item.z || 0));
+				this.$set(this.selectedClothes[index], 'z', maxZ + 1);
+			},
+			onCategoryChange(e) {
+				this.category = this.categories[e.detail.value];
+			},
 			selectClothes(index) {
 				this.activeIndex = index;
 			},
@@ -207,8 +229,11 @@
 					const ctx = uni.createCanvasContext("outfitCanvas", this);
 					ctx.setFillStyle("#ffffff");
 					ctx.fillRect(0, 0, 300, 300);
+					// 先按 zIndex 排序再绘制
+					const sortedItems = [...this.selectedClothes].sort((a, b) => (a.z || 1) - (b.z || 1));
 
-					this.selectedClothes.forEach((item) => {
+
+					sortedItems.forEach((item) => {
 						ctx.save();
 						ctx.translate(150 + item.x, 150 + item.y);
 						ctx.rotate((item.rotation * Math.PI) / 180);
@@ -216,14 +241,14 @@
 						ctx.drawImage(item.image, -40, -40, 80, 80);
 						ctx.restore();
 					});
-					
+
 					ctx.draw(false, () => {
 						uni.canvasToTempFilePath({
 							canvasId: "outfitCanvas",
 							success: (res) => resolve(res.tempFilePath),
 							fail: (err) => reject(err),
 						}, this);
-					});	
+					});
 				});
 			},
 
@@ -252,7 +277,7 @@
 			},
 			getTime() {
 				const date = new Date()
-				return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+				return date.getTime()
 			},
 			saveToStorage(imagePath) {
 				const outfit = {
@@ -260,7 +285,8 @@
 					name: this.outfitName,
 					note: this.note,
 					thumbnail: imagePath,
-					time : this.getTime()
+					category: this.category,
+					time: this.getTime()
 				};
 
 				let outfits = uni.getStorageSync("outfits") || [];
@@ -352,7 +378,7 @@
 		position: relative;
 	}
 
-	
+
 
 	/* 衣服卡片 */
 	.clothes-item {
@@ -371,12 +397,12 @@
 	.clothes-image {
 		width: 100%;
 		height: 100%;
-		border-radius: 10px;
-		box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+		border-radius: 2px;
+		box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 	}
 
 
-	
+
 	/* 缩放按钮 */
 	.resize-btn {
 		position: absolute;
@@ -408,7 +434,7 @@
 		border: 2px solid #fff;
 	}
 
-	
+
 	/* 套装详情 */
 	.details-section {
 		width: calc(100vw - 20px);
@@ -417,6 +443,9 @@
 		padding: 15px 0;
 		border-radius: 10px;
 		box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+		
+		display: flex;
+		flex-direction: column;
 	}
 
 	/* 输入行 */
@@ -426,12 +455,33 @@
 		justify-content: space-between;
 		margin: 10px;
 	}
-.note-input-row{
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	margin: 10px;
-}
+
+	.note-input-row {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		margin: 10px;
+	}
+	
+	.picker-category{
+		width: 70%;
+		align-items: center;
+		justify-content: center;
+	}
+	.input-box-category {
+		width: 100%;
+		padding: 10px 0;
+		border: 1px solid #8A6FDF;
+		border-radius: 5px;
+		font-size: 16px;
+		font-weight: bold;
+		color: #8A6FDF;
+		background-color: #ffffff;
+		text-align: center;
+	}
+	
+
+
 	/* 输入框/选择框名称 */
 	.label {
 		font-size: 16px;
@@ -443,16 +493,20 @@
 	/* 输入框/选择框 */
 	.input-box {
 		width: 75%;
-		height: 40px;
-		padding: 5px;
+		padding: 10px;
 		border-bottom: 1px solid #cbcbcb;
 		font-size: 16px;
 		font-weight: bold;
 		color: #333;
+		text-align: start;
 	}
+	
+	
+	
+	
 
 	/* 选择框样式 */
-	picker.input-box {
+	.input-box {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -482,8 +536,8 @@
 		height: 300px;
 	}
 
-	
-	
+
+
 	.textarea-field {
 		width: 100%;
 		height: 80px;
@@ -496,5 +550,22 @@
 		resize: none;
 		box-sizing: border-box;
 		margin-top: 10px;
+	}
+
+	.zindex-btn {
+		position: absolute;
+		bottom: -12px;
+		left: -12px;
+		width: 24px;
+		height: 24px;
+		background-color: #2196f3;
+		color: white;
+		border-radius: 50%;
+		font-size: 14px;
+		text-align: center;
+		line-height: 24px;
+		cursor: pointer;
+		font-weight: bold;
+		border: 2px solid #fff;
 	}
 </style>

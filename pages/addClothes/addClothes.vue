@@ -368,7 +368,7 @@
 		border: 1px solid #868686;
 		background-color: #fff;
 		border-radius: 5px;
-	}
+	}	
 
 
 	.picker-text {

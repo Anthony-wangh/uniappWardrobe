@@ -1,60 +1,63 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const components_theme = require("../../components/theme.js");
 const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   data() {
     return {
       currentMainCategoryIndex: 0,
-      categories: [
-        {
-          name: "上衣",
-          subCategories: ["T恤", "衬衫", "外套", "羽绒服"]
-        },
-        {
-          name: "裤子",
-          subCategories: ["牛仔裤", "运动裤", "休闲裤", "裙子"]
-        },
-        {
-          name: "鞋",
-          subCategories: ["运动鞋", "板鞋", "高跟鞋", "靴子"]
-        },
-        {
-          name: "配饰",
-          subCategories: ["帽子", "眼镜", "丝巾"]
-        },
-        {
-          name: "包",
-          subCategories: ["单肩包", "双肩包"]
-        }
-      ],
+      categoriesMap: {
+        上衣: ["T恤", "衬衫", "外套", "羽绒服"],
+        裤子: ["牛仔裤", "运动裤", "休闲裤", "裙子"],
+        鞋: ["运动鞋", "板鞋", "高跟鞋", "靴子"],
+        配饰: ["帽子", "眼镜", "丝巾"],
+        包: ["单肩包", "双肩包"]
+      },
       clothes: [],
       isSubCollapsed: {},
       isEditMode: false,
       selectedClothes: [],
-      theme: components_theme.themes[0],
-      themes: components_theme.themes,
       searchKeyword: "",
       //确定搜索关键词
       selectedSeasons: [],
       allSeasons: ["春", "夏", "秋", "冬"],
       seasonDropdownVisible: false,
       selectSeasonText: "",
-      isExpand: false
+      isExpand: false,
+      quota: {
+        clothesCount: 0,
+        outfitsCount: 0,
+        clothesQuota: 20,
+        outfitsQuota: 5,
+        clothesRate: "0%",
+        outfitsRate: "0%"
+      },
+      canAddClothes: true,
+      canAddOutfits: true
     };
   },
   computed: {
+    categories() {
+      return Object.entries(this.categoriesMap).map(([name, subCategories]) => ({
+        name,
+        subCategories
+      }));
+    },
     currentSubCategories() {
-      return this.categories[this.currentMainCategoryIndex].subCategories || [];
+      const currentMain = this.categories[this.currentMainCategoryIndex];
+      return currentMain ? currentMain.subCategories : [];
     }
   },
   onShow() {
-    common_vendor.index.setNavigationBarColor({
-      frontColor: "#000000",
-      backgroundColor: "#ffffff"
-    });
-    const saved = common_vendor.index.getStorageSync("theme") || this.themes[0];
-    this.theme = saved;
+    const quo = common_vendor.index.getStorageSync("wardrobeQuota");
+    if (quo) {
+      this.quota = quo;
+    }
+    const category = common_vendor.index.getStorageSync("wartrobeCategory");
+    if (category) {
+      this.categoriesMap = category;
+    }
+    this.canAddClothes = this.quota.clothesCount < this.quota.clothesQuota;
+    this.canAddOutfits = this.quota.outfitsCount < this.quota.outfitsQuota;
     this.clothes = common_vendor.index.getStorageSync("clothes") || [];
     this.categories[this.currentMainCategoryIndex].subCategories.forEach((sub) => {
       this.$set(this.isSubCollapsed, sub, false);
@@ -84,18 +87,6 @@ const _sfc_main = {
           this.$set(this.isSubCollapsed, sub, this.isExpand);
         });
       });
-    },
-    getTabStyle(id) {
-      const base = {
-        padding: "5px",
-        fontSize: "16px",
-        color: "#1b1b1b"
-      };
-      if (id === this.currentMainCategoryIndex) {
-        base.color = "#8A6FDF";
-        base.fontWeight = "bold";
-      }
-      return base;
     },
     selectMainCategory(index) {
       this.currentMainCategoryIndex = index;
@@ -150,14 +141,37 @@ const _sfc_main = {
         this.selectedClothes.push(item);
       }
     },
+    longPressClothes(item) {
+      if (this.isEditMode)
+        return;
+      this.toggleEditMode();
+      this.selectedClothes.push(item);
+    },
     deleteSelected() {
       if (this.selectedClothes.length === 0)
         return;
-      this.clothes = this.clothes.filter((c) => !this.selectedClothes.includes(c));
-      this.selectedClothes = [];
-      this.saveClothes();
+      common_vendor.index.showModal({
+        title: "确定删除选中的衣物？",
+        content: `删除后将无法找回！`,
+        success: (res) => {
+          if (res.confirm) {
+            this.clothes = this.clothes.filter((c) => !this.selectedClothes.includes(c));
+            this.selectedClothes = [];
+            this.saveClothes();
+            this.quota.clothesCount = this.clothes.length;
+            common_vendor.index.setStorageSync("wardrobeQuota", this.quota);
+          }
+        }
+      });
     },
     matchSelected() {
+      if (!this.canAddOutfits) {
+        common_vendor.index.showToast({
+          title: "配额不足",
+          icon: "error"
+        });
+        return;
+      }
       if (this.selectedClothes.length <= 0) {
         common_vendor.index.showToast({
           title: "至少选择一件衣物进行搭配",
@@ -188,6 +202,13 @@ const _sfc_main = {
       return [...clothesList];
     },
     onAddItemClick(subCat) {
+      if (!this.canAddClothes) {
+        common_vendor.index.showToast({
+          title: "配额不足",
+          icon: "error"
+        });
+        return;
+      }
       if (this.isEditMode)
         this.toggleEditMode();
       const mainCat = this.categories[this.currentMainCategoryIndex].name;
@@ -205,30 +226,29 @@ if (!Array) {
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: $data.theme.textColor,
-    b: common_assets._imports_0$2,
-    c: $data.searchKeyword,
-    d: common_vendor.o(($event) => $data.searchKeyword = $event.detail.value),
-    e: common_vendor.t($data.isEditMode ? "完成" : "管理"),
-    f: common_vendor.n($data.isEditMode ? "finish" : "edit"),
-    g: $data.isEditMode ? "/static/Fnish.png" : "/static/Edit.png",
-    h: common_vendor.n($data.isEditMode ? "finish" : "edit"),
-    i: common_vendor.o((...args) => $options.toggleEditMode && $options.toggleEditMode(...args)),
-    j: common_vendor.o((...args) => $options.toggleSeasonDropdown && $options.toggleSeasonDropdown(...args)),
-    k: common_assets._imports_1$2,
-    l: common_vendor.o((...args) => $options.toggleSeasonDropdown && $options.toggleSeasonDropdown(...args)),
-    m: $data.selectSeasonText !== ""
+    a: common_assets._imports_0$2,
+    b: $data.searchKeyword,
+    c: common_vendor.o(($event) => $data.searchKeyword = $event.detail.value),
+    d: common_vendor.t($data.isEditMode ? "完成" : "管理"),
+    e: common_vendor.n($data.isEditMode ? "finish" : "edit"),
+    f: $data.isEditMode ? "/static/Fnish.png" : "/static/Edit.png",
+    g: common_vendor.n($data.isEditMode ? "finish" : "edit"),
+    h: common_vendor.o((...args) => $options.toggleEditMode && $options.toggleEditMode(...args)),
+    i: common_vendor.o((...args) => $options.toggleSeasonDropdown && $options.toggleSeasonDropdown(...args)),
+    j: common_assets._imports_1$2,
+    k: common_vendor.o((...args) => $options.toggleSeasonDropdown && $options.toggleSeasonDropdown(...args)),
+    l: $data.selectSeasonText !== ""
   }, $data.selectSeasonText !== "" ? {
-    n: common_vendor.t($data.selectSeasonText),
-    o: common_vendor.o((...args) => $options.clearSelectSeason && $options.clearSelectSeason(...args))
+    m: common_vendor.t($data.selectSeasonText),
+    n: common_vendor.o((...args) => $options.clearSelectSeason && $options.clearSelectSeason(...args))
   } : {}, {
-    p: common_vendor.t($data.isExpand ? "全部收起" : "全部展开"),
-    q: common_vendor.n($data.isExpand ? "" : "open"),
-    r: common_assets._imports_2$1,
-    s: common_vendor.o((...args) => $options.clickFoldall && $options.clickFoldall(...args)),
-    t: $data.seasonDropdownVisible
+    o: common_vendor.t($data.isExpand ? "全部收起" : "全部展开"),
+    p: common_vendor.n($data.isExpand ? "" : "open"),
+    q: common_assets._imports_2$1,
+    r: common_vendor.o((...args) => $options.clickFoldall && $options.clickFoldall(...args)),
+    s: $data.seasonDropdownVisible
   }, $data.seasonDropdownVisible ? {
-    v: common_vendor.f($data.allSeasons, (season, k0, i0) => {
+    t: common_vendor.f($data.allSeasons, (season, k0, i0) => {
       return {
         a: $data.selectedSeasons.includes(season) ? "/static/checked.png" : "/static/unChecked.png",
         b: common_vendor.t(season),
@@ -237,7 +257,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       };
     })
   } : {}, {
-    w: common_vendor.f($data.categories, (category, index, i0) => {
+    v: common_vendor.f($options.categories, (category, index, i0) => {
       return {
         a: common_vendor.t(category.name),
         b: common_vendor.t($options.getClothesForMain(category.name).length),
@@ -246,7 +266,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         e: common_vendor.o(($event) => $options.selectMainCategory(index), index)
       };
     }),
-    x: common_vendor.f($options.currentSubCategories, (subCat, k0, i0) => {
+    w: common_vendor.f($options.currentSubCategories, (subCat, k0, i0) => {
       return common_vendor.e({
         a: common_vendor.t(subCat),
         b: common_vendor.t($options.getClothesForSub(subCat).length),
@@ -264,7 +284,8 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
                 b: item.image,
                 c: common_vendor.t(item.name),
                 d: itemIndex,
-                e: common_vendor.o(($event) => $options.toggleSelectClothes(item), itemIndex)
+                e: common_vendor.o(($event) => $options.toggleSelectClothes(item), itemIndex),
+                f: common_vendor.o(($event) => $options.longPressClothes(item), itemIndex)
               });
             }),
             b: rowIndex
@@ -275,14 +296,14 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         i: subCat
       });
     }),
-    y: $data.isEditMode
+    x: $data.isEditMode
   }, $data.isEditMode ? {
-    z: common_assets._imports_3,
-    A: common_vendor.o((...args) => $options.deleteSelected && $options.deleteSelected(...args)),
-    B: common_assets._imports_4,
-    C: common_vendor.o((...args) => $options.matchSelected && $options.matchSelected(...args))
+    y: common_assets._imports_3,
+    z: common_vendor.o((...args) => $options.deleteSelected && $options.deleteSelected(...args)),
+    A: common_assets._imports_4,
+    B: common_vendor.o((...args) => $options.matchSelected && $options.matchSelected(...args))
   } : {}, {
-    D: common_vendor.o(($event) => $data.seasonDropdownVisible = false)
+    C: common_vendor.o(($event) => $data.seasonDropdownVisible = false)
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-9e425260"]]);

@@ -20,14 +20,16 @@ const _sfc_main = {
       startY: 0,
       startDistance: null,
       startRotateX: 0,
-      startRotateY: 0
+      startRotateY: 0,
+      category: "日常通勤",
+      categories: ["日常通勤", "春日出游", "周末约会", "正式场合"]
     };
   },
   onLoad(options) {
     if (options.clothes) {
       let selectItems = JSON.parse(decodeURIComponent(options.clothes));
       if (selectItems.length === 0) {
-        common_vendor.index.__f__("log", "at pages/addMatching/addMatching.vue:79", "未选中任何衣物！！");
+        common_vendor.index.__f__("log", "at pages/addMatching/addMatching.vue:86", "未选中任何衣物！！");
         return;
       }
       const {
@@ -52,11 +54,27 @@ const _sfc_main = {
       this.selectedClothes = clothesItems;
     }
   },
+  onShow() {
+    const match = common_vendor.index.getStorageSync("matchCategories");
+    if (match && Array.isArray(match)) {
+      this.categories = match;
+      this.category = this.categories[0];
+    }
+  },
   methods: {
     getStyle(item) {
       return {
-        transform: `translate(${item.x}px, ${item.y}px) rotate(${item.rotation}deg) scale(${item.scale})`
+        transform: `translate(${item.x}px, ${item.y}px) rotate(${item.rotation}deg) scale(${item.scale})`,
+        transformOrigin: "center center",
+        zIndex: item.z || 1
       };
+    },
+    bringToFront(index) {
+      const maxZ = Math.max(...this.selectedClothes.map((item) => item.z || 0));
+      this.$set(this.selectedClothes[index], "z", maxZ + 1);
+    },
+    onCategoryChange(e) {
+      this.category = this.categories[e.detail.value];
     },
     selectClothes(index) {
       this.activeIndex = index;
@@ -138,7 +156,8 @@ const _sfc_main = {
         const ctx = common_vendor.index.createCanvasContext("outfitCanvas", this);
         ctx.setFillStyle("#ffffff");
         ctx.fillRect(0, 0, 300, 300);
-        this.selectedClothes.forEach((item) => {
+        const sortedItems = [...this.selectedClothes].sort((a, b) => (a.z || 1) - (b.z || 1));
+        sortedItems.forEach((item) => {
           ctx.save();
           ctx.translate(150 + item.x, 150 + item.y);
           ctx.rotate(item.rotation * Math.PI / 180);
@@ -178,7 +197,7 @@ const _sfc_main = {
     },
     getTime() {
       const date = /* @__PURE__ */ new Date();
-      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+      return date.getTime();
     },
     saveToStorage(imagePath) {
       const outfit = {
@@ -186,6 +205,7 @@ const _sfc_main = {
         name: this.outfitName,
         note: this.note,
         thumbnail: imagePath,
+        category: this.category,
         time: this.getTime()
       };
       let outfits = common_vendor.index.getStorageSync("outfits") || [];
@@ -214,23 +234,27 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         c: common_vendor.o(($event) => $options.handleMove($event), index),
         d: $data.activeIndex === index
       }, $data.activeIndex === index ? {
-        e: common_assets._imports_1$4,
-        f: common_vendor.o(($event) => $options.startTransform($event), index),
-        g: common_vendor.o(($event) => $options.handleTransform($event), index),
-        h: common_vendor.o(($event) => $options.removeClothes(index), index)
+        e: common_vendor.o(($event) => $options.bringToFront(index), index),
+        f: common_assets._imports_1$4,
+        g: common_vendor.o(($event) => $options.startTransform($event), index),
+        h: common_vendor.o(($event) => $options.handleTransform($event), index),
+        i: common_vendor.o(($event) => $options.removeClothes(index), index)
       } : {}, {
-        i: index,
-        j: "clothesItem" + index,
+        j: index,
         k: "clothesItem" + index,
-        l: common_vendor.s($options.getStyle(item))
+        l: "clothesItem" + index,
+        m: common_vendor.s($options.getStyle(item))
       });
     }),
     d: common_vendor.o((...args) => $options.clearSelection && $options.clearSelection(...args)),
     e: $data.outfitName,
     f: common_vendor.o(($event) => $data.outfitName = $event.detail.value),
-    g: $data.note,
-    h: common_vendor.o(($event) => $data.note = $event.detail.value),
-    i: common_vendor.o((...args) => $options.saveOutfit && $options.saveOutfit(...args))
+    g: common_vendor.t($data.category),
+    h: $data.categories,
+    i: common_vendor.o((...args) => $options.onCategoryChange && $options.onCategoryChange(...args)),
+    j: $data.note,
+    k: common_vendor.o(($event) => $data.note = $event.detail.value),
+    l: common_vendor.o((...args) => $options.saveOutfit && $options.saveOutfit(...args))
   };
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-cfe86fb7"]]);

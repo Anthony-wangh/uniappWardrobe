@@ -22,12 +22,22 @@ const _sfc_main = {
       inputValue: "",
       actionType: "",
       targetCategory: "",
-      sourceSubCategoryIndex: null
+      sourceSubCategoryIndex: null,
+      //搭配类目
+      matchCategories: ["日常通勤", "春日出游", "周末约会", "正式场合"]
     };
   },
-  mounted() {
+  onShow() {
+    const category = common_vendor.index.getStorageSync("wartrobeCategory");
+    if (category) {
+      this.categoriesMap = category;
+    }
     for (const key in this.categoriesMap) {
       this.$set(this.collapsed, key, true);
+    }
+    const match = common_vendor.index.getStorageSync("matchCategories");
+    if (match && Array.isArray(match)) {
+      this.matchCategories = match;
     }
   },
   methods: {
@@ -75,16 +85,27 @@ const _sfc_main = {
         success: (res) => {
           if (res.confirm) {
             delete this.categoriesMap[category];
+            this.save();
           }
         }
       });
       this.dropdownIndex = null;
     },
     openAddCategory() {
-      this.modalTitle = "新增主类目";
-      this.inputValue = "";
-      this.actionType = "addMain";
-      this.modalVisible = true;
+      common_vendor.index.showActionSheet({
+        itemList: ["新增衣物类目", "新增搭配类目"],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            this.modalTitle = "新增主类目";
+            this.actionType = "addMain";
+          } else {
+            this.modalTitle = "新增搭配类目";
+            this.actionType = "addMatch";
+          }
+          this.inputValue = "";
+          this.modalVisible = true;
+        }
+      });
     },
     editSubCategory(mainCategory, subCategory, index) {
       this.modalTitle = "修改类目";
@@ -102,6 +123,7 @@ const _sfc_main = {
           if (res.confirm) {
             const list = this.categoriesMap[mainCategory];
             list.splice(index, 1);
+            this.save();
           }
         }
       });
@@ -156,12 +178,53 @@ const _sfc_main = {
         sublist[this.sourceSubCategoryIndex] = value;
         this.categoriesMap[this.targetCategory] = sublist;
         this.sourceSubCategoryIndex = null;
+      } else if (this.actionType === "editMatch") {
+        if (this.matchCategories.includes(value)) {
+          return common_vendor.index.showToast({
+            title: "搭配类目已存在",
+            icon: "none"
+          });
+        }
+        this.matchCategories[this.sourceSubCategoryIndex] = value;
+        this.sourceSubCategoryIndex = null;
+      } else if (this.actionType === "addMatch") {
+        if (this.matchCategories.includes(value)) {
+          return common_vendor.index.showToast({
+            title: "搭配类目已存在",
+            icon: "none"
+          });
+        }
+        this.matchCategories.push(value);
       }
       this.modalVisible = false;
       this.inputValue = "";
+      this.save();
+    },
+    save() {
+      common_vendor.index.setStorageSync("wartrobeCategory", this.categoriesMap);
+      common_vendor.index.setStorageSync("matchCategories", this.matchCategories);
     },
     goBack() {
       common_vendor.index.navigateBack();
+    },
+    editMatchCategory(index) {
+      this.modalTitle = "修改搭配类目";
+      this.inputValue = this.matchCategories[index];
+      this.actionType = "editMatch";
+      this.sourceSubCategoryIndex = index;
+      this.modalVisible = true;
+    },
+    deleteMatchCategory(index) {
+      common_vendor.index.showModal({
+        title: "提示",
+        content: `确定删除“${this.matchCategories[index]}”搭配类目？`,
+        success: (res) => {
+          if (res.confirm) {
+            this.matchCategories.splice(index, 1);
+            this.save();
+          }
+        }
+      });
     }
   }
 };
@@ -179,7 +242,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       }, $data.dropdownIndex === index ? {
         f: common_assets._imports_1$7,
         g: common_vendor.o(($event) => $options.editCategory(category), category),
-        h: common_assets._imports_2$3,
+        h: common_assets._imports_2$4,
         i: common_vendor.o(($event) => $options.addSubCategory(category), category),
         j: common_assets._imports_3$2,
         k: common_vendor.o(($event) => $options.deleteCategory(category), category),
@@ -202,19 +265,29 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     }),
     d: common_assets._imports_1$7,
     e: common_assets._imports_3$2,
-    f: common_vendor.o(($event) => $data.dropdownIndex = null),
-    g: common_assets._imports_4$1,
-    h: common_vendor.o((...args) => $options.openAddCategory && $options.openAddCategory(...args)),
-    i: $data.modalVisible
-  }, $data.modalVisible ? {
-    j: common_vendor.t($data.modalTitle),
-    k: $data.inputValue,
-    l: common_vendor.o(($event) => $data.inputValue = $event.detail.value),
-    m: common_vendor.o(($event) => $data.modalVisible = false),
-    n: common_vendor.o((...args) => $options.confirmModal && $options.confirmModal(...args)),
-    o: common_vendor.o(() => {
+    f: common_vendor.f($data.matchCategories, (item, index, i0) => {
+      return {
+        a: common_vendor.t(item),
+        b: common_vendor.o(($event) => $options.editMatchCategory(index), index),
+        c: common_vendor.o(($event) => $options.deleteMatchCategory(index), index),
+        d: index
+      };
     }),
-    p: common_vendor.o(($event) => $data.modalVisible = false)
+    g: common_assets._imports_1$7,
+    h: common_assets._imports_3$2,
+    i: common_vendor.o(($event) => $data.dropdownIndex = null),
+    j: common_assets._imports_4$1,
+    k: common_vendor.o((...args) => $options.openAddCategory && $options.openAddCategory(...args)),
+    l: $data.modalVisible
+  }, $data.modalVisible ? {
+    m: common_vendor.t($data.modalTitle),
+    n: $data.inputValue,
+    o: common_vendor.o(($event) => $data.inputValue = $event.detail.value),
+    p: common_vendor.o(($event) => $data.modalVisible = false),
+    q: common_vendor.o((...args) => $options.confirmModal && $options.confirmModal(...args)),
+    r: common_vendor.o(() => {
+    }),
+    s: common_vendor.o(($event) => $data.modalVisible = false)
   } : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-353de722"]]);

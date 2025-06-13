@@ -5,9 +5,9 @@
 
 		<!-- 头部 欢迎 & 头像 -->
 		<view class="header">
-			<image class="avatar" :src="avatarUrl" mode="aspectFill" />
+			<image class="avatar" :src="userInfo.avatarUrl" mode="aspectFill" />
 			<view class="greeting">
-				<text class="welcome-text">欢迎回来，{{ nickName }}</text>
+				<text class="welcome-text">欢迎回来，{{ userInfo.nickName }}</text>
 				<text class="subtitle">为每天搭配精致穿搭</text>
 			</view>
 		</view>
@@ -56,21 +56,12 @@
 			</div>
 		</section>
 
-<!-- <view class="login-container">
-	
-	<view class="login-btn">
-		一键登录		
-	</view>
-	
-</view> -->
+
 
 	</view>
 </template>
 
 <script>
-	import {
-		themes
-	} from '@/components/theme.js'
 	export default {
 
 		data() {
@@ -88,34 +79,22 @@
 				weatherTips: '',
 				windText: '',
 				weatherIcon: '',
-				theme: themes[0],
-				themes,
 				banners: [
 					'/static/banners/banner1.png',
 					'/static/banners/banner2.png',
 					'/static/banners/banner3.png'
-				],
-				nickName: '',
+				],				
+				userInfo:{},		
 				isLoggedIn: false,
 				slogan: '让穿搭变得简单',
-
-				nickName: 'Sarah',
-				avatarUrl: '/static/theme.png',
 				weatherIcon: '/static/weather_icons/theme.png',
 				currentDate: '',
 				weekDay: '',
-				recentlyClothes: []
+				recentlyClothes: [],
 			};
 		},
-		onShow() {
-			uni.setNavigationBarColor({
-			  frontColor:  '#000000',
-			  backgroundColor: '#ffffff' 
-			});
-			
-			
-			const saved = uni.getStorageSync('theme') || this.themes[0];
-			this.theme = saved;
+		onShow() {			
+			this.userInfo = uni.getStorageSync('wardrobeUserInfo') || {};
 			const clothes = uni.getStorageSync("clothes") || [];
 			if (clothes.length > 0) {
 				//取最近五个上传的衣服
@@ -164,7 +143,7 @@
 					type: 'wgs84',
 					success: res => {
 						const loc = `${res.longitude},${res.latitude}`;
-						wx.request({
+						uni.request({
 							url: 'https://nd3tefcedt.re.qweatherapi.com/v7/weather/3d',
 							data: {
 								location: loc,

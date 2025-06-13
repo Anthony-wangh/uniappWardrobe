@@ -3,7 +3,7 @@
 		<!-- 顶部标题栏 -->
 		<view class="header-container">
 			<view class="header">
-				<text class="title-text" :style="{ color: theme.textColor }">我的衣橱</text>
+				<text class="title-text">我的衣橱</text>
 			</view>
 
 			<view class="search-filter-area">
@@ -11,32 +11,33 @@
 					<view class="search-area">
 						<image class="search-btn" src="/static/search.png" mode="aspectFit"></image>
 						<input v-model="searchKeyword" class="search-input" placeholder="搜索衣物名称" />
-					</view>				
-					
+					</view>
+
 					<view :class="['edit-btn-inline', isEditMode ? 'finish' : 'edit']" @click="toggleEditMode">
 						<text
 							:class="['edit-btn-text',isEditMode ? 'finish' : 'edit']">{{ isEditMode ? '完成' : '管理' }}</text>
 						<image class="edit-btn-image" :src="isEditMode ? '/static/Fnish.png':'/static/Edit.png'"
 							mode="aspectFit"></image>
-					</view>					
+					</view>
 				</view>
 
 				<!-- 季节选择下拉 -->
 				<view class="search-options-container">
-					<view class="season-dropdown" >
+					<view class="season-dropdown">
 						<text class="edit-btn-text" @click.stop="toggleSeasonDropdown">季节</text>
-						<image src="/static/Filter.png" class="arrow-icon" mode="aspectFit" @click.stop="toggleSeasonDropdown"/>
+						<image src="/static/Filter.png" class="arrow-icon" mode="aspectFit"
+							@click.stop="toggleSeasonDropdown" />
 						<view v-if="selectSeasonText!==''" class="season-selection">
 							<text class="season-selection-text">{{selectSeasonText}}</text>
 							<text class="clear-select-season" @click="clearSelectSeason">×</text>
 						</view>
 					</view>
-					
+
 					<view class="fold-all" @click="clickFoldall">
 						<text class="edit-btn-text">{{ isExpand ? '全部收起' : '全部展开' }}</text>
 						<image :class="['arrow', isExpand ? '' : 'open']" src='/static/Expend.png' mode="aspectFit">
 						</image>
-					</view>			
+					</view>
 
 					<view class="dropdown-panel" v-if="seasonDropdownVisible">
 						<view class="dropdown-option" v-for="season in allSeasons" :key="season"
@@ -86,7 +87,7 @@
 								<view class="clothes-row" v-for="(row, rowIndex) in getRows(getAllItemsWithAdd(subCat))"
 									:key="rowIndex">
 									<view v-for="(item, itemIndex) in row" :key="itemIndex" class="clothes-item"
-										@click.stop="toggleSelectClothes(item)">
+										@click.stop="toggleSelectClothes(item)" @longpress="longPressClothes(item)">
 										<template>
 											<view class="checkbox" v-if="isEditMode">
 												<image
@@ -121,63 +122,64 @@
 
 
 <script>
-	import {
-		themes
-	} from '@/components/theme.js';
-
 	export default {
 		data() {
 			return {
 				currentMainCategoryIndex: 0,
-				categories: [{
-						name: "上衣",
-						subCategories: ["T恤", "衬衫", "外套", "羽绒服"]
-					},
-					{
-						name: "裤子",
-						subCategories: ["牛仔裤", "运动裤", "休闲裤", "裙子"]
-					},
-					{
-						name: "鞋",
-						subCategories: ["运动鞋", "板鞋", "高跟鞋", "靴子"]
-					},
-					{
-						name: "配饰",
-						subCategories: ["帽子", "眼镜", "丝巾"]
-					},
-					{
-						name: "包",
-						subCategories: ["单肩包", "双肩包"]
-					}
-				],
+				categoriesMap: {
+					上衣: ['T恤', '衬衫', '外套', '羽绒服'],
+					裤子: ['牛仔裤', '运动裤', '休闲裤', '裙子'],
+					鞋: ['运动鞋', '板鞋', '高跟鞋', '靴子'],
+					配饰: ['帽子', '眼镜', '丝巾'],
+					包: ['单肩包', '双肩包']
+				},
 				clothes: [],
 				isSubCollapsed: {},
 				isEditMode: false,
 				selectedClothes: [],
-				theme: themes[0],
-				themes,
 				searchKeyword: '', //确定搜索关键词
 				selectedSeasons: [],
 				allSeasons: ['春', '夏', '秋', '冬'],
 				seasonDropdownVisible: false,
 				selectSeasonText: '',
-				isExpand: false
+				isExpand: false,
+				quota: {
+					clothesCount: 0,
+					outfitsCount: 0,
+					clothesQuota: 20,
+					outfitsQuota: 5,
+					clothesRate: '0%',
+					outfitsRate: '0%'
+				},
+				canAddClothes: true,
+				canAddOutfits: true
 
 			};
 		},
 		computed: {
+			categories() {
+				return Object.entries(this.categoriesMap).map(([name, subCategories]) => ({
+					name,
+					subCategories
+				}));
+			},
 			currentSubCategories() {
-				return this.categories[this.currentMainCategoryIndex].subCategories || [];
+				const currentMain = this.categories[this.currentMainCategoryIndex];
+				return currentMain ? currentMain.subCategories : [];
 			}
 		},
 		onShow() {
-			uni.setNavigationBarColor({
-				frontColor: '#000000',
-				backgroundColor: '#ffffff'
-			});
+			const quo = uni.getStorageSync("wardrobeQuota");
+			if (quo) {
+				this.quota = quo;
+			}
+			const category = uni.getStorageSync('wartrobeCategory');
+			if (category) {
+				this.categoriesMap = category;
+			}
 
-			const saved = uni.getStorageSync('theme') || this.themes[0];
-			this.theme = saved;
+			this.canAddClothes = this.quota.clothesCount < this.quota.clothesQuota;
+			this.canAddOutfits = this.quota.outfitsCount < this.quota.outfitsQuota;
 
 			this.clothes = uni.getStorageSync("clothes") || [];
 			this.categories[this.currentMainCategoryIndex].subCategories.forEach(sub => {
@@ -213,19 +215,6 @@
 				});
 			},
 
-
-			getTabStyle(id) {
-				const base = {
-					padding: '5px',
-					fontSize: '16px',
-					color: '#1b1b1b',
-				};
-				if (id === this.currentMainCategoryIndex) {
-					base.color = '#8A6FDF';
-					base.fontWeight = 'bold';
-				}
-				return base;
-			},
 			selectMainCategory(index) {
 				this.currentMainCategoryIndex = index;
 			},
@@ -277,13 +266,40 @@
 					this.selectedClothes.push(item);
 				}
 			},
+			longPressClothes(item) {
+				if (this.isEditMode)
+					return;
+				this.toggleEditMode();
+				this.selectedClothes.push(item);
+			},
 			deleteSelected() {
 				if (this.selectedClothes.length === 0) return;
-				this.clothes = this.clothes.filter(c => !this.selectedClothes.includes(c));
-				this.selectedClothes = [];
-				this.saveClothes();
+
+				uni.showModal({
+					title: '确定删除选中的衣物？',
+					content: `删除后将无法找回！`,
+					success: res => {
+						if (res.confirm) {
+							this.clothes = this.clothes.filter(c => !this.selectedClothes.includes(c));
+							this.selectedClothes = [];
+							this.saveClothes();
+
+							this.quota.clothesCount = this.clothes.length;
+							uni.setStorageSync("wardrobeQuota", this.quota);
+						}
+					}
+				});
+
 			},
 			matchSelected() {
+				if (!this.canAddOutfits) {
+					uni.showToast({
+						title: '配额不足',
+						icon: 'error'
+					});
+					return;
+				}
+
 				if (this.selectedClothes.length <= 0) {
 					uni.showToast({
 						title: '至少选择一件衣物进行搭配',
@@ -316,6 +332,14 @@
 				return [...clothesList];
 			},
 			onAddItemClick(subCat) {
+				if (!this.canAddClothes) {
+					uni.showToast({
+						title: '配额不足',
+						icon: 'error'
+					});
+					return;
+				}
+
 				if (this.isEditMode)
 					this.toggleEditMode();
 
@@ -508,6 +532,17 @@
 		justify-content: space-around;
 		align-items: center;
 		box-shadow: 4px 4px 12rpx rgba(0, 0, 0, 0.05);
+		animation: slideUp 0.3s ease-out;
+	}
+
+	@keyframes slideUp {
+		from {
+			transform: translateY(100%);
+		}
+
+		to {
+			transform: translateY(0);
+		}
 	}
 
 	.action-btn {
@@ -532,14 +567,14 @@
 
 
 	.search-container {
-		width: 100%;		
+		width: 100%;
 		align-items: center;
 		display: flex;
-		flex-direction: row;		
+		flex-direction: row;
 		margin: 5px 10px;
 	}
-	
-	.search-area{
+
+	.search-area {
 		width: calc(100% - 70px);
 		display: flex;
 		flex-direction: row;
@@ -614,8 +649,8 @@
 		position: relative;
 		justify-content: space-between;
 	}
-	
-	.edit-option{
+
+	.edit-option {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -661,7 +696,7 @@
 		margin-left: 5px;
 	}
 
-	.fold-all {		
+	.fold-all {
 		height: 20px;
 		display: flex;
 		align-items: center;
@@ -696,15 +731,15 @@
 		border: 1px solid #f1f1f1;
 		background-color: #f8f8f8;
 	}
-	
-	.edit-btn-text{
+
+	.edit-btn-text {
 		font-size: 14px;
 		padding: 0 3px;
 	}
 
 
 	.edit-btn-text.finish {
-		
+
 		color: #8A6FDF;
 	}
 

@@ -96,6 +96,20 @@
 			{
 				"navigationBarTitleText" : ""
 			}
+		},
+		{
+			"path" : "pages/settings/feedback",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/settings/about",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
 		}
 		
 

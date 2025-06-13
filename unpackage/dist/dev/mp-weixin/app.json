@@ -14,7 +14,9 @@
     "pages/settings/faqSetting",
     "pages/settings/privacyPolicy",
     "pages/settings/categorySetting",
-    "pages/settings/messageList"
+    "pages/settings/messageList",
+    "pages/settings/feedback",
+    "pages/settings/about"
   ],
   "window": {
     "navigationBarTextStyle": "black",

@@ -45,8 +45,8 @@
 				messages: [{
 						id: 1,
 						title: '欢迎使用衣橱管家！',
-						content: '这是您的第一条站内信，感谢您的使用。',
-						time: '2025-05-13 10:00',
+						content: '这是您的第一条站内信，感谢您的使用，让我们一起进入精致的生活吧。',
+						time: '2025-06-11 10:00',
 						read: false,
 						expanded: false
 					},
@@ -63,7 +63,7 @@
 						title: '功能更新通知',
 						content: '新增类目编辑功能和主题设置界面，欢迎体验！',
 						time: '2025-05-10 14:20',
-						read: true,
+						read: false,
 						expanded: false
 					},
 				],

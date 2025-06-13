@@ -1,6 +1,5 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const components_theme = require("../../components/theme.js");
 const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   data() {
@@ -18,18 +17,14 @@ const _sfc_main = {
       weatherTips: "",
       windText: "",
       weatherIcon: "",
-      theme: components_theme.themes[0],
-      themes: components_theme.themes,
       banners: [
         "/static/banners/banner1.png",
         "/static/banners/banner2.png",
         "/static/banners/banner3.png"
       ],
-      nickName: "",
+      userInfo: {},
       isLoggedIn: false,
       slogan: "让穿搭变得简单",
-      nickName: "Sarah",
-      avatarUrl: "/static/theme.png",
       weatherIcon: "/static/weather_icons/theme.png",
       currentDate: "",
       weekDay: "",
@@ -37,12 +32,7 @@ const _sfc_main = {
     };
   },
   onShow() {
-    common_vendor.index.setNavigationBarColor({
-      frontColor: "#000000",
-      backgroundColor: "#ffffff"
-    });
-    const saved = common_vendor.index.getStorageSync("theme") || this.themes[0];
-    this.theme = saved;
+    this.userInfo = common_vendor.index.getStorageSync("wardrobeUserInfo") || {};
     const clothes = common_vendor.index.getStorageSync("clothes") || [];
     if (clothes.length > 0) {
       this.recentlyClothes = clothes.length > 5 ? clothes.slice(-5) : clothes;
@@ -87,7 +77,7 @@ const _sfc_main = {
         type: "wgs84",
         success: (res) => {
           const loc = `${res.longitude},${res.latitude}`;
-          common_vendor.wx$1.request({
+          common_vendor.index.request({
             url: "https://nd3tefcedt.re.qweatherapi.com/v7/weather/3d",
             data: {
               location: loc,
@@ -101,10 +91,10 @@ const _sfc_main = {
               this.weatherInfo = today;
               this.updateWeather(today);
             },
-            fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:181", "获取天气失败:", err)
+            fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:160", "获取天气失败:", err)
           });
         },
-        fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:184", "获取位置失败:", err)
+        fail: (err) => common_vendor.index.__f__("error", "at pages/main/main.vue:163", "获取位置失败:", err)
       });
     },
     updateWeather(w) {
@@ -244,8 +234,8 @@ ${parts.join("\n")}`;
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: $data.avatarUrl,
-    b: common_vendor.t($data.nickName),
+    a: $data.userInfo.avatarUrl,
+    b: common_vendor.t($data.userInfo.nickName),
     c: common_vendor.t($data.weatherDetail),
     d: common_vendor.t($data.windText),
     e: common_vendor.t($data.weatherTips),

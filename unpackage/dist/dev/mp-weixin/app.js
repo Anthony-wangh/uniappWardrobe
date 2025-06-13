@@ -17,6 +17,8 @@ if (!Math) {
   "./pages/settings/privacyPolicy.js";
   "./pages/settings/categorySetting.js";
   "./pages/settings/messageList.js";
+  "./pages/settings/feedback.js";
+  "./pages/settings/about.js";
 }
 const _sfc_main = {
   onLaunch() {

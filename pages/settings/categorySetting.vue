@@ -7,7 +7,9 @@
 		</view>
 
 		<!-- 主类目列表 -->
-		<scroll-view scroll-y class="category-list" @click="dropdownIndex=null">
+		<scroll-view scroll-y class="category-list" @click="dropdownIndex=null">	
+						
+			<view class="section-title">衣物类目</view>
 			<view v-for="(subList, category, index) in categoriesMap" :key="category" class="category-item">
 				<!-- 主类目行 -->
 				<view class="category-header" @click="toggleCollapse(category)">
@@ -46,6 +48,17 @@
 					</view>
 				</view>
 			</view>
+		
+			<view class="section-title">搭配类目</view>
+		<!-- 搭配类目区域 -->
+			<view class="match-section">			
+			<view class="match-item" v-for="(item, index) in matchCategories" :key="index">
+				<text class="match-name">{{ item }}</text>
+				<image class="sub-item-edit" src="/static/handleIcons/edit.png" @click="editMatchCategory(index)" />
+				<image class="sub-item-delete" src="/static/handleIcons/delete.png" @click="deleteMatchCategory(index)" />
+			</view>
+		</view>
+		
 		</scroll-view>
 
 		<!-- 右下角浮动按钮 -->
@@ -91,12 +104,25 @@
 				inputValue: '',
 				actionType: '',
 				targetCategory: '',
-				sourceSubCategoryIndex: null
+				sourceSubCategoryIndex: null,
+				//搭配类目
+				matchCategories: ['日常通勤', '春日出游', '周末约会', '正式场合'],
+
 			};
-		},
-		mounted() {
+		},		
+		onShow() {
+			const category=uni.getStorageSync('wartrobeCategory');
+			if(category){
+				this.categoriesMap = category;
+			}
 			for (const key in this.categoriesMap) {
 				this.$set(this.collapsed, key, true);
+			}
+			
+			
+			const match = uni.getStorageSync('matchCategories');
+			if (match && Array.isArray(match)) {
+				this.matchCategories = match;
 			}
 		},
 		methods: {
@@ -146,17 +172,29 @@
 						if (res.confirm) {
 							// 删除主类目
 							delete this.categoriesMap[category];
+							this.save();
 						}
 					}
 				});
 				this.dropdownIndex = null;
 			},
 			openAddCategory() {
-				this.modalTitle = '新增主类目';
-				this.inputValue = '';
-				this.actionType = 'addMain';
-				this.modalVisible = true;
+				uni.showActionSheet({
+					itemList: ['新增衣物类目', '新增搭配类目'],
+					success: res => {
+						if (res.tapIndex === 0) {
+							this.modalTitle = '新增主类目';
+							this.actionType = 'addMain';
+						} else {
+							this.modalTitle = '新增搭配类目';
+							this.actionType = 'addMatch';
+						}
+						this.inputValue = '';
+						this.modalVisible = true;
+					}
+				});
 			},
+
 			editSubCategory(mainCategory, subCategory, index) {
 				this.modalTitle = '修改类目';
 				this.targetCategory=mainCategory;
@@ -173,6 +211,7 @@
 						if (res.confirm) {
 							const list = this.categoriesMap[mainCategory];
 							list.splice(index, 1);
+							this.save();
 						}
 					}
 				});
@@ -228,12 +267,59 @@
 					this.categoriesMap[this.targetCategory] = sublist;
 					this.sourceSubCategoryIndex = null;
 				}
+				else if (this.actionType === 'editMatch') {
+					if (this.matchCategories.includes(value)) {
+						return uni.showToast({
+							title: '搭配类目已存在',
+							icon: 'none'
+						});
+					}
+					this.matchCategories[this.sourceSubCategoryIndex] = value;
+					this.sourceSubCategoryIndex = null;
+				}
+				else if (this.actionType === 'addMatch') {
+					if (this.matchCategories.includes(value)) {
+						return uni.showToast({
+							title: '搭配类目已存在',
+							icon: 'none'
+						});
+					}
+					this.matchCategories.push(value);
+				}
 				this.modalVisible = false;
 				this.inputValue = '';
+				this.save();
+			},
+			save(){
+				uni.setStorageSync('wartrobeCategory',this.categoriesMap);
+				uni.setStorageSync('matchCategories', this.matchCategories);
 			},
 			goBack() {
 				uni.navigateBack();
+			},
+			
+			editMatchCategory(index) {
+				this.modalTitle = '修改搭配类目';
+				this.inputValue = this.matchCategories[index];
+				this.actionType = 'editMatch';
+				this.sourceSubCategoryIndex = index;
+				this.modalVisible = true;
+			},
+			
+			deleteMatchCategory(index) {
+				uni.showModal({
+					title: '提示',
+					content: `确定删除“${this.matchCategories[index]}”搭配类目？`,
+					success: res => {
+						if (res.confirm) {
+							this.matchCategories.splice(index, 1);
+							this.save(); // 可拓展同步保存逻辑
+						}
+					}
+				});
 			}
+
+			
 		}
 	};
 </script>
@@ -389,7 +475,7 @@
 		bottom: 40px;
 		width: 50px;
 		height: 50px;
-		background-color: #2f2f2f;
+		background-color: #8A6FDF;
 		border-radius: 25px;
 		display: flex;
 		align-items: center;
@@ -450,4 +536,38 @@
 		display: flex;
 		justify-content: space-between;
 	}
+	
+	.section-title {
+		padding: 12px 16px 6px;
+		font-size: 16px;
+		font-weight: bold;
+		color: #333;
+	}
+	
+	.match-section {
+		margin: 10px 10px 0;
+		background-color: #fff;
+		border-radius: 6px;
+		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+		padding: 10px;
+	}
+	
+	.match-item {
+		display: flex;
+		align-items: center;
+		padding: 8px 0;
+		border-bottom: 1px solid #eee;
+		position: relative;
+	}
+	
+	.match-item:last-child {
+		border-bottom: none;
+	}
+	
+	.match-name {
+		font-size: 16px;
+		color: #212121;
+		margin-left: 10px;
+	}
+
 </style>

@@ -26,10 +26,10 @@
 
 /* 内容滚动区域 */
 .content.data-v-b41dbc0d {
-	flex: 1;
-	padding: 16px 0;
-	background-color: #fff;
-	margin: 10px;
+	width: calc(100% - 40px);
+	/* background-color: #fff; */
+	margin: 5px 20px;
+	height: calc(100vh - 120px);
 }
 .section.data-v-b41dbc0d {
 	margin-bottom: 20px;
