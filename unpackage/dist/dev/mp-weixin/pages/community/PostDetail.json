@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "",
-  "usingComponents": {
-    "comment-input-popup": "../../components/CommentInputPopup"
-  }
-}
