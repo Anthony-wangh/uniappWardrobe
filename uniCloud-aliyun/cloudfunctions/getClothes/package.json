@@ -1,0 +1,7 @@
+{
+  "name": "getClothes",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

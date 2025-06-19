@@ -41,7 +41,7 @@
 		data() {
 			return {
 				version: '1.0.0',
-				updateDate: '2025年6月12日',
+				updateDate: '2025年6月18日',
 				features: [
 					'我的衣橱助手全新上线，首个版本尝鲜！',
 					'风格可爱的界面，让你爱不释手',

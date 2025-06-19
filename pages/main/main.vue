@@ -5,12 +5,14 @@
 
 		<!-- 头部 欢迎 & 头像 -->
 		<view class="header">
-			<image class="avatar" :src="userInfo.avatarUrl" mode="aspectFill" />
-			<view class="greeting">
-				<text class="welcome-text">欢迎回来，{{ userInfo.nickName }}</text>
-				<text class="subtitle">为每天搭配精致穿搭</text>
+			<image class="avatar" :src='userInfo.avatarUrl ? userInfo.avatarUrl : "/static/avatorDefault.png"' mode="aspectFill" />
+			<view v-if="userInfo.nickName" class="greeting">
+				<text class="welcome-text">{{"欢迎回来，" + userInfo.nickName }}</text>
+				<text class="subtitle">{{ '小管家已经陪伴你' + this.usageDay +'天'}}</text>
 			</view>
+			<view v-if="!userInfo.nickName" class="login-btn" @click="clickLogin">点击登录</view>
 		</view>
+		
 
 		<!-- 天气卡片 -->
 		<view class="weather-card">
@@ -36,7 +38,7 @@
 			</view>
 			<view class="action-btn" @click="startMatch">
 				<image class="action-icon" src="/static/main/Shuffle.png" />
-				<text class="action-text">开始搭配</text>
+				<text class="action-text">我的搭配</text>
 			</view>
 		</view>
 		<!-- 推荐模块 -->
@@ -51,6 +53,7 @@
 					<view class="item-info">
 						<text class="item-name">{{ item.name }}</text>
 						<text class="item-category">{{ item.primaryCategory }}/{{item.secondaryCategory}}</text>
+						<text class="item-time">{{ formatTime(item.createTime) }}</text>
 					</view>
 				</div>
 			</div>
@@ -91,10 +94,12 @@
 				currentDate: '',
 				weekDay: '',
 				recentlyClothes: [],
+				usageDay:0//使用时长
 			};
 		},
 		onShow() {			
 			this.userInfo = uni.getStorageSync('wardrobeUserInfo') || {};
+			this.usageDay =  uni.getStorageSync('wardrobeUsingDates') || 1;
 			const clothes = uni.getStorageSync("clothes") || [];
 			if (clothes.length > 0) {
 				//取最近五个上传的衣服
@@ -111,15 +116,46 @@
 				const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
 				this.weekDay = days[date.getDay()]
 			},
+			formatTime(time) {
+				const date = new Date(time);
+			
+				const year = date.getFullYear();
+				const month = date.getMonth() + 1;
+				const day = date.getDate();
+				const hour = date.getHours().toString().padStart(2, '0');
+				const minute = date.getMinutes().toString().padStart(2, '0');
+			
+				return `${year}年${month}月${day}日 ${hour}:${minute}`;
+			},
 			upload() {
+				if(!this.checkLogin())
+					return;
 				uni.navigateTo({
 					url: "/pages/addClothes/addClothes"
 				});
 			},
 			startMatch() {
+				if(!this.checkLogin())
+					return;
 				uni.switchTab({
 					url: "/pages/matching/matching"
 				});
+			},
+			clickLogin(){
+				uni.navigateTo({
+					url: "/pages/login/login"
+				});
+			},
+			checkLogin(){
+				const userInfo = uni.getStorageSync('wardrobeUserInfo');
+				if(userInfo)
+				{
+					return true;
+				}				
+				uni.navigateTo({
+					url: "/pages/login/login"
+				});
+				return false;
 			},
 			isToday(dateStr) {
 				const [y, m, d] = dateStr.split('-').map(Number);
@@ -288,7 +324,7 @@
 				if (rec.accessories.length) parts.push(`- 配饰：${rec.accessories.join('、')}`);
 				if (rec.specialNotes.length) parts.push(`- 注意：${rec.specialNotes.join('；')}`);
 				if (rec.tips.length) parts.push(`- 小贴士：${rec.tips.join('；')}`);
-				rec.summary = `天气${rec.level}\n${parts.join('\n')}`;
+				rec.summary = `[穿衣建议]\n${parts.join('\n')}`;
 				return rec;
 			}
 		}
@@ -303,31 +339,18 @@
 		height: 100vh;
 		position: relative;
 	}
-	.login-container{
-		position: absolute;
-		background-color: #C09AFF;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		
-		justify-content: space-around;
-		align-items: center;
-		justify-items: center;
-		display: flex;
-	}
 	
 	.login-btn{
-		background-color: #161616;
-		border-radius: 20px;
 		font-size: 16px;
-		padding: 10px 20px;
-		color: #F9F9F9;
-		text-align: center;
+		font-weight: bold;
+		padding: 8px 0px;
+		color: #8A6FDF;
+		text-align: start;
+		margin-left: 15px;
 	}
 
 	.status-safe-area {
-		height: calc(var(--status-bar-height) + 30px);
+		height: calc(var(--status-bar-height) + 40px);
 	}
 
 	.header {
@@ -458,8 +481,8 @@
 	}
 
 	.empty-state-text {
-		font-size: 14px;
-		color: #C09AFF;
+		font-size: 12px;
+		color: #8A6FDF;
 		text-align: center;
 		margin-top: 20px;
 	}
@@ -485,11 +508,16 @@
 				// border-radius: 12px;
 				// background: #f8f8f8;
 				// padding: 10px;
-				// box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.05);
+				box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.05);
 				display: flex;
 				flex-direction: column;
 				// align-items: center;
 				// justify-items: center;
+				border: #d1d1d1 solid 1px;
+				border-radius: 20px;
+				
+				border-bottom-left-radius: 10px;
+				border-bottom-right-radius: 10px;
 
 				.item-icon {
 					width: 150px;
@@ -500,21 +528,39 @@
 
 				.item-info {
 					margin: 10px;
+					display: flex;
+					flex-direction: column;
+					
+					.item-name {
+						font-size: 15px;
+						color: #161616;
+						
+						max-width: 100px;
+						/* 限制最大宽度，可根据需要调整 */
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+					
+					.item-category {
+						align-self: flex-start;
+						font-size: 10px;
+						color: #ffffff;
+						background: #8E7AFF;
+						border-radius: 10px;
+						padding: 3px 6px;
+						text-align: center;
+						margin: 3px 0;
+					}
+					
+					.item-time{
+						font-size: 10px;
+						color: #666;
+						padding: 3px 0px;
+					}
 				}
 
-				.item-name {
-					font-size: 15px;
-					color: #161616;
-				}
-
-				.item-category {
-					margin-left: 10px;
-					font-size: 10px;
-					color: #ffffff;
-					background: #8E7AFF;
-					border-radius: 10px;
-					padding: 2px 5px;
-				}
+				
 
 			}
 		}

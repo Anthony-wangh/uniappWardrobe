@@ -3,17 +3,18 @@
 		<!-- 用户信息 -->
 		<view class="user-profile">
 			<view class="user-info">
-				<button open-type="chooseAvatar" class="avatar-btn" @chooseavatar="onChooseAvatar">
-					<image v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" class="avatar"></image>
+				<button v-if="userInfo.avatarUrl" open-type="chooseAvatar" class="avatar-btn" @chooseavatar="onChooseAvatar">
+					<image v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" class="avatar"></image>					
 				</button>
+				<image v-if="!userInfo.avatarUrl" src='/static/avatorDefault.png' class="avator-default" mode="aspectFit"></image>		
 				<view class="user-meta">
 					<view class="nickName">
-						<input type="nickname" class="nickname-input" :value="userInfo.nickName" @blur="userNameInput"
+						<input v-if="userInfo.nickName" type="nickname" class="nickname-input" :value="userInfo.nickName" @blur="userNameInput"
 							placeholder="请输入昵称" />
-						<!-- <text class="editNickName">></text> -->
+						<text v-if="!userInfo.nickName" class="login-btn">点击登录</text>
 					</view>
 
-					<view class="achievement">
+					<view class="achievement" v-if="userInfo.nickName">
 						<image class="achievement-icon" src='/static/achivement/achivementIcon.png'></image>
 						<text class="user-desc">{{ achievement.name}}</text>
 					</view>
@@ -27,7 +28,7 @@
 					<view class="quota-bar">
 						<view class="quota-bar-fill pink-bar" :style="{ width: quota.clothesRate.toString() }"></view>
 					</view>
-					<text class="expand-text">+扩容</text>
+					<!-- <text class="expand-text">+扩容</text> -->
 				</view>
 				<view class="quota-box">
 					<text class="quota-title">搭配额度</text>
@@ -35,18 +36,13 @@
 					<view class="quota-bar">
 						<view class="quota-bar-fill blue-bar" :style="{ width:  quota.outfitsRate.toString() }"></view>
 					</view>
-					<text class="expand-text">+扩容</text>
+					<!-- <text class="expand-text">+扩容</text> -->
 				</view>
 			</view>
 		</view>
 
 		<!-- 设置项 -->
 		<view class="settings-list">
-			<!-- <navigator url="/pages/settings/messageList" class="setting-item">
-				<image src="/static/settingIcons/message.png" class="icon" />
-				<text class="label">消息</text>
-				<text class="arrow">›</text>
-			</navigator> -->
 
 			<navigator url="/pages/settings/categorySetting" class="setting-item">
 				<image src="/static/settingIcons/category.png" class="icon" />
@@ -54,11 +50,6 @@
 				<text class="arrow">›</text>
 			</navigator>
 
-			<!-- <navigator url="/pages/settings/themeSetting" class="setting-item">
-				<image src="/static/settingIcons/theme.png" class="icon" />
-				<text class="label">主题设置</text>
-				<text class="arrow">›</text>
-			</navigator> -->
 
 			<navigator url="/pages/settings/faqSetting" class="setting-item">
 				<image src="/static/settingIcons/faq.png" class="icon" />
@@ -72,11 +63,6 @@
 				<text class="arrow">›</text>
 			</navigator>
 			
-			<navigator url="/pages/settings/feedback" class="setting-item">
-				<image src="/static/settingIcons/communication.png" class="icon" />
-				<text class="label">反馈建议</text>
-				<text class="arrow">›</text>
-			</navigator>
 			
 			<navigator url="/pages/settings/about" class="setting-item">
 				<image src="/static/settingIcons/about.png" class="icon" />
@@ -102,8 +88,8 @@
 				quota:{
 					clothesCount :0,
 					outfitsCount : 0,
-					clothesQuota : 20,
-					outfitsQuota : 5,
+					clothesQuota : 30,
+					outfitsQuota : 8,
 					clothesRate : '0%',
 					outfitsRate : '0%'
 				},
@@ -170,10 +156,10 @@
 					quo.clothesQuota = this.quota.clothesQuota;
 					quo.outfitsQuota = this.quota.outfitsQuota;
 				}
-				quo.clothesCount = this.clothes.length;
-				quo.outfitsCount = this.outfits.length;
-				quo.clothesRate = (100.0*this.clothes.length / this.quota.clothesQuota).toString() + '%';
-				quo.outfitsRate = (100.0*this.outfits.length / this.quota.outfitsQuota).toString() + '%';						
+				quo.clothesCount = this.clothes?this.clothes.length:0;
+				quo.outfitsCount = this.outfits?this.outfits.length:0;
+				quo.clothesRate = (100.0*quo.clothesCount / this.quota.clothesQuota).toString() + '%';
+				quo.outfitsRate = (100.0*quo.outfitsCount / this.quota.outfitsQuota).toString() + '%';						
 				this.quota = quo;
 				uni.setStorageSync("wardrobeQuota",quo);	
 			},			
@@ -247,6 +233,17 @@
 					});
 					console.error('云函数错误：', err);
 				});
+			},
+			clickLogin(){
+				uni.navigateTo({
+					url: "/pages/login/login"
+				});				
+			},
+			onClickDefaultAvator(){
+				uni.showToast({
+					title: '请先登录',
+					icon: 'none'
+				});
 			}
 		}
 
@@ -280,6 +277,14 @@
 		overflow: hidden;
 		margin-right: 12px;
 		background: linear-gradient(30deg, #FDE047, #F59E0B);		
+	}
+	
+	.avator-default{
+		width: 60px;
+		height: 60px;
+		border-radius: 50%;
+		overflow: hidden;
+		margin-right: 12px;
 	}
 
 	.avatar {
@@ -453,5 +458,11 @@
 		font-size: 12px;
 		text-align: center;
 		margin-top: 20px;
+	}
+	.login-btn{
+		font-size: 16px;
+		font-weight: bold;
+		color: #8A6FDF;
+		margin-left: 10px;
 	}
 </style>

@@ -1,18 +1,18 @@
 {
 	"pages": [
 		{
-			"path" : "pages/login/login",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
-			}
-		},
-		{
 			"path": "pages/main/main",
 			"style": {
 				"navigationBarTitleText": ""
 			}
 		},
+		{
+			"path" : "pages/login/login",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},		
 		{
 			"path": "pages/wardrobe/wardrobe"
 		},
@@ -35,28 +35,7 @@
 			}
 		},
 		{
-			"path" : "pages/community/community",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
-			}
-		},
-		{
-			"path" : "pages/publishPost/publishPost",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
-			}
-		},
-		{
 			"path" : "pages/settings/settings",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
-			}
-		},
-		{
-			"path" : "pages/community/PostDetail",
 			"style" : 
 			{
 				"navigationBarTitleText" : ""
@@ -92,13 +71,6 @@
 		},
 		{
 			"path" : "pages/settings/messageList",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
-			}
-		},
-		{
-			"path" : "pages/settings/feedback",
 			"style" : 
 			{
 				"navigationBarTitleText" : ""

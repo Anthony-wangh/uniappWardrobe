@@ -21,10 +21,10 @@
 					</view>
 				</view>
 				<view class="input-row">
-					<picker class="picker-category" mode="selector" :range="categories" @change="onCategoryChange">						
+					<picker class="picker-category" mode="selector" :range="categories" @change="onCategoryChange">
 						<view class="input-box-category">
 							<text class="category-text">{{ category }}</text>
-							<image class="filter-icon" src="/static/filter1.png" mode="aspectFit"></image>						
+							<image class="filter-icon" src="/static/filter1.png" mode="aspectFit"></image>
 						</view>
 					</picker>
 				</view>
@@ -44,9 +44,11 @@
 						<image :src="item.thumbnail" class="outfit-icon" mode="aspectFit" />
 					</view>
 					<view class="outfit-info">
-						<view class="name">{{ item.name }}</view>
-						<view class="time">{{ getTime(item.time)}}</view>
+						<text class="name">{{ item.name }}</text>
+						<text class="category-label">{{ item.category }}</text>
+						<text class="time">{{ getTime(item.time) }}</text>
 					</view>
+
 				</view>
 			</view>
 			<view v-else class="empty">
@@ -94,26 +96,23 @@
 				quota: {
 					clothesCount: 0,
 					outfitsCount: 0,
-					clothesQuota: 20,
-					outfitsQuota: 5,
+					clothesQuota: 30,
+					outfitsQuota: 8,
 					clothesRate: '0%',
 					outfitsRate: '0%'
 				},
-				category:'日常通勤',
-				categories: ['日常通勤', '春日出游', '周末约会', '正式场合'],
+				category: '全部',
+				categories: ['全部', '日常通勤', '春日出游', '周末约会', '正式场合'],
 			};
 		},
 		computed: {
 			filteredOutfits() {
-				if (!this.searchKeyword.trim()) {
-					return this.outfits.filter(item =>
-						item.category===this.category
-					);
-				}					
 				const keyword = this.searchKeyword.toLowerCase();
-				return this.outfits.filter(item =>
-					item.name.toLowerCase().includes(keyword)&&item.category===this.category
-				);
+				return this.outfits.filter(item => {
+					const matchKeyword = item.name.toLowerCase().includes(keyword);
+					const matchCategory = this.category === '全部' || item.category === this.category;
+					return matchKeyword && matchCategory;
+				});
 			}
 		},
 		onShow() {
@@ -124,14 +123,47 @@
 			if (quo) {
 				this.quota = quo;
 			}
-			
+
 			const match = uni.getStorageSync('matchCategories');
 			if (match && Array.isArray(match)) {
+				match.unshift("全部");
 				this.categories = match;
 				this.category = this.categories[0];
 			}
+
+			this.syncLocalData();
 		},
 		methods: {
+			syncLocalData() {
+				const userInfo = uni.getStorageSync('wardrobeUserInfo');
+				if (!userInfo) {
+					console.log("未登录！");
+					return;
+				}
+				const localData = uni.getStorageSync('localOutfits');
+				if (localData) {
+					//本地数据大于10条时上传一次
+					if (localData.length >= 10) {
+						uniCloud.callFunction({
+							name: 'syncOutfitsData',
+							data: {
+								userId: userInfo._id,
+								outfits: localData
+							}
+						}).then((result) => {
+							if (result.result.code !== 200) {
+								console.log("数据上传失败！" + result.result.msg);
+							} else {
+								// 清空本地存储
+								uni.setStorageSync('localOutfits', null);
+								console.log("数据上传成功！");
+							}
+						}).catch((err) => {
+							console.error('云函数错误：', err);
+						});
+					}
+				}
+			},
 			getTime(time) {
 				const date = new Date(time);
 
@@ -185,6 +217,16 @@
 					content: `删除后将无法找回！`,
 					success: res => {
 						if (res.confirm) {
+							//保存更新记录
+							this.selectedOutfits.forEach(item => {
+								const deleteData = {
+									type: "delete",
+									data: item
+								};
+								this.saveLocalData(deleteData);
+							});
+
+
 							this.outfits = this.outfits.filter(c => !this.selectedOutfits.includes(c));
 							this.selectedOutfits = [];
 							uni.setStorageSync("outfits", this.outfits);
@@ -193,6 +235,11 @@
 						}
 					}
 				});
+			},
+			saveLocalData(data) {
+				let localData = uni.getStorageSync('localOutfits') || [];
+				localData.push(data);
+				uni.setStorageSync('localOutfits', localData);
 			}
 		}
 	};
@@ -388,13 +435,19 @@
 	.name {
 		font-size: 16px;
 		margin-bottom: 6rpx;
+		
+		max-width: 100px;
+		/* 限制最大宽度，可根据需要调整 */
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	.remark,
 	.time {
-		font-size: 10px;
+		font-size: 12px;
 		color: #666;
-		margin-bottom: 5px;
+		padding: 3px 0px;
+		margin-bottom: 10px;
 	}
 
 	.floating-btn {
@@ -484,14 +537,15 @@
 		align-items: center;
 		justify-content: center;
 	}
-	.filter-icon{
+
+	.filter-icon {
 		width: 20px;
 		height: 20px;
 	}
 
 	.input-box-category {
 		width: 100%;
-		padding: 6px 0;		
+		padding: 6px 0;
 		align-items: center;
 		justify-content: center;
 		justify-content: space-around;
@@ -500,17 +554,44 @@
 		border: 1px solid #f1f1f1;
 		background-color: #f8f8f8;
 	}
-	
-	.category-text{
+
+	.category-text {
 		font-size: 14px;
 		color: #333;
 		text-align: center;
 	}
-	
+
 	.input-row {
 		width: 150px;
 		display: flex;
 		align-items: center;
 		margin: 10px 0;
+	}
+
+	.name-category {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		/* align-items: center; */
+		padding-bottom: 5px;
+	}
+
+	.category-label {
+		align-self: flex-start;
+		display: inline-block;
+		font-size: 10px;
+		color: #8A6FDF;
+		background-color: #ebecf1;
+		box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
+		border-radius: 10px;
+		padding: 3px 6px;
+		text-align: center;
+		margin: 3px 0;
+
+		max-width: 100px;
+		/* 限制最大宽度，可根据需要调整 */
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 </style>

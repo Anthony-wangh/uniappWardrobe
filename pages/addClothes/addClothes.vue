@@ -67,8 +67,6 @@
 					<input class="input-field" v-model="form.brand" placeholder="请输入品牌（可选）" />
 				</view>
 			</view>
-
-
 			<button class="submit-btn" @click="submitForm">保存</button>
 			<text class="error-msg" v-if="errorMsg">{{ errorMsg }}</text>
 		</view>
@@ -110,7 +108,8 @@
 					notes: '',
 					purchaseDate: '',
 					brand: '',
-					seasons: []
+					seasons: [],
+					createTime:new Date().getTime()
 				},
 				categories: {
 					上衣: ["T恤", "衬衫", "外套", "羽绒服"],
@@ -173,36 +172,59 @@
 					this.form.seasons.splice(index, 1);
 				}
 			},
+			uploadImage(id,filePath) {
+				uni.showLoading({
+					title:'上传中..',
+					mask: true
+				});
+				uniCloud.uploadFile({
+					filePath: filePath,
+					cloudPath: 'clothesImage/' + id + '.png' // 指定上传到云存储的路径和文件名					
+				}).then(res => {
+					uni.hideLoading();
+					this.comfirmSubmit(id,res.fileID);
+				}).catch(err => {
+					uni.hideLoading();
+					uni.showToast({
+						title: '图片上传失败',						
+						icon: 'error'
+					});
+				});
+			},
 			submitForm() {
 				if (!this.form.image) return (this.errorMsg = '请上传衣服图片');
 				if (!this.form.name) return (this.errorMsg = '请输入衣服名称');
 				if (!this.form.primaryCategory) return (this.errorMsg = '请选择一级类目');
 				if (!this.form.secondaryCategory) return (this.errorMsg = '请选择二级类目');
-
+				const id = this.generateUniqueId();
+				this.uploadImage(id,this.form.image);
+			},
+			comfirmSubmit(id,imagePath){			
+				this.form.image = imagePath;
 				let clothes = uni.getStorageSync('clothes') || [];
-
+				
 				if (this.isEdit) {
 					let index = clothes.findIndex(item => item.id === this.form.id);
 					if (index !== -1) clothes[index] = this.form;
 					else {
-						this.form.id = this.generateUniqueId();
+						this.form.id = id;
 						clothes.push(this.form);
 					}
 				} else {
-					this.form.id = this.generateUniqueId();
+					this.form.id = id;
 					clothes.push(this.form);
 				}
-
+				const addData={type:"add",data:this.form};
+				this.saveLocalData(addData);
+				
 				uni.setStorageSync('clothes', clothes);
 				uni.showToast({
 					title: this.isEdit ? '修改成功' : '上传成功',
 					icon: 'success'
 				});
-
-				this.resetForm();
 				setTimeout(() => uni.switchTab({
 					url: "/pages/wardrobe/wardrobe"
-				}), 10);
+				}), 100);
 			},
 			resetForm() {
 				this.form = {
@@ -219,6 +241,11 @@
 			},
 			goBack() {
 				uni.navigateBack();
+			},
+			saveLocalData(data){
+				let localData = uni.getStorageSync('localClothes') || [];
+				localData.push(data);
+				uni.setStorageSync('localClothes', localData);
 			}
 		}
 	}

@@ -19,7 +19,7 @@
 						<view class="zindex-btn" @click.stop="bringToFront(index)">↑</view>
 						<image src="/static/scaleBtn.png" class="resize-btn" @touchstart.stop="startTransform($event)"
 							@touchmove.stop="handleTransform($event)"></image>
-						<view class="remove-btn" @click.stop="removeClothes(index)">×</view>
+						<!-- <view class="remove-btn" @click.stop="removeClothes(index)">×</view> -->
 					</view>
 				</view>
 
@@ -93,27 +93,35 @@
 					windowHeight
 				} = uni.getSystemInfoSync();
 
-				// 计算安全范围（避免衣物出界）
-				const cardWidth = 80; // 假设衣物卡片宽度为 80px
-				const cardHeight = 80; // 假设衣物卡片高度为 100px
-				const safeX = windowWidth - cardWidth;
-				const safeY = 320 - cardHeight;
-
 				let clothesItems = [];
-
-				selectItems.forEach(item => {
+				const cardWidth = 80;
+				const cardHeight = 80;
+				const padding = 10;
+				const containerWidth = windowWidth - 20; // outfit-preview 宽度是 100vw - 20px
+				
+				let x = -containerWidth*0.5 + cardWidth*0.5 + padding, y = -containerWidth*0.5 + cardHeight*0.5 +padding;
+				
+				selectItems.forEach((item, index) => {
+					// 换行判断
+					if ((x + cardWidth) > containerWidth * 0.5) {
+						x = -containerWidth*0.5 + cardWidth*0.5 + padding;
+						y += cardHeight + padding;
+					}
+				
 					const clothesItem = {
 						image: item.image,
-						x: (Math.random() - 0.5) * safeX,
-						y: (Math.random() - 0.5) * safeY,
+						x: x,
+						y: y,
 						scale: 1,
 						rotation: 0
 					};
 					clothesItems.push(clothesItem);
-
+				
+					x += cardWidth + padding;
 				});
-
+				
 				this.selectedClothes = clothesItems;
+
 			}
 		},
 		onShow() {
@@ -125,8 +133,11 @@
 		},
 		methods: {
 			getStyle(item) {
+				const rotation = isNaN(item.rotation) ? 0 : item.rotation;
+				const scale = isNaN(item.scale) ? 1 : item.scale;
+			
 				return {
-					transform: `translate(${item.x}px, ${item.y}px) rotate(${item.rotation}deg) scale(${item.scale})`,
+					transform: `translate(${item.x}px, ${item.y}px) rotate(${rotation}deg) scale(${scale})`,
 					transformOrigin: 'center center',
 					zIndex: item.z || 1
 				};
@@ -177,34 +188,42 @@
 					const touchY = event.touches[0].clientY;
 
 					this.startAngle = Math.atan2(touchY - this.centerY, touchX - this.centerX) * (180 / Math.PI);
-					this.startRotation = item.rotation;
+					this.startRotation = typeof item.rotation === 'number' ? item.rotation : 0;
 
 					this.startDistance = Math.hypot(touchX - this.centerX, touchY - this.centerY);
-					this.startScale = item.scale;
+					this.startScale = typeof item.scale === 'number' ? item.scale : 1;
+
 				}).exec();
 			},
 
 			handleTransform(event) {
 				if (this.activeIndex === null) return;
-
+			
 				const item = this.selectedClothes[this.activeIndex];
-
+			
 				const touchX = event.touches[0].clientX;
 				const touchY = event.touches[0].clientY;
-
-				// 当前角度
+			
+				// 防护：中心点是否准备好
+				if (typeof this.centerX !== 'number' || typeof this.centerY !== 'number') return;
+			
+				// 当前角度计算
 				const currentAngle = Math.atan2(touchY - this.centerY, touchX - this.centerX) * (180 / Math.PI);
 				const angleDelta = currentAngle - this.startAngle;
-				item.rotation = this.startRotation + angleDelta;
-
-				// 当前距离
+			
+				let newRotation = this.startRotation + angleDelta;
+				if (!isNaN(newRotation)) {
+					item.rotation = newRotation;
+				}
+			
+				// 当前距离计算
 				const currentDistance = Math.hypot(touchX - this.centerX, touchY - this.centerY);
-				let scaleRatio = currentDistance / this.startDistance;
-				scaleRatio = Math.max(0.5, Math.min(scaleRatio, 2));
-				item.scale = this.startScale * scaleRatio;
+				if (!isNaN(currentDistance) && this.startDistance > 0) {
+					let scaleRatio = currentDistance / this.startDistance;
+					scaleRatio = Math.max(0.5, Math.min(scaleRatio, 2));
+					item.scale = this.startScale * scaleRatio;
+				}
 			},
-
-
 			removeClothes(index) {
 				uni.showModal({
 					title: '确认删除？', // 标题文字，支持字符串或空值
@@ -263,7 +282,8 @@
 
 				try {
 					const path = await this.generateThumbnail();
-					this.saveToStorage(path);
+					const id = this.generateUniqueId();
+					this.uploadImage(id,path);
 				} catch (err) {
 					uni.showToast({
 						title: "缩略图生成失败",
@@ -279,9 +299,28 @@
 				const date = new Date()
 				return date.getTime()
 			},
-			saveToStorage(imagePath) {
+			uploadImage(id,filePath) {
+				uni.showLoading({
+					title:'上传中..',
+					mask: true
+				});
+				uniCloud.uploadFile({
+					filePath: filePath,
+					cloudPath: 'outfitsImage/' + id + '.png' // 指定上传到云存储的路径和文件名					
+				}).then(res => {
+					uni.hideLoading();
+					this.saveToStorage(id,res.fileID);
+				}).catch(err => {
+					uni.hideLoading();
+					uni.showToast({						
+						title: '图片上传失败',						
+						icon: 'error'
+					});
+				});
+			},
+			saveToStorage(id,imagePath) {
 				const outfit = {
-					id: this.generateUniqueId(),
+					id: id,
 					name: this.outfitName,
 					note: this.note,
 					thumbnail: imagePath,
@@ -292,7 +331,9 @@
 				let outfits = uni.getStorageSync("outfits") || [];
 				outfits.push(outfit);
 				uni.setStorageSync("outfits", outfits);
-
+				//保存更新记录
+				const addData={type:"add",data:outfit};
+				this.saveLocalData(addData);
 				uni.showToast({
 					title: "套装已保存",
 					icon: "success"
@@ -302,6 +343,11 @@
 						url: "/pages/matching/matching"
 					})
 				}, 100);
+			},
+			saveLocalData(data){
+				let localData = uni.getStorageSync('localOutfits') || [];
+				localData.push(data);
+				uni.setStorageSync('localOutfits', localData);
 			}
 		},
 	}

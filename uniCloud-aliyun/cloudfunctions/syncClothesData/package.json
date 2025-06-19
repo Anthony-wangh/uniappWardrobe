@@ -1,0 +1,7 @@
+{
+  "name": "syncClothesData",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

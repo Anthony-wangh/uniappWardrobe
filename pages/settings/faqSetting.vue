@@ -33,6 +33,10 @@ export default {
 			openIndex: null,
 			faqList: [
 				{
+					question: '如何上传衣物和进行搭配？',
+					answer: '1.上传衣物，在“我的衣橱”标签页中，点击二级类目后面的“上传”按钮，可以在当前类目下上传衣物；\n 2.搭配套装，在“我的衣橱”标签页中，点击右上角“编辑”按钮，然后选中衣物列表中你想进行搭配的衣物，点击底部“搭配”按钮，即可进入搭配模式。'
+				},
+				{
 					question: '如何修改头像和名称？',
 					answer: '请前往“设置”页中，点击顶部头像或者名称进行修改，可以使用微信头像昵称或者自定义。'
 				},
@@ -123,5 +127,6 @@ export default {
 	font-size: 14px;
 	color: #666;
 	line-height: 1.6;
+	white-space: pre-line;
 }
 </style>

@@ -3,12 +3,12 @@
 		<image class="bg-image" src="/static/main/bg.png" mode="aspectFill"></image>
 		
 		<view class="main-body">
-			<image class="center-icon" src="/static/main/icon_Center.png" mode="aspectFit"></image>
+			<image class="center-icon" :src="iconUrl" mode="aspectFill"></image>
 			<text class="name">我的衣橱管家</text>
 			<text class="slogen">开启你的精致生活</text>
 			
-			<text class="login-btn" @click="loginClick">
-				{{isLoggedin?'开启精致生活':'一键登录'}}	
+			<text :class="['login-btn','']" @click="loginClick">
+				一键登录
 			</text>		
 			<image class="bottom-icon" src="/static/main/icon.png" mode="aspectFit"></image>
 		</view>			
@@ -21,6 +21,7 @@
 		data() {
 			return {
 				isLoggedin:false,
+				iconUrl:'https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png'
 			}
 		},
 		onShow() {
@@ -70,7 +71,7 @@
 										userInfo: userProfileRes.userInfo
 									}
 								}).then((result) => {
-									uni.hideLoading();
+									
 									if (result.result.code === 200) {
 										
 										//登陆状态，用作保持登录
@@ -78,11 +79,11 @@
 										//用作修改用户信息
 										uni.setStorageSync('wardrobeOpenid', result.result.data.openid);
 										//通用用户信息
-										uni.setStorageSync('wardrobeUserInfo', result.result.data.newUserInfo);										
-										console.log(result.result.data);
-										
-										const usingDates = this.userInfo ? (Math.floor((Date
-											.now() - this.userInfo.createTime
+										uni.setStorageSync('wardrobeUserInfo', result.result.data.newUserInfo);	
+										this.isLoggedin = true;
+										const userInfo = result.result.data.newUserInfo;
+										const usingDates = userInfo ? (Math.floor((Date
+											.now() - userInfo.createTime
 										) / (1000 * 60 * 60 * 24))) : 0;
 										//使用天数
 										uni.setStorageSync('wardrobeUsingDates', usingDates);
@@ -90,13 +91,19 @@
 											title: '登录成功',
 											icon: 'success'
 										});
+										
+										this.requestClothesData(userInfo._id);
 										setTimeout(()=>{
-											uni.switchTab({
-												url:'/pages/main/main'
-											})
-										},100);
+											this.requestOutfitsData(userInfo._id);	
+										},10); 								
+										
+										setTimeout(()=>{
+											uni.hideLoading();
+											uni.navigateBack();
+										},1000);
 			
 									} else {
+										uni.hideLoading();
 										uni.showToast({
 											title: result.result.msg,
 											icon: 'none'
@@ -132,6 +139,43 @@
 				});
 			},
 			
+			requestClothesData(userId){
+				uniCloud.callFunction({
+					name: 'getClothes',
+					data: {
+						userId: userId,
+					}
+				}).then((result) => {
+					if (result.result.code !== 200) {
+						console.log("获取数据失败！" + result.result.msg);
+					} else {
+						// 更新本地存储
+						console.log('clothesData',result.result.data);
+						uni.setStorageSync('clothes', result.result.data.data);
+					}
+				}).catch((err) => {
+					console.error('云函数错误：', err);
+				});
+			},
+			
+			requestOutfitsData(userId){
+				uniCloud.callFunction({
+					name: 'getOutfits',
+					data: {
+						userId: userId,
+					}
+				}).then((result) => {
+					if (result.result.code !== 200) {
+						console.log("获取数据失败！" + result.result.msg);
+					} else {
+						// 更新本地存储
+						console.log('outfitsData',result.result.data);
+						uni.setStorageSync('outfits', result.result.data.data);
+					}
+				}).catch((err) => {
+					console.error('云函数错误：', err);
+				});
+			}
 		}
 	}
 </script>
@@ -164,7 +208,12 @@
 }
 
 .center-icon{
+	width: 60vw;
+	height: 60vw;
 	margin-top: 20%;
+	border: #fff solid 10px;
+	border-radius: 50%;
+	box-shadow: 4px 4px 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .name{
@@ -191,6 +240,15 @@
 	text-align: center;
 	margin-top: 200px;
 }
+
+.login-btn.isLoggedin{
+	width: 50%;
+	padding: 20px 00px;
+	color: #fff;
+	background-color: #ec9b0d;
+	font-size: 22px;
+}
+
 .bottom-icon{
 	height: 20px;
 	margin-bottom: 20px;

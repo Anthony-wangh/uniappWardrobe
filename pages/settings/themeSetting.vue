@@ -30,7 +30,7 @@
 </template>
 
 <script>
-	import { themes } from '@/components/theme.js';
+	// import { themes } from '@/components/theme.js';
 
 	export default {
 		data() {

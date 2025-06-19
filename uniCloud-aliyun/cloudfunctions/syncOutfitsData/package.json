@@ -1,5 +1,5 @@
 {
-  "name": "feedBack",
+  "name": "syncOutfitsData",
   "dependencies": {},
   "extensions": {
     "uni-cloud-jql": {}

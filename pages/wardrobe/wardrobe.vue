@@ -96,6 +96,7 @@
 											</view>
 											<image class="clothes-image" :src="item.image" mode="aspectFit" />
 											<text class="clothes-name">{{ item.name }}</text>
+											<text class="clothes-time">{{ formatTime(item.createTime) }}</text>
 										</template>
 									</view>
 								</view>
@@ -146,8 +147,8 @@
 				quota: {
 					clothesCount: 0,
 					outfitsCount: 0,
-					clothesQuota: 20,
-					outfitsQuota: 5,
+					clothesQuota : 30,
+					outfitsQuota : 8,
 					clothesRate: '0%',
 					outfitsRate: '0%'
 				},
@@ -185,9 +186,51 @@
 			this.categories[this.currentMainCategoryIndex].subCategories.forEach(sub => {
 				this.$set(this.isSubCollapsed, sub, false);
 			});
+			
+			this.syncLocalData();
 		},
 		methods: {
-
+			formatTime(time) {
+				const date = new Date(time);
+			
+				const year = date.getFullYear();
+				const month = date.getMonth() + 1;
+				const day = date.getDate();
+				const hour = date.getHours().toString().padStart(2, '0');
+				const minute = date.getMinutes().toString().padStart(2, '0');
+			
+				return `${year}年${month}月${day}日 ${hour}:${minute}`;
+			},
+			syncLocalData() {
+				const userInfo = uni.getStorageSync('wardrobeUserInfo');
+				if (!userInfo) {
+					console.log("未登录！");
+					return;
+				}
+				const localData = uni.getStorageSync('localClothes');
+				if (localData) {
+					//本地数据大于10条时上传一次
+					if (localData.length >= 10) {
+						uniCloud.callFunction({
+							name: 'syncClothesData',
+							data: {
+								userId: userInfo._id,
+								clothes: localData
+							}
+						}).then((result) => {
+							if (result.result.code !== 200) {
+								console.log("数据上传失败！" + result.result.msg);
+							} else {
+								// 清空本地存储
+								uni.setStorageSync('localClothes', null);
+								console.log("数据上传成功！");
+							}
+						}).catch((err) => {
+							console.error('云函数错误：', err);
+						});
+					}
+				}
+			},
 			toggleSeasonDropdown() {
 				this.seasonDropdownVisible = !this.seasonDropdownVisible;
 			},
@@ -232,6 +275,8 @@
 				);
 			},
 			getClothesForMain(mainCat) {
+				if(!this.clothes)
+					return [];
 				return this.clothes.filter(item =>
 					item.primaryCategory === mainCat &&
 					(this.searchKeyword.trim() === '' || item.name.includes(this.searchKeyword.trim())) &&
@@ -280,16 +325,34 @@
 					content: `删除后将无法找回！`,
 					success: res => {
 						if (res.confirm) {
+							//保存更新记录
+							this.selectedClothes.forEach(item=>{
+								const deleteData={type:"delete",data:item};
+								this.saveLocalData(deleteData);
+							});	
+							//保存衣物数据
 							this.clothes = this.clothes.filter(c => !this.selectedClothes.includes(c));
 							this.selectedClothes = [];
 							this.saveClothes();
-
+							
+							//更新配额
 							this.quota.clothesCount = this.clothes.length;
 							uni.setStorageSync("wardrobeQuota", this.quota);
 						}
 					}
 				});
 
+			},
+			checkLogin(){
+				const userInfo = uni.getStorageSync('wardrobeUserInfo');
+				if(userInfo)
+				{
+					return true;
+				}				
+				uni.navigateTo({
+					url: "/pages/login/login"
+				});
+				return false;
 			},
 			matchSelected() {
 				if (!this.canAddOutfits) {
@@ -332,6 +395,9 @@
 				return [...clothesList];
 			},
 			onAddItemClick(subCat) {
+				if(!this.checkLogin())
+					return;
+				
 				if (!this.canAddClothes) {
 					uni.showToast({
 						title: '配额不足',
@@ -349,6 +415,11 @@
 						url: `/pages/addClothes/addClothes?primaryCategory=${encodeURIComponent(mainCat)}&secondaryCategory=${encodeURIComponent(subCat)}`
 					});
 				}, 100);
+			},
+			saveLocalData(data){
+				let localData = uni.getStorageSync('localClothes') || [];
+				localData.push(data);
+				uni.setStorageSync('localClothes', localData);
 			}
 		}
 	};
@@ -453,7 +524,7 @@
 	.clothes-item {
 		position: relative;
 		width: 46%;
-		height: 180px;
+		height: 200px;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
@@ -465,8 +536,6 @@
 
 	.clothes-image {
 		width: 100%;
-		height: 160px;
-
 		object-fit: contain;
 	}
 
@@ -475,6 +544,21 @@
 		margin-bottom: 5px;
 		font-size: 14px;
 		color: #1d1d1d;
+		padding: 5px 0;
+		
+		max-width: 100px;
+		/* 限制最大宽度，可根据需要调整 */
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	
+	.clothes-time {
+		font-size: 10px;
+		color: #666;
+		padding: 3px 0px;
+		margin-bottom: 5px;
+		margin-left: 5px;
 	}
 
 
