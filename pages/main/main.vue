@@ -104,6 +104,11 @@
 			if (clothes.length > 0) {
 				//取最近五个上传的衣服
 				this.recentlyClothes = clothes.length > 5 ? clothes.slice(-5) : clothes;
+				this.recentlyClothes.sort((a, b) => {
+						const timeA = a.createTime ? a.createTime : 0;
+						const timeB = b.createTime ? b.createTime : 0;
+						return timeB - timeA; // 时间越近越靠前
+				});
 			}			
 
 			this.getTime();

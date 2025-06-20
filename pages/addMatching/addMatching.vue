@@ -16,14 +16,19 @@
 					<image class="clothes-image" :src="item.image" @touchstart.stop="startDrag(index, $event)"
 						@touchmove.stop="handleMove($event)" />
 					<view v-if="activeIndex === index">
-						<view class="zindex-btn" @click.stop="bringToFront(index)">↑</view>
-						<image src="/static/scaleBtn.png" class="resize-btn" @touchstart.stop="startTransform($event)"
+						<image src="/static/upLevel.png" mode="aspectFit" class="zindex-btn" @click.stop="bringToFront(index)"></image>
+						<image src="/static/resize.png" mode="aspectFit"  class="resize-btn" @touchstart.stop="startTransform($event)"
 							@touchmove.stop="handleTransform($event)"></image>
 						<!-- <view class="remove-btn" @click.stop="removeClothes(index)">×</view> -->
 					</view>
 				</view>
 
-				<canvas canvas-id="outfitCanvas" class="hidden-canvas"></canvas>
+				<canvas
+				  :style="{ width: containerWidth + 'px', height: containerWidth + 'px' }"
+				  canvas-id="outfitCanvas"
+				  class="hidden-canvas"
+				/>
+
 			</view>
 
 
@@ -76,6 +81,15 @@
 				startRotateY: 0,
 				category: '日常通勤',
 				categories: ['日常通勤', '春日出游', '周末约会', '正式场合'],
+				containerWidth:0,
+				quota:{
+					clothesCount :0,
+					outfitsCount : 0,
+					clothesQuota : 30,
+					outfitsQuota : 8,
+					clothesRate : '0%',
+					outfitsRate : '0%'
+				},
 
 			};
 		},
@@ -97,14 +111,14 @@
 				const cardWidth = 80;
 				const cardHeight = 80;
 				const padding = 10;
-				const containerWidth = windowWidth - 20; // outfit-preview 宽度是 100vw - 20px
+				this.containerWidth = windowWidth - 20; // outfit-preview 宽度是 100vw - 20px
 				
-				let x = -containerWidth*0.5 + cardWidth*0.5 + padding, y = -containerWidth*0.5 + cardHeight*0.5 +padding;
+				let x = -this.containerWidth*0.5 + cardWidth*0.5 + padding, y = -this.containerWidth*0.5 + cardHeight*0.5 +padding;
 				
 				selectItems.forEach((item, index) => {
 					// 换行判断
-					if ((x + cardWidth) > containerWidth * 0.5) {
-						x = -containerWidth*0.5 + cardWidth*0.5 + padding;
+					if ((x + cardWidth) > this.containerWidth * 0.5) {
+						x = -this.containerWidth*0.5 + cardWidth*0.5 + padding;
 						y += cardHeight + padding;
 					}
 				
@@ -132,6 +146,15 @@
 			}
 		},
 		methods: {
+			updateQuota(outfits){
+				let quo = uni.getStorageSync("wardrobeQuota");				
+				if(quo){
+					this.quota = quo;
+				}
+				this.quota.outfitsCount = outfits?outfits.length:0;
+				this.quota.outfitsRate = (100.0*quo.outfitsCount / this.quota.outfitsQuota).toString() + '%';
+				uni.setStorageSync("wardrobeQuota",quo);	
+			},
 			getStyle(item) {
 				const rotation = isNaN(item.rotation) ? 0 : item.rotation;
 				const scale = isNaN(item.scale) ? 1 : item.scale;
@@ -243,34 +266,61 @@
 			generateUniqueId() {
 				return 'id_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 			},
+			async downloadImages(clothes) {
+				return Promise.all(clothes.map(item => {
+					return new Promise((resolve, reject) => {
+						if (item.image.startsWith('http')) {
+							uni.downloadFile({
+								url: item.image,
+								success: (res) => {
+									if (res.statusCode === 200) {
+										resolve({...item, image: res.tempFilePath });
+									} else {
+										reject('下载失败');
+									}
+								},
+								fail: reject
+							});
+						} else {
+							// 本地图片直接使用
+							resolve(item);
+						}
+					});
+				}));
+			},
 			async generateThumbnail() {
+				const clothesWithLocalImages = await this.downloadImages(this.selectedClothes);
+			
+				const size = this.containerWidth; // 动态 canvas 尺寸
+			
 				return new Promise((resolve, reject) => {
 					const ctx = uni.createCanvasContext("outfitCanvas", this);
 					ctx.setFillStyle("#ffffff");
-					ctx.fillRect(0, 0, 300, 300);
-					// 先按 zIndex 排序再绘制
-					const sortedItems = [...this.selectedClothes].sort((a, b) => (a.z || 1) - (b.z || 1));
-
-
+					ctx.fillRect(0, 0, size, size); // 背景绘制区域
+			
+					const sortedItems = [...clothesWithLocalImages].sort((a, b) => (a.z || 1) - (b.z || 1));
+					const halfWidth = 40; // 元素宽高一半
+			
 					sortedItems.forEach((item) => {
 						ctx.save();
-						ctx.translate(150 + item.x, 150 + item.y);
+						ctx.translate(size / 2 + item.x , size / 2 + item.y); // 注意偏移中心点
 						ctx.rotate((item.rotation * Math.PI) / 180);
 						ctx.scale(item.scale, item.scale);
-						ctx.drawImage(item.image, -40, -40, 80, 80);
+						ctx.drawImage(item.image, -halfWidth, -halfWidth, 80, 80);
 						ctx.restore();
 					});
-
+			
 					ctx.draw(false, () => {
 						uni.canvasToTempFilePath({
 							canvasId: "outfitCanvas",
+							destWidth: size,
+							destHeight: size,
 							success: (res) => resolve(res.tempFilePath),
 							fail: (err) => reject(err),
 						}, this);
 					});
 				});
 			},
-
 			async saveOutfit() {
 				if (!this.outfitName.trim()) {
 					uni.showToast({
@@ -285,6 +335,7 @@
 					const id = this.generateUniqueId();
 					this.uploadImage(id,path);
 				} catch (err) {
+					console.log('缩略图生成失败',err);
 					uni.showToast({
 						title: "缩略图生成失败",
 						icon: "none"
@@ -329,8 +380,9 @@
 				};
 
 				let outfits = uni.getStorageSync("outfits") || [];
-				outfits.push(outfit);
+				outfits.push(outfit);				
 				uni.setStorageSync("outfits", outfits);
+				this.updateQuota(outfits);
 				//保存更新记录
 				const addData={type:"add",data:outfit};
 				this.saveLocalData(addData);
@@ -454,12 +506,12 @@
 		position: absolute;
 		bottom: -12px;
 		right: -12px;
-		width: 20px;
-		height: 20px;
-		/* background-color: #2196f3; */
+		width: 24px;
+		height: 24px;
+		background-color: #707070;
+		color: white;
 		border-radius: 50%;
-		cursor: pointer;
-		border: 1px solid #fff;
+		border: 2px solid #fff;
 	}
 
 	/* 删除按钮 */
@@ -578,8 +630,6 @@
 		position: absolute;
 		top: -9999px;
 		left: -9999px;
-		width: 300px;
-		height: 300px;
 	}
 
 
@@ -604,7 +654,7 @@
 		left: -12px;
 		width: 24px;
 		height: 24px;
-		background-color: #2196f3;
+		background-color: #707070;
 		color: white;
 		border-radius: 50%;
 		font-size: 14px;

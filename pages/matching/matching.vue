@@ -118,7 +118,11 @@
 		onShow() {
 			// 模拟数据加载
 			this.outfits = uni.getStorageSync("outfits") || [];
-
+			this.outfits.sort((a, b) => {
+					const timeA = a.time ? a.time : 0;
+					const timeB = b.time ? b.time : 0;
+					return timeB - timeA; // 时间越近越靠前
+			});
 			const quo = uni.getStorageSync("wardrobeQuota");
 			if (quo) {
 				this.quota = quo;
@@ -369,7 +373,7 @@
 	.scroll-container {
 		flex: 1;
 		/* padding: 16rpx; */
-		height: calc(100vh - 150px);
+		height: calc(100vh - 220px);
 		margin: 10px;
 	}
 
@@ -489,6 +493,7 @@
 
 	.bottom-action-bar {
 		position: fixed;
+		z-index: 20;
 		bottom: 20px;
 		width: calc(100% - 40px);
 		height: 100rpx;

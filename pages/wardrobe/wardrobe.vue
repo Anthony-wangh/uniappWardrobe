@@ -101,7 +101,9 @@
 									</view>
 								</view>
 							</view>
+						
 						</view>
+					
 					</view>
 				</scroll-view>
 
@@ -183,6 +185,11 @@
 			this.canAddOutfits = this.quota.outfitsCount < this.quota.outfitsQuota;
 
 			this.clothes = uni.getStorageSync("clothes") || [];
+			this.clothes.sort((a, b) => {
+					const timeA = a.createTime ? a.createTime : 0;
+					const timeB = b.createTime ? b.createTime : 0;
+					return timeB - timeA; // 时间越近越靠前
+			});
 			this.categories[this.currentMainCategoryIndex].subCategories.forEach(sub => {
 				this.$set(this.isSubCollapsed, sub, false);
 			});
@@ -606,6 +613,7 @@
 
 	.bottom-action-bar {
 		position: fixed;
+		z-index: 20;
 		bottom: 20px;
 		width: calc(100% - 40px);
 		height: 100rpx;

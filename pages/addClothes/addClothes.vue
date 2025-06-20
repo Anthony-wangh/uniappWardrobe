@@ -79,7 +79,7 @@
 
 	<view class="cropper-container" v-if="cropperSrc !==''">
 		<view class="cropper-wrap">
-			<ksp-cropper mode="free" :width="512" :height="512" :maxWidth="1024" :maxHeight="1024" :url="cropperSrc"
+			<ksp-cropper mode="free" :width="400" :height="400" :maxWidth="512" :maxHeight="512" :url="cropperSrc"
 				@cancel="oncancel" @ok="onok"></ksp-cropper>
 		</view>
 	</view>
@@ -122,6 +122,14 @@
 				isEdit: false,
 				showSubFromgroup: false, //显示详细表单项
 				cropperSrc: '', //裁剪图片路径，底图
+				quota:{
+					clothesCount :0,
+					outfitsCount : 0,
+					clothesQuota : 30,
+					outfitsQuota : 8,
+					clothesRate : '0%',
+					outfitsRate : '0%'
+				},
 			};
 		},
 		onLoad(options) {
@@ -132,6 +140,15 @@
 			this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight;
 		},
 		methods: {
+			updateQuota(clothes){
+				let quo = uni.getStorageSync("wardrobeQuota");				
+				if(quo){
+					this.quota = quo;
+				}
+				this.quota.clothesCount = clothes?clothes.length:0;
+				this.quota.clothesRate = (100.0*quo.clothesCount / this.quota.clothesQuota).toString() + '%';
+				uni.setStorageSync("wardrobeQuota",quo);	
+			},
 			onok(ev) {
 				this.cropperSrc = "";
 				this.form.image = ev.path;
@@ -218,6 +235,8 @@
 				this.saveLocalData(addData);
 				
 				uni.setStorageSync('clothes', clothes);
+				//更新配额
+				this.updateQuota(clothes);
 				uni.showToast({
 					title: this.isEdit ? '修改成功' : '上传成功',
 					icon: 'success'
