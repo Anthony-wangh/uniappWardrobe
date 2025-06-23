@@ -448,10 +448,10 @@
 	}
 
 	.time {
-		font-size: 12px;
+		font-size: 10px;
 		color: #666;
 		padding: 3px 0px;
-		margin-bottom: 10px;
+		margin-bottom: 5px;
 	}
 
 	.floating-btn {

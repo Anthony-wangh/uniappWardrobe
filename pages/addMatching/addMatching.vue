@@ -7,8 +7,24 @@
 				<text class="header-title">搭配</text>
 			</view>
 		</view>
-
 		<view class="main-container">
+			<!-- 套装详情模块 -->
+			<view class="details-section">
+				<view class="input-row">
+					<text class="label">套装名称</text>
+					<input class="input-box" v-model="outfitName" placeholder="请输入套装名称" />
+				</view>
+				<view class="input-row">
+					<text class="label">类目</text>
+					<picker class="picker-category" mode="selector" :range="categories" @change="onCategoryChange">
+						<view class="input-box-category">{{ category }}</view>
+					</picker>
+				</view>			
+			
+				<!-- <button class="save-btn" @click="saveOutfit">保存套装</button> -->
+			</view>
+			
+			
 			<!-- 搭配模块 -->
 			<view class="outfit-preview" :style="{backgroundSize: 'cover' }" @click="clearSelection">
 				<view class="clothes-item" v-for="(item, index) in selectedClothes" :key="index"
@@ -30,31 +46,9 @@
 				/>
 
 			</view>
-
-
-			<!-- 套装详情模块 -->
-			<view class="details-section">
-				<view class="input-row">
-					<text class="label">套装名称</text>
-					<input class="input-box" v-model="outfitName" placeholder="请输入套装名称" />
-				</view>
-				<view class="input-row">
-					<text class="label">类目</text>
-					<picker class="picker-category" mode="selector" :range="categories" @change="onCategoryChange">
-						<view class="input-box-category">{{ category }}</view>
-					</picker>
-				</view>
-
-				<view class="note-input-row">
-					<label class="label">备注</label>
-					<textarea class="textarea-field" v-model="note" placeholder="请输入备注（可选）"></textarea>
-				</view>
-
-				<button class="save-btn" @click="saveOutfit">保存套装</button>
-			</view>
+			
+			<button class="save-btn" @click="saveOutfit">保存套装</button>
 		</view>
-
-
 	</view>
 </template>
 
@@ -72,7 +66,6 @@
 					// }
 				],
 				outfitName: "",
-				note: "",
 				activeIndex: null,
 				startX: 0,
 				startY: 0,
@@ -162,7 +155,7 @@
 				return {
 					transform: `translate(${item.x}px, ${item.y}px) rotate(${rotation}deg) scale(${scale})`,
 					transformOrigin: 'center center',
-					zIndex: item.z || 1
+					zIndex: item.z || 0
 				};
 			},
 			bringToFront(index) {
@@ -373,7 +366,6 @@
 				const outfit = {
 					id: id,
 					name: this.outfitName,
-					note: this.note,
 					thumbnail: imagePath,
 					category: this.category,
 					time: this.getTime()
@@ -544,6 +536,7 @@
 		
 		display: flex;
 		flex-direction: column;
+		margin-bottom: 10px;
 	}
 
 	/* 输入行 */
@@ -551,16 +544,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin: 10px;
+		margin: 5px 10px;
 	}
 
-	.note-input-row {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		margin: 10px;
-	}
-	
 	.picker-category{
 		width: 70%;
 		align-items: center;
@@ -568,10 +554,10 @@
 	}
 	.input-box-category {
 		width: 100%;
-		padding: 10px 0;
+		padding: 6px 0;
 		border: 1px solid #8A6FDF;
 		border-radius: 5px;
-		font-size: 16px;
+		font-size: 14px;
 		font-weight: bold;
 		color: #8A6FDF;
 		background-color: #ffffff;
@@ -582,7 +568,7 @@
 
 	/* 输入框/选择框名称 */
 	.label {
-		font-size: 16px;
+		font-size: 14px;
 		color: #333;
 		width: 30%;
 		text-align: left;
@@ -591,14 +577,13 @@
 	/* 输入框/选择框 */
 	.input-box {
 		width: 75%;
-		padding: 10px;
+		padding: 5px 0px;
 		border-bottom: 1px solid #cbcbcb;
-		font-size: 16px;
+		font-size: 14px;
 		font-weight: bold;
 		color: #333;
 		text-align: start;
 	}
-	
 	
 	
 	
