@@ -2,6 +2,7 @@
 	"pages": [
 		{
 			"path": "pages/main/main",
+			"enableShareAppMessage": true,
 			"style": {
 				"navigationBarTitleText": ""
 			}
@@ -18,6 +19,7 @@
 		},
 		{
 			"path": "pages/matching/matching",
+			"enableShareAppMessage": true,
 			"style": {
 				"navigationBarTitleText": "搭配"
 			}
@@ -36,6 +38,7 @@
 		},
 		{
 			"path" : "pages/settings/settings",
+			
 			"style" : 
 			{
 				"navigationBarTitleText" : ""

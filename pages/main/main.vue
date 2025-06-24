@@ -5,14 +5,15 @@
 
 		<!-- 头部 欢迎 & 头像 -->
 		<view class="header">
-			<image class="avatar" :src='userInfo.avatarUrl ? userInfo.avatarUrl : "/static/avatorDefault.png"' mode="aspectFill" />
+			<image class="avatar" :src='userInfo.avatarUrl ? userInfo.avatarUrl : "/static/avatorDefault.png"'
+				mode="aspectFill" />
 			<view v-if="userInfo.nickName" class="greeting">
 				<text class="welcome-text">{{"欢迎回来，" + userInfo.nickName }}</text>
 				<text class="subtitle">{{ '小管家已经陪伴你' + this.usageDay +'天'}}</text>
 			</view>
 			<view v-if="!userInfo.nickName" class="login-btn" @click="clickLogin">点击登录</view>
 		</view>
-		
+
 
 		<!-- 天气卡片 -->
 		<view class="weather-card">
@@ -86,33 +87,45 @@
 					'/static/banners/banner1.png',
 					'/static/banners/banner2.png',
 					'/static/banners/banner3.png'
-				],				
-				userInfo:{},		
+				],
+				userInfo: {},
 				isLoggedIn: false,
 				slogan: '让穿搭变得简单',
 				weatherIcon: '/static/weather_icons/theme.png',
 				currentDate: '',
 				weekDay: '',
 				recentlyClothes: [],
-				usageDay:0//使用时长
+				usageDay: 0 //使用时长
 			};
 		},
-		onShow() {			
+		onShow() {
 			this.userInfo = uni.getStorageSync('wardrobeUserInfo') || {};
-			this.usageDay =  uni.getStorageSync('wardrobeUsingDates') || 1;
+			this.usageDay = uni.getStorageSync('wardrobeUsingDates') || 1;
 			const clothes = uni.getStorageSync("clothes") || [];
 			if (clothes.length > 0) {
 				//取最近五个上传的衣服
 				this.recentlyClothes = clothes.length > 5 ? clothes.slice(-5) : clothes;
 				this.recentlyClothes.sort((a, b) => {
-						const timeA = a.createTime ? a.createTime : 0;
-						const timeB = b.createTime ? b.createTime : 0;
-						return timeB - timeA; // 时间越近越靠前
+					const timeA = a.createTime ? a.createTime : 0;
+					const timeB = b.createTime ? b.createTime : 0;
+					return timeB - timeA; // 时间越近越靠前
 				});
-			}			
+			}
 
 			this.getTime();
 			this.getWeather();
+		},
+		onShareAppMessage() {
+			return {
+				title: "每天穿什么不再纠结！这个衣橱管理神器推荐给你",
+				path: "pages/main/main",
+				imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png"
+			};
+		},
+		onShareTimeline() {
+			return {
+				title: '衣服再也不怕乱堆！这个电子衣橱帮你轻松整理～👗👕', // 自定义朋友圈分享标题		
+			};
 		},
 		methods: {
 			getTime() {
@@ -123,40 +136,39 @@
 			},
 			formatTime(time) {
 				const date = new Date(time);
-			
+
 				const year = date.getFullYear();
 				const month = date.getMonth() + 1;
 				const day = date.getDate();
 				const hour = date.getHours().toString().padStart(2, '0');
 				const minute = date.getMinutes().toString().padStart(2, '0');
-			
+
 				return `${year}年${month}月${day}日 ${hour}:${minute}`;
 			},
 			upload() {
-				if(!this.checkLogin())
+				if (!this.checkLogin())
 					return;
 				uni.navigateTo({
 					url: "/pages/addClothes/addClothes"
 				});
 			},
 			startMatch() {
-				if(!this.checkLogin())
+				if (!this.checkLogin())
 					return;
 				uni.switchTab({
 					url: "/pages/matching/matching"
 				});
 			},
-			clickLogin(){
+			clickLogin() {
 				uni.navigateTo({
 					url: "/pages/login/login"
 				});
 			},
-			checkLogin(){
+			checkLogin() {
 				const userInfo = uni.getStorageSync('wardrobeUserInfo');
-				if(userInfo)
-				{
+				if (userInfo) {
 					return true;
-				}				
+				}
 				uni.navigateTo({
 					url: "/pages/login/login"
 				});
@@ -344,8 +356,8 @@
 		height: 100vh;
 		position: relative;
 	}
-	
-	.login-btn{
+
+	.login-btn {
 		font-size: 16px;
 		font-weight: bold;
 		padding: 8px 0px;
@@ -520,7 +532,7 @@
 				// justify-items: center;
 				border: #d1d1d1 solid 1px;
 				border-radius: 20px;
-				
+
 				border-bottom-left-radius: 10px;
 				border-bottom-right-radius: 10px;
 
@@ -535,18 +547,18 @@
 					margin: 10px;
 					display: flex;
 					flex-direction: column;
-					
+
 					.item-name {
 						font-size: 15px;
 						color: #161616;
-						
+
 						max-width: 100px;
 						/* 限制最大宽度，可根据需要调整 */
 						white-space: nowrap;
 						overflow: hidden;
 						text-overflow: ellipsis;
 					}
-					
+
 					.item-category {
 						align-self: flex-start;
 						font-size: 10px;
@@ -557,15 +569,15 @@
 						text-align: center;
 						margin: 3px 0;
 					}
-					
-					.item-time{
+
+					.item-time {
 						font-size: 10px;
 						color: #666;
 						padding: 3px 0px;
 					}
 				}
 
-				
+
 
 			}
 		}

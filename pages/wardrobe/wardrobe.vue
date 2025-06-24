@@ -15,9 +15,9 @@
 
 					<view :class="['edit-btn-inline', isEditMode ? 'finish' : 'edit']" @click="toggleEditMode">
 						<text
-							:class="['edit-btn-text',isEditMode ? 'finish' : 'edit']">{{ isEditMode ? '完成' : '管理' }}</text>
-						<image class="edit-btn-image" :src="isEditMode ? '/static/Fnish.png':'/static/Edit.png'"
-							mode="aspectFit"></image>
+							:class="['edit-btn-text',isEditMode ? 'finish' : 'edit']">{{ isEditMode ? '取消' : '管理' }}</text>
+						<image class="edit-btn-image" :src="isEditMode ? '/static/UnEdit.png':'/static/Edit.png'"
+							mode="aspectFill"></image>
 					</view>
 				</view>
 
@@ -101,9 +101,9 @@
 									</view>
 								</view>
 							</view>
-						
+
 						</view>
-					
+
 					</view>
 				</scroll-view>
 
@@ -149,8 +149,8 @@
 				quota: {
 					clothesCount: 0,
 					outfitsCount: 0,
-					clothesQuota : 30,
-					outfitsQuota : 8,
+					clothesQuota: 30,
+					outfitsQuota: 8,
 					clothesRate: '0%',
 					outfitsRate: '0%'
 				},
@@ -186,26 +186,38 @@
 
 			this.clothes = uni.getStorageSync("clothes") || [];
 			this.clothes.sort((a, b) => {
-					const timeA = a.createTime ? a.createTime : 0;
-					const timeB = b.createTime ? b.createTime : 0;
-					return timeB - timeA; // 时间越近越靠前
+				const timeA = a.createTime ? a.createTime : 0;
+				const timeB = b.createTime ? b.createTime : 0;
+				return timeB - timeA; // 时间越近越靠前
 			});
 			this.categories[this.currentMainCategoryIndex].subCategories.forEach(sub => {
 				this.$set(this.isSubCollapsed, sub, false);
 			});
-			
+
 			this.syncLocalData();
+		},
+		onShareAppMessage() {
+			return {
+				title: "每天穿什么不再纠结！这个衣橱管理神器推荐给你",
+				path: "pages/main/main",
+				imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png"
+			};
+		},
+		onShareTimeline() {
+			return {
+				title: '衣服再也不怕乱堆！这个电子衣橱帮你轻松整理～👗👕', // 自定义朋友圈分享标题		
+			};
 		},
 		methods: {
 			formatTime(time) {
 				const date = new Date(time);
-			
+
 				const year = date.getFullYear();
 				const month = date.getMonth() + 1;
 				const day = date.getDate();
 				const hour = date.getHours().toString().padStart(2, '0');
 				const minute = date.getMinutes().toString().padStart(2, '0');
-			
+
 				return `${year}年${month}月${day}日 ${hour}:${minute}`;
 			},
 			syncLocalData() {
@@ -282,7 +294,7 @@
 				);
 			},
 			getClothesForMain(mainCat) {
-				if(!this.clothes)
+				if (!this.clothes)
 					return [];
 				return this.clothes.filter(item =>
 					item.primaryCategory === mainCat &&
@@ -333,15 +345,18 @@
 					success: res => {
 						if (res.confirm) {
 							//保存更新记录
-							this.selectedClothes.forEach(item=>{
-								const deleteData={type:"delete",data:item};
+							this.selectedClothes.forEach(item => {
+								const deleteData = {
+									type: "delete",
+									data: item
+								};
 								this.saveLocalData(deleteData);
-							});	
+							});
 							//保存衣物数据
 							this.clothes = this.clothes.filter(c => !this.selectedClothes.includes(c));
 							this.selectedClothes = [];
 							this.saveClothes();
-							
+
 							//更新配额
 							this.quota.clothesCount = this.clothes.length;
 							uni.setStorageSync("wardrobeQuota", this.quota);
@@ -350,12 +365,11 @@
 				});
 
 			},
-			checkLogin(){
+			checkLogin() {
 				const userInfo = uni.getStorageSync('wardrobeUserInfo');
-				if(userInfo)
-				{
+				if (userInfo) {
 					return true;
-				}				
+				}
 				uni.navigateTo({
 					url: "/pages/login/login"
 				});
@@ -370,9 +384,9 @@
 					return;
 				}
 
-				if (this.selectedClothes.length <= 0) {
+				if (this.selectedClothes.length < 2 || this.selectedClothes.length > 6) {
 					uni.showToast({
-						title: '至少选择一件衣物进行搭配',
+						title: '请选择最低2件衣物，最多6件衣物进行搭配',
 						icon: 'none'
 					});
 					return;
@@ -402,9 +416,9 @@
 				return [...clothesList];
 			},
 			onAddItemClick(subCat) {
-				if(!this.checkLogin())
+				if (!this.checkLogin())
 					return;
-				
+
 				if (!this.canAddClothes) {
 					uni.showToast({
 						title: '配额不足',
@@ -423,7 +437,7 @@
 					});
 				}, 100);
 			},
-			saveLocalData(data){
+			saveLocalData(data) {
 				let localData = uni.getStorageSync('localClothes') || [];
 				localData.push(data);
 				uni.setStorageSync('localClothes', localData);
@@ -552,14 +566,14 @@
 		font-size: 14px;
 		color: #1d1d1d;
 		padding: 5px 0;
-		
+
 		max-width: 100px;
 		/* 限制最大宽度，可根据需要调整 */
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-	
+
 	.clothes-time {
 		font-size: 10px;
 		color: #666;
@@ -609,6 +623,9 @@
 	.clothes-checkbox-icon {
 		width: 25px;
 		height: 25px;
+		background-color: #fff;
+		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+		border-radius: 5px;
 	}
 
 	.bottom-action-bar {
@@ -815,13 +832,14 @@
 	}
 
 	.edit-btn-inline.finish {
-		border: 1px solid #8A6FDF;
+		
+		border: 1px solid #8a8a8a;
 		background-color: #fff;
 	}
 
 	.edit-btn-inline.edit {
-		border: 1px solid #f1f1f1;
-		background-color: #f8f8f8;
+		border: 1px solid #8A6FDF;
+		background-color: #fff;
 	}
 
 	.edit-btn-text {
@@ -831,12 +849,11 @@
 
 
 	.edit-btn-text.finish {
-
-		color: #8A6FDF;
+		color: #8a8a8a;
 	}
 
 	.edit-btn-text.edit {
-		color: #707070;
+		color: #8A6FDF;
 	}
 
 

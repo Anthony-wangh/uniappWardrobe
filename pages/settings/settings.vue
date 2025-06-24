@@ -3,14 +3,16 @@
 		<!-- 用户信息 -->
 		<view class="user-profile">
 			<view class="user-info">
-				<button v-if="userInfo.avatarUrl" open-type="chooseAvatar" class="avatar-btn" @chooseavatar="onChooseAvatar">
-					<image v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" class="avatar"></image>					
+				<button v-if="userInfo.avatarUrl" open-type="chooseAvatar" class="avatar-btn"
+					@chooseavatar="onChooseAvatar">
+					<image v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" class="avatar"></image>
 				</button>
-				<image v-if="!userInfo.avatarUrl" src='/static/avatorDefault.png' class="avator-default" mode="aspectFit"></image>		
+				<image v-if="!userInfo.avatarUrl" src='/static/avatorDefault.png' class="avator-default"
+					mode="aspectFit"></image>
 				<view class="user-meta">
 					<view class="nickName">
-						<input v-if="userInfo.nickName" type="nickname" class="nickname-input" :value="userInfo.nickName" @blur="userNameInput"
-							placeholder="请输入昵称" />
+						<input v-if="userInfo.nickName" type="nickname" class="nickname-input"
+							:value="userInfo.nickName" @blur="userNameInput" placeholder="请输入昵称" />
 						<text v-if="!userInfo.nickName" class="login-btn">点击登录</text>
 					</view>
 
@@ -62,18 +64,18 @@
 				<text class="label">用户隐私协议</text>
 				<text class="arrow">›</text>
 			</navigator>
-			
-			
+
+
 			<navigator url="/pages/settings/about" class="setting-item">
 				<image src="/static/settingIcons/about.png" class="icon" />
 				<text class="label">关于</text>
 				<text class="arrow">›</text>
 			</navigator>
-			
+
 		</view>
 
 		<!-- 版本信息 -->
-		<view class="version-text">版本 1.0.0</view>
+		<view class="version-text">版本 1.1.0</view>
 	</view>
 </template>
 
@@ -85,13 +87,13 @@
 		},
 		data() {
 			return {
-				quota:{
-					clothesCount :0,
-					outfitsCount : 0,
-					clothesQuota : 30,
-					outfitsQuota : 8,
-					clothesRate : '0%',
-					outfitsRate : '0%'
+				quota: {
+					clothesCount: 0,
+					outfitsCount: 0,
+					clothesQuota: 30,
+					outfitsQuota: 8,
+					clothesRate: '0%',
+					outfitsRate: '0%'
 				},
 				userInfo: {
 					avatarUrl: '/static/tabBarIcons/setting.png',
@@ -142,29 +144,42 @@
 		onShow() {
 			this.token = uni.getStorageSync('wardrobeToken') || '';
 			this.userInfo = uni.getStorageSync('wardrobeUserInfo') || {};
-			this.outfits = uni.getStorageSync("outfits") || [];		
-			this.clothes = uni.getStorageSync("clothes") || [];		
+			this.outfits = uni.getStorageSync("outfits") || [];
+			this.clothes = uni.getStorageSync("clothes") || [];
 			this.updateQuota();
 			this.getAchievement();
 		},
+		onShareAppMessage() {
+			return {
+				title: "每天穿什么不再纠结！这个衣橱管理神器推荐给你",
+				path: "pages/main/main",
+				imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png"
+			};
+		},
+		onShareTimeline() {
+			return {
+				title: '衣服再也不怕乱堆！这个电子衣橱帮你轻松整理～👗👕', // 自定义朋友圈分享标题		
+			};
+		},
 		methods: {
-			updateQuota(){
+
+			updateQuota() {
 				let quo = uni.getStorageSync("wardrobeQuota");
-				
-				if(!quo){
+
+				if (!quo) {
 					quo = this.quota;
 					quo.clothesQuota = this.quota.clothesQuota;
 					quo.outfitsQuota = this.quota.outfitsQuota;
 				}
-				quo.clothesCount = this.clothes?this.clothes.length:0;
-				quo.outfitsCount = this.outfits?this.outfits.length:0;
-				quo.clothesRate = (100.0*quo.clothesCount / this.quota.clothesQuota).toString() + '%';
-				quo.outfitsRate = (100.0*quo.outfitsCount / this.quota.outfitsQuota).toString() + '%';						
+				quo.clothesCount = this.clothes ? this.clothes.length : 0;
+				quo.outfitsCount = this.outfits ? this.outfits.length : 0;
+				quo.clothesRate = (100.0 * quo.clothesCount / this.quota.clothesQuota).toString() + '%';
+				quo.outfitsRate = (100.0 * quo.outfitsCount / this.quota.outfitsQuota).toString() + '%';
 				this.quota = quo;
-				uni.setStorageSync("wardrobeQuota",quo);	
-			},			
+				uni.setStorageSync("wardrobeQuota", quo);
+			},
 			getAchievement() {
-				
+
 				let index = this.achievements.findLastIndex(c => this.outfits.length >= c.level);
 				index = index < 0 ? 7 : index;
 				this.achievement = this.achievements[index];
@@ -200,7 +215,7 @@
 				}).catch(err => {
 					console.error('上传失败：', err);
 					uni.showToast({
-						title: '图片上传失败',						
+						title: '图片上传失败',
 						icon: 'error'
 					});
 				});
@@ -234,12 +249,12 @@
 					console.error('云函数错误：', err);
 				});
 			},
-			clickLogin(){
+			clickLogin() {
 				uni.navigateTo({
 					url: "/pages/login/login"
-				});				
+				});
 			},
-			onClickDefaultAvator(){
+			onClickDefaultAvator() {
 				uni.showToast({
 					title: '请先登录',
 					icon: 'none'
@@ -276,10 +291,10 @@
 		border-radius: 50%;
 		overflow: hidden;
 		margin-right: 12px;
-		background: linear-gradient(30deg, #FDE047, #F59E0B);		
+		background: linear-gradient(30deg, #FDE047, #F59E0B);
 	}
-	
-	.avator-default{
+
+	.avator-default {
 		width: 60px;
 		height: 60px;
 		border-radius: 50%;
@@ -459,7 +474,8 @@
 		text-align: center;
 		margin-top: 20px;
 	}
-	.login-btn{
+
+	.login-btn {
 		font-size: 16px;
 		font-weight: bold;
 		color: #8A6FDF;

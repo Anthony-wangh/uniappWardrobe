@@ -15,9 +15,9 @@
 
 					<view :class="['edit-btn-inline', isEditMode ? 'finish' : 'edit']" @click="toggleEditMode">
 						<text
-							:class="['edit-btn-text',isEditMode ? 'finish' : 'edit']">{{ isEditMode ? '完成' : '管理' }}</text>
-						<image class="edit-btn-image" :src="isEditMode ? '/static/Fnish.png':'/static/Edit.png'"
-							mode="aspectFit"></image>
+							:class="['edit-btn-text',isEditMode ? 'finish' : 'edit']">{{ isEditMode ? '取消' : '管理' }}</text>
+						<image class="edit-btn-image" :src="isEditMode ? '/static/UnEdit.png':'/static/Edit.png'"
+							mode="aspectFill"></image>
 					</view>
 				</view>
 				<view class="input-row">
@@ -47,6 +47,7 @@
 						<text class="name">{{ item.name }}</text>
 						<text class="category-label">{{ item.category }}</text>
 						<text class="time">{{ getTime(item.time) }}</text>
+						<!-- <button class="share-Btn" open-type="share" @click="onShareClick(item)">分享</button> -->
 					</view>
 
 				</view>
@@ -103,6 +104,22 @@
 				},
 				category: '全部',
 				categories: ['全部', '日常通勤', '春日出游', '周末约会', '正式场合'],
+
+				shareInfo: {
+					imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png",
+				}
+			};
+		},
+		onShareAppMessage() {
+			return {
+				title: "每天穿什么不再纠结！这个衣橱管理神器推荐给你",
+				path: "pages/main/main",
+				imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png"
+			};
+		},
+		onShareTimeline() {
+			return {
+				title: '衣服再也不怕乱堆！这个电子衣橱帮你轻松整理～👗👕', // 自定义朋友圈分享标题		
 			};
 		},
 		computed: {
@@ -119,9 +136,9 @@
 			// 模拟数据加载
 			this.outfits = uni.getStorageSync("outfits") || [];
 			this.outfits.sort((a, b) => {
-					const timeA = a.time ? a.time : 0;
-					const timeB = b.time ? b.time : 0;
-					return timeB - timeA; // 时间越近越靠前
+				const timeA = a.time ? a.time : 0;
+				const timeB = b.time ? b.time : 0;
+				return timeB - timeA; // 时间越近越靠前
 			});
 			const quo = uni.getStorageSync("wardrobeQuota");
 			if (quo) {
@@ -138,6 +155,9 @@
 			this.syncLocalData();
 		},
 		methods: {
+			onShareClick(item) {
+				this.shareInfo.imageUrl = item.thumbnail;
+			},
 			syncLocalData() {
 				const userInfo = uni.getStorageSync('wardrobeUserInfo');
 				if (!userInfo) {
@@ -338,28 +358,28 @@
 	}
 
 	.edit-btn-inline.finish {
+		
+		border: 1px solid #8a8a8a;
+		background-color: #fff;
+	}
+	
+	.edit-btn-inline.edit {
 		border: 1px solid #8A6FDF;
 		background-color: #fff;
 	}
-
-	.edit-btn-inline.edit {
-		border: 1px solid #f1f1f1;
-		background-color: #f8f8f8;
-	}
-
+	
 	.edit-btn-text {
 		font-size: 14px;
 		padding: 0 3px;
 	}
-
-
+	
+	
 	.edit-btn-text.finish {
-
-		color: #8A6FDF;
+		color: #8a8a8a;
 	}
-
+	
 	.edit-btn-text.edit {
-		color: #707070;
+		color: #8A6FDF;
 	}
 
 
@@ -414,6 +434,9 @@
 	.clothes-checkbox-icon {
 		width: 25px;
 		height: 25px;
+		background-color: #fff;
+		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+		border-radius: 5px;
 	}
 
 	.thumbnail {
@@ -434,12 +457,23 @@
 		flex-direction: column;
 		justify-content: space-between;
 		margin-top: 12rpx;
+		position: relative;
+	}
+
+	.share-Btn {
+		position: absolute;
+		right: 5px;
+		bottom: 15px;
+		font-size: 10px;
+		color: #8A6FDF;
+		font-weight: bold;
+		background-color: #fff;
 	}
 
 	.name {
 		font-size: 16px;
 		margin-bottom: 6rpx;
-		
+
 		max-width: 100px;
 		/* 限制最大宽度，可根据需要调整 */
 		white-space: nowrap;

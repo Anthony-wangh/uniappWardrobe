@@ -4,26 +4,11 @@
 			<view class="status-bar"></view>
 			<view class="header">
 				<image class="back-icon" src="/static/back.png" @click="goBack" />
-				<text class="header-title">搭配</text>
+				<text class="header-title">搭配</text>				
 			</view>
+			
 		</view>
-		<view class="main-container">
-			<!-- 套装详情模块 -->
-			<view class="details-section">
-				<view class="input-row">
-					<text class="label">套装名称</text>
-					<input class="input-box" v-model="outfitName" placeholder="请输入套装名称" />
-				</view>
-				<view class="input-row">
-					<text class="label">类目</text>
-					<picker class="picker-category" mode="selector" :range="categories" @change="onCategoryChange">
-						<view class="input-box-category">{{ category }}</view>
-					</picker>
-				</view>			
-			
-				<!-- <button class="save-btn" @click="saveOutfit">保存套装</button> -->
-			</view>
-			
+		<view class="main-container">		
 			
 			<!-- 搭配模块 -->
 			<view class="outfit-preview" :style="{backgroundSize: 'cover' }" @click="clearSelection">
@@ -46,8 +31,23 @@
 				/>
 
 			</view>
+			<!-- 套装详情模块 -->
+			<view class="details-section">
+				<view class="input-row">
+					<text class="label">套装名称</text>
+					<input class="input-box" v-model="outfitName" placeholder="请输入套装名称" />
+				</view>
+				<view class="input-row">
+					<text class="label">类目</text>
+					<picker class="picker-category" mode="selector" :range="categories" @change="onCategoryChange">
+						<view class="input-box-category">{{ category }}</view>
+					</picker>
+				</view>			
 			
-			<button class="save-btn" @click="saveOutfit">保存套装</button>
+				<button class="save-btn" @click="saveOutfit">保存套装</button>
+			</view>
+			
+			
 		</view>
 	</view>
 </template>
@@ -411,7 +411,7 @@
 		width: 100%;
 		background-color: #ffffff;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-		padding-top: calc(var(--status-bar-height) + 30px);
+		padding-top: calc(var(--status-bar-height) + 25px);
 		padding-bottom: 10px;
 	}
 
@@ -428,6 +428,7 @@
 		align-items: center;
 		padding: 12px 0px;
 		background-color: #fff;
+		
 	}
 
 	.back-icon {
@@ -528,7 +529,7 @@
 	/* 套装详情 */
 	.details-section {
 		width: calc(100vw - 20px);
-		margin: 0 10px;
+		margin: 5px 10px;
 		background: white;
 		padding: 15px 0;
 		border-radius: 10px;
@@ -536,7 +537,6 @@
 		
 		display: flex;
 		flex-direction: column;
-		margin-bottom: 10px;
 	}
 
 	/* 输入行 */
@@ -601,14 +601,14 @@
 		height: 45px;
 		background-color: #8A6FDF;
 		color: white;
-		font-size: 16px;
+		font-size: 14px;
 		text-align: center;
-		line-height: 45px;
 		border-radius: 10px;
-		margin-top: 10px;
 		cursor: pointer;
 		font-weight: bold;
 		box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+		padding: 5px 10px;
+		margin-top: 10px;
 	}
 
 	.hidden-canvas {

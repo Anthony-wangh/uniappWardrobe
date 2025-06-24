@@ -28,6 +28,18 @@
 			const token = uni.getStorageSync('wardrobeToken') || '';
 			this.isLoggedin = token !=='';
 		},
+		onShareAppMessage() {
+		    return {
+		      title: "每天穿什么不再纠结！这个衣橱管理神器推荐给你",
+		      path: "pages/main/main",
+		      imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png"
+		    };
+		  },
+		  onShareTimeline() {
+		  	return {
+		  		title: '衣服再也不怕乱堆！这个电子衣橱帮你轻松整理～👗👕', // 自定义朋友圈分享标题		
+		  	};
+		  },
 		methods: {
 			loginClick(){
 				if(this.isLoggedin){
@@ -93,9 +105,7 @@
 										});
 										
 										this.requestClothesData(userInfo._id);
-										setTimeout(()=>{
-											this.requestOutfitsData(userInfo._id);	
-										},10); 								
+																	
 										
 										setTimeout(()=>{
 											uni.hideLoading();
@@ -151,31 +161,14 @@
 					} else {
 						// 更新本地存储
 						console.log('clothesData',result.result.data);
-						uni.setStorageSync('clothes', result.result.data.data);
-					}
-				}).catch((err) => {
-					console.error('云函数错误：', err);
-				});
-			},
-			
-			requestOutfitsData(userId){
-				uniCloud.callFunction({
-					name: 'getOutfits',
-					data: {
-						userId: userId,
-					}
-				}).then((result) => {
-					if (result.result.code !== 200) {
-						console.log("获取数据失败！" + result.result.msg);
-					} else {
-						// 更新本地存储
-						console.log('outfitsData',result.result.data);
-						uni.setStorageSync('outfits', result.result.data.data);
+						uni.setStorageSync('clothes', result.result.data.clothes.data);
+						uni.setStorageSync('outfits', result.result.data.outfits.data);
 					}
 				}).catch((err) => {
 					console.error('云函数错误：', err);
 				});
 			}
+			
 		}
 	}
 </script>
