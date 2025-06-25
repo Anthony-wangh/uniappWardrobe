@@ -30,7 +30,9 @@
 					<view class="quota-bar">
 						<view class="quota-bar-fill pink-bar" :style="{ width: quota.clothesRate.toString() }"></view>
 					</view>
-					<!-- <text class="expand-text">+扩容</text> -->
+					<view class="expand">
+						<button class="expand-text expand-pink" @click="openQuotaModal('clothes')">+扩容</button>
+					</view>
 				</view>
 				<view class="quota-box">
 					<text class="quota-title">搭配额度</text>
@@ -38,7 +40,9 @@
 					<view class="quota-bar">
 						<view class="quota-bar-fill blue-bar" :style="{ width:  quota.outfitsRate.toString() }"></view>
 					</view>
-					<!-- <text class="expand-text">+扩容</text> -->
+					<view class="expand">
+						<button class="expand-text expand-blue" @click="openQuotaModal('outfits')">+扩容</button>
+					</view>
 				</view>
 			</view>
 		</view>
@@ -77,6 +81,33 @@
 		<!-- 版本信息 -->
 		<view class="version-text">版本 1.1.0</view>
 	</view>
+
+	<!-- 新增弹窗 -->
+	<view v-if="modalVisible" class="modal-mask">
+		<view class="modal-content">
+			<view class="modal-header">
+				<text class="modal-title">获取更多额度</text>
+				<text class="modal-close" @click="closeQuotaModal">×</text>
+			</view>
+			<button class="modal-btn ad" @click="watchAd">
+				<image src="/static/settingIcons/ad.png" class="modal-btn-icon" mode="aspectFit" />
+				<view class="modal-text">
+					<text class="modal-title">观看广告</text>
+					<text class="modal-btn-text">每观看一次最长30s视频广告，即可获取{{this.modalGetresault}}。</text>
+				</view>
+			</button>
+			<button class="modal-btn invite" @click="inviteFriend" open-type="share">
+				<image src="/static/settingIcons/visitor.png" class="modal-btn-icon" mode="aspectFit" />
+				<view class="modal-text">
+					<text class="modal-title">邀请好友</text>
+					<text class="modal-btn-text">每邀请一位新朋友完成登录，即可获取{{this.modalGetresault}}。</text>
+				</view>
+			</button>
+			
+			<view class="modal-tip">每天最多只能扩容5次！</view>
+		</view>
+	</view>
+
 </template>
 
 <script>
@@ -87,6 +118,9 @@
 		},
 		data() {
 			return {
+				modalVisible: false, // 新增：控制弹窗显示
+				modalType:'',//扩容弹窗类型：“clothes”,"outfits"
+				modalGetresault:'',//扩容获得结果
 				quota: {
 					clothesCount: 0,
 					outfitsCount: 0,
@@ -153,7 +187,7 @@
 			return {
 				title: "每天穿什么不再纠结！这个衣橱管理神器推荐给你",
 				path: "pages/main/main",
-				imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png"
+				imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/ShareIcon.jpg"
 			};
 		},
 		onShareTimeline() {
@@ -162,7 +196,6 @@
 			};
 		},
 		methods: {
-
 			updateQuota() {
 				let quo = uni.getStorageSync("wardrobeQuota");
 
@@ -259,6 +292,72 @@
 					title: '请先登录',
 					icon: 'none'
 				});
+			},
+			openQuotaModal(type) {
+				if(type === 'clothes'){
+					this.modalGetresault = '衣橱额度3点';	
+				}
+				else{
+					this.modalGetresault = '搭配额度1点';	
+				}
+				
+				this.modalType = type;
+				this.modalVisible = true;
+				uni.hideTabBar();
+			},
+			closeQuotaModal() {
+				this.modalType = '';
+				this.modalVisible = false;
+				uni.showTabBar();
+			},
+			watchAd() {
+				// 在这里触发广告逻辑
+				uni.showToast({
+					title: "广告模块暂不开放，敬请期待！",
+					icon: "none"
+				})
+			},
+			inviteFriend() {
+				const today = new Date();
+				let inviteTimes = uni.getStorageSync("inviteTimes");
+				if(!inviteTimes){
+					inviteTimes = {
+						timeTemp : today.getTime(),
+						times : 0
+					};
+				}
+				
+				const timeTemp = new Date(inviteTimes.timeTemp);
+				if(timeTemp.getMonth() === today.getMonth() && timeTemp.getDay() === today.getDay()){
+					if(inviteTimes.times>5)
+					{
+						uni.showToast({
+							title: "今日已经扩容5次，请明日再来！",
+							icon: "none"
+						})
+						this.closeQuotaModal();	
+						return;
+					}						
+					else
+					{
+						inviteTimes.times +=1;
+					}
+				}
+				else{
+					inviteTimes.timeTemp = today.getTime();
+					inviteTimes.times = 1;
+				}
+				uni.setStorageSync("inviteTimes", inviteTimes);
+				
+				if(this.modalType === 'clothes'){
+					this.quota.clothesQuota += 3;					
+				}
+				else{
+					this.quota.outfitsQuota += 1;		
+				}
+				uni.setStorageSync("wardrobeQuota", this.quota);
+				// 在这里触发邀请逻辑				
+				this.closeQuotaModal();				
 			}
 		}
 
@@ -416,19 +515,38 @@
 	}
 
 	.pink-bar {
-		background-color: #ff9ca7;
+		background: linear-gradient(90deg, #ff6783, #ff9ca7);
 	}
 
 	.blue-bar {
-		background-color: #93b8ff;
+		background: linear-gradient(90deg, #3c82ff, #93b8ff);
 	}
 
 	.expand-text {
+		position: absolute;
+		left: 0px;
 		font-size: 12px;
-		color: #505cff;
-		text-align: left;
+		font-weight: bold;
+		color: #fff;
+		text-align: center;
+		border: #ffffff solid 1px;
+		border-top-left-radius: 20px;
+		border-bottom-right-radius: 20px;
 	}
 
+	.expand-pink {
+		background-color: #ff9ca7;
+	}
+
+	.expand-blue {
+		background-color: #93b8ff;
+	}
+
+	.expand {
+		min-height: 30px;
+		display: flex;
+		position: relative;
+	}
 
 
 	.settings-list {
@@ -480,5 +598,94 @@
 		font-weight: bold;
 		color: #8A6FDF;
 		margin-left: 10px;
+	}
+
+	.modal-mask {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.4);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 999;
+	}
+
+	.modal-content {
+		background: #fff;
+		width: 60%;
+		padding: 16px;
+		border-radius: 12px;
+		position: relative;
+	}
+	.modal-tip{
+		font-size: 10px;
+		color: #646464;
+		text-align: center;
+		margin-top: 10px;
+	}
+
+	.modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 16px;
+	}
+
+	.modal-title {
+		text-align: center;
+		font-size: 16px;
+		font-weight: bold;
+	}
+
+	.modal-close {
+		font-size: 24px;
+		color: #999;
+	}
+
+	.modal-btn {
+		width: 100%;
+		padding: 10px;
+		border-radius: 10px;
+		margin: 8px 0;
+		display: flex;
+		align-items: center;
+		border: #fff solid 1px;
+		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.03);
+	}
+
+	.modal-btn-icon {
+		width: 30px;
+		height: 30px;
+		margin-right: 8px;
+	}
+	.modal-text{
+		margin-left: 5px;
+		display: flex;
+		flex-direction: column;
+	}
+	
+	.modal-title{
+		text-align: start;
+		font-size: 14px;
+		font-weight: bold;
+		color: #333;
+	}
+
+	.modal-btn-text {
+		flex-wrap: wrap;
+		text-align: start;
+		font-size: 12px;
+		color: #666666;
+	}
+
+	.ad {
+		background: linear-gradient(135deg, #F0F8FF, #fcfeff);
+	}
+
+	.invite {
+		background: linear-gradient(135deg, #F0FFF0, #fdfffe);
 	}
 </style>

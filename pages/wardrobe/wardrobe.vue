@@ -4,6 +4,7 @@
 		<view class="header-container">
 			<view class="header">
 				<text class="title-text">我的衣橱</text>
+				<text class="quota">({{quota.clothesCount}}/{{quota.clothesQuota}})</text>
 			</view>
 
 			<view class="search-filter-area">
@@ -200,7 +201,7 @@
 			return {
 				title: "每天穿什么不再纠结！这个衣橱管理神器推荐给你",
 				path: "pages/main/main",
-				imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png"
+				imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/ShareIcon.jpg"
 			};
 		},
 		onShareTimeline() {
@@ -468,6 +469,11 @@
 		display: flex;
 		align-items: center;
 		padding-bottom: 15px;
+	}
+	
+	.quota{
+		font-size: 14px;
+		color: #6f5bdc;
 	}
 
 	.edit-btn {
