@@ -1,8 +1,5 @@
 <template>
 	<view class="home-page">
-		<!-- 状态栏占位 -->
-		<view class="status-safe-area"></view>
-
 		<!-- 头部 欢迎 & 头像 -->
 		<view class="header">
 			<image class="avatar" :src='userInfo.avatarUrl ? userInfo.avatarUrl : "/static/avatorDefault.png"'
@@ -37,9 +34,9 @@
 				<image class="action-icon" src="/static/main/Upload.png" />
 				<text class="action-text">上传衣物</text>
 			</view>
-			<view class="action-btn" @click="startMatch">
+			<view class="action-btn" @click="chooseImage">
 				<image class="action-icon" src="/static/main/Shuffle.png" />
-				<text class="action-text">我的搭配</text>
+				<text class="action-text">上传套装</text>
 			</view>
 		</view>
 		<!-- 推荐模块 -->
@@ -50,7 +47,7 @@
 			</view>
 			<div class="recommendation-list" v-else>
 				<div v-for="(item, index) in recentlyClothes" :key="index" class="recommendation-card">
-					<image :src="item.image" mode="aspectFit" class="item-icon" />
+					<image :src="item.image" mode="widthFix" class="item-icon" />
 					<view class="item-info">
 						<text class="item-name">{{ item.name }}</text>
 						<text class="item-category">{{ item.primaryCategory }}/{{item.secondaryCategory}}</text>
@@ -62,6 +59,12 @@
 
 
 
+	</view>
+	<view class="cropper-container" v-if="cropperSrc !==''">
+		<view class="cropper-wrap">
+			<ksp-cropper mode="free" :width="450" :height="600" :maxWidth="450" :maxHeight="600" :url="cropperSrc"
+				@cancel="oncancel" @ok="onok"></ksp-cropper>
+		</view>
 	</view>
 </template>
 
@@ -95,7 +98,8 @@
 				currentDate: '',
 				weekDay: '',
 				recentlyClothes: [],
-				usageDay: 0 //使用时长
+				usageDay: 0 ,//使用时长
+				cropperSrc:''
 			};
 		},
 		onShow() {
@@ -343,6 +347,30 @@
 				if (rec.tips.length) parts.push(`- 小贴士：${rec.tips.join('；')}`);
 				rec.summary = `[穿衣建议]\n${parts.join('\n')}`;
 				return rec;
+			},
+			onok(ev) {
+				this.cropperSrc = "";
+				uni.showTabBar();
+				setTimeout(() => {
+					uni.navigateTo({
+						url: `/pages/addMatching/addMatching?outfit=${ev.path}`
+					});
+				}, 100);
+			},
+			oncancel() {
+				// url设置为空，隐藏控件
+				this.cropperSrc = "";
+				uni.showTabBar();
+			},
+			chooseImage(){
+				uni.chooseImage({
+					count: 1,
+					sourceType: ['album', 'camera'],
+					success: res => {
+						uni.hideTabBar();
+						this.cropperSrc = res.tempFilePaths[0];
+					}
+				});
 			}
 		}
 	};
@@ -366,16 +394,13 @@
 		margin-left: 15px;
 	}
 
-	.status-safe-area {
-		height: calc(var(--status-bar-height) + 40px);
-	}
-
 	.header {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		padding: 20px;
 		padding-bottom: 10px;
+		padding-top: calc(var(--status-bar-height) + 50px);
+		margin: 0 20px;
 	}
 
 	.avatar {
@@ -522,24 +547,18 @@
 			.recommendation-card {
 				min-width: 150px;
 				margin-right: 10px;
-				// border-radius: 12px;
-				// background: #f8f8f8;
-				// padding: 10px;
 				box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.05);
 				display: flex;
 				flex-direction: column;
-				// align-items: center;
-				// justify-items: center;
 				border: #d1d1d1 solid 1px;
 				border-radius: 20px;
-
 				border-bottom-left-radius: 10px;
 				border-bottom-right-radius: 10px;
+				background-color: #F9F9F9;
 
 				.item-icon {
-					width: 150px;
-					height: 150px;
-					object-fit: contain;
+					width: 100%;
+					height: 160px;
 					border-radius: 20px;
 				}
 
@@ -576,9 +595,6 @@
 						padding: 3px 0px;
 					}
 				}
-
-
-
 			}
 		}
 	}

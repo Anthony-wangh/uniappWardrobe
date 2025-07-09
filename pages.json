@@ -45,13 +45,6 @@
 			}
 		},
 		{
-			"path" : "pages/settings/themeSetting",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
-			}
-		},
-		{
 			"path" : "pages/settings/faqSetting",
 			"style" : 
 			{

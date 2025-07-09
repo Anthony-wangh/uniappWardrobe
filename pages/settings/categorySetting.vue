@@ -31,7 +31,7 @@
 							<text class="dropdown-name">添加</text>
 						</view>
 						<view class="dropdown-item delete" @click.stop="deleteCategory(category)">
-							<image class="dropdown-icon" src="/static/handleIcons/delete.png"></image>
+							<image class="dropdown-icon" src="/static/shanchu.png"></image>
 							<text class="dropdown-name">删除</text>
 						</view>
 					</view>

@@ -79,7 +79,7 @@
 
 	<view class="cropper-container" v-if="cropperSrc !==''">
 		<view class="cropper-wrap">
-			<ksp-cropper mode="free" :width="400" :height="400" :maxWidth="512" :maxHeight="512" :url="cropperSrc"
+			<ksp-cropper mode="free" :width="450" :height="600" :maxWidth="450" :maxHeight="600" :url="cropperSrc"
 				@cancel="oncancel" @ok="onok"></ksp-cropper>
 		</view>
 	</view>
@@ -318,7 +318,7 @@
 
 	.image-picker {
 		width: calc(100vw - 60px);
-		height: calc(100vw - 60px);
+		height: calc((100vw - 60px)*4/3);
 		background-color: #ffffff;
 		display: flex;
 		align-items: center;

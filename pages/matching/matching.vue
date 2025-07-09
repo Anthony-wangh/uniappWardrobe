@@ -42,7 +42,7 @@
 							class="clothes-checkbox-icon" mode="aspectFit" />
 					</view>
 					<view class="thumbnail">
-						<image :src="item.thumbnail" class="outfit-icon" mode="aspectFit" />
+						<image :src="item.thumbnail" class="outfit-icon" mode="widthFix" />
 					</view>
 					<view class="outfit-info">
 						<text class="name">{{ item.name }}</text>
@@ -62,15 +62,24 @@
 
 
 		<!-- 右下角浮动按钮 -->
-		<!-- <view class="floating-btn" @click="goAddOutfit" :style="{ background: '#8A6FDF' }">
-			<image class="floating-btn-image" src="/static/plus-l.png" mode="aspectFit"></image>
-		</view> -->
+		<view class="floating-btn" @click="chooseImage" :style="{ background: '#8A6FDF' }">
+			<image class="floating-btn-image" src="/static/camera.png" mode="aspectFit"></image>
+			<text class="floating-btn-text">上传套装</text>
+		</view>
 
 		<view class="bottom-action-bar" v-if="isEditMode">
 			<view class="action-btn" @click="deleteSelected">
 				<image class="action-icon" src="/static/shanchu.png" mode="aspectFit" />
 				<text class="action-text">删除</text>
 			</view>
+		</view>
+	</view>
+	
+	
+	<view class="cropper-container" v-if="cropperSrc !==''">
+		<view class="cropper-wrap">
+			<ksp-cropper mode="free" :width="450" :height="600" :maxWidth="450" :maxHeight="600" :url="cropperSrc"
+				@cancel="oncancel" @ok="onok"></ksp-cropper>
 		</view>
 	</view>
 </template>
@@ -108,7 +117,8 @@
 
 				shareInfo: {
 					imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png",
-				}
+				},
+				cropperSrc: '', //裁剪图片路径，底图
 			};
 		},
 		onShareAppMessage() {
@@ -265,6 +275,30 @@
 				let localData = uni.getStorageSync('localOutfits') || [];
 				localData.push(data);
 				uni.setStorageSync('localOutfits', localData);
+			},
+			onok(ev) {
+				this.cropperSrc = "";
+				uni.showTabBar();
+				setTimeout(() => {
+					uni.navigateTo({
+						url: `/pages/addMatching/addMatching?outfit=${ev.path}`
+					});
+				}, 100);
+			},
+			oncancel() {
+				// url设置为空，隐藏控件
+				this.cropperSrc = "";
+				uni.showTabBar();
+			},
+			chooseImage(){
+				uni.chooseImage({
+					count: 1,
+					sourceType: ['album', 'camera'],
+					success: res => {
+						uni.hideTabBar();
+						this.cropperSrc = res.tempFilePaths[0];
+					}
+				});
 			}
 		}
 	};
@@ -409,16 +443,16 @@
 	}
 
 	.outfit-card {
-		width: calc(46% - 20px);
+		width: calc(46%);
 		/* 一排2个，留空隙 */
 		background-color: #ffffff;
-		border-radius: 16rpx;
-		padding: 0px 10px;
+		border-radius: 15px;
 		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
 		display: flex;
 		flex-direction: column;
 		margin-bottom: 16rpx;
 		position: relative;
+		overflow: hidden;
 	}
 
 	.checkbox {
@@ -445,13 +479,10 @@
 
 	.thumbnail {
 		width: 100%;
-		aspect-ratio: 1 / 1;
-		object-fit: cover;
 	}
 
 	.outfit-icon {
 		width: 100%;
-		height: 100%;
 		justify-items: center;
 		align-items: center;
 	}
@@ -460,7 +491,8 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
-		margin-top: 12rpx;
+		margin: 10px;
+		
 		position: relative;
 	}
 
@@ -489,26 +521,32 @@
 		font-size: 10px;
 		color: #666;
 		padding: 3px 0px;
-		margin-bottom: 5px;
 	}
 
 	.floating-btn {
 		position: fixed;
 		right: 20px;
 		bottom: 40px;
-		width: 50px;
-		height: 50px;
+		
+		padding: 10px;
 		background-color: #ccd3ff;
-		border-radius: 25px;
+		border-radius: 10px;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.15);
 	}
 
 	.floating-btn-image {
 		width: 30px;
 		height: 30px;
+	}
+	
+	.floating-btn-text{
+		font-size: 12px;
+		color: #fff;
+		font-weight: bold;
 	}
 
 	.empty {

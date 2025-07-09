@@ -79,7 +79,7 @@
 		</view>
 
 		<!-- 版本信息 -->
-		<view class="version-text">版本 1.1.0</view>
+		<view class="version-text">版本 1.1.1</view>
 	</view>
 
 	<!-- 新增弹窗 -->

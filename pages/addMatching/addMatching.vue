@@ -25,7 +25,7 @@
 				</view>
 
 				<canvas
-				  :style="{ width: containerWidth + 'px', height: containerWidth + 'px' }"
+				  :style="{ width: containerWidth + 'px', height: containerHeight + 'px' }"
 				  canvas-id="outfitCanvas"
 				  class="hidden-canvas"
 				/>
@@ -75,6 +75,7 @@
 				category: '日常通勤',
 				categories: ['日常通勤', '春日出游', '周末约会', '正式场合'],
 				containerWidth:0,
+				containerHeight:0,
 				quota:{
 					clothesCount :0,
 					outfitsCount : 0,
@@ -87,26 +88,27 @@
 			};
 		},
 		onLoad(options) {
+			// 获取屏幕宽高
+			const {
+				windowWidth,
+				windowHeight
+			} = uni.getSystemInfoSync();
+			
+			let clothesItems = [];
+			const cardWidth = 80;
+			const cardHeight = 107;
+			const padding = 10;
+			this.containerWidth = windowWidth - 20; // outfit-preview 宽度是 100vw - 20px
+			this.containerHeight = this.containerWidth*4/3;
+			
 			if (options.clothes) {
 				let selectItems = JSON.parse(decodeURIComponent(options.clothes));
 				if (selectItems.length === 0) {
 					console.log("未选中任何衣物！！");
 					return;
-				}
-
-				// 获取屏幕宽高
-				const {
-					windowWidth,
-					windowHeight
-				} = uni.getSystemInfoSync();
-
-				let clothesItems = [];
-				const cardWidth = 80;
-				const cardHeight = 80;
-				const padding = 10;
-				this.containerWidth = windowWidth - 20; // outfit-preview 宽度是 100vw - 20px
+				}				
 				
-				let x = -this.containerWidth*0.5 + cardWidth*0.5 + padding, y = -this.containerWidth*0.5 + cardHeight*0.5 +padding;
+				let x = -this.containerWidth*0.5 + cardWidth*0.5 + padding, y = -this.containerHeight*0.5 + cardHeight*0.5 +padding;
 				
 				selectItems.forEach((item, index) => {
 					// 换行判断
@@ -116,6 +118,7 @@
 					}
 				
 					const clothesItem = {
+						handle:true,
 						image: item.image,
 						x: x,
 						y: y,
@@ -128,7 +131,18 @@
 				});
 				
 				this.selectedClothes = clothesItems;
-
+			}
+			else if(options.outfit){
+				const clothesItem = {
+					handle:false,
+					image: options.outfit,
+					x: 0,
+					y: 0,
+					scale: this.containerWidth/cardWidth,
+					rotation: 0
+				};
+				let clothesItems = [clothesItem];
+				this.selectedClothes = clothesItems;
 			}
 		},
 		onShow() {
@@ -174,6 +188,8 @@
 			},
 
 			startDrag(index, event) {
+				if(!this.selectedClothes[index].handle)
+					return;
 				this.activeIndex = index;
 				this.startX = event.touches[0].clientX - this.selectedClothes[this.activeIndex].x;
 				this.startY = event.touches[0].clientY - this.selectedClothes[this.activeIndex].y;
@@ -284,30 +300,28 @@
 			async generateThumbnail() {
 				const clothesWithLocalImages = await this.downloadImages(this.selectedClothes);
 			
-				const size = this.containerWidth; // 动态 canvas 尺寸
 			
 				return new Promise((resolve, reject) => {
 					const ctx = uni.createCanvasContext("outfitCanvas", this);
 					ctx.setFillStyle("#ffffff");
-					ctx.fillRect(0, 0, size, size); // 背景绘制区域
+					ctx.fillRect(0, 0, this.containerWidth, this.containerHeight); // 背景绘制区域
 			
 					const sortedItems = [...clothesWithLocalImages].sort((a, b) => (a.z || 1) - (b.z || 1));
-					const halfWidth = 40; // 元素宽高一半
 			
 					sortedItems.forEach((item) => {
 						ctx.save();
-						ctx.translate(size / 2 + item.x , size / 2 + item.y); // 注意偏移中心点
+						ctx.translate(this.containerWidth / 2 + item.x , this.containerHeight / 2 + item.y); // 注意偏移中心点
 						ctx.rotate((item.rotation * Math.PI) / 180);
 						ctx.scale(item.scale, item.scale);
-						ctx.drawImage(item.image, -halfWidth, -halfWidth, 80, 80);
+						ctx.drawImage(item.image, -40, -53.5, 80, 107);
 						ctx.restore();
 					});
 			
 					ctx.draw(false, () => {
 						uni.canvasToTempFilePath({
 							canvasId: "outfitCanvas",
-							destWidth: size,
-							destHeight: size,
+							destWidth: this.containerWidth,
+							destHeight: this.containerHeight,
 							success: (res) => resolve(res.tempFilePath),
 							fail: (err) => reject(err),
 						}, this);
@@ -458,7 +472,7 @@
 	.outfit-preview {
 		margin: 0 10px;
 		width: calc(100vw - 20px);
-		height: calc(100vw - 20px);
+		height: calc((100vw - 20px)*4/3);
 		background-color: #fff;
 		border: 1px dashed #ccc;
 		border-radius: 10px;
@@ -477,7 +491,7 @@
 		z-index: 100;
 		pointer-events: auto;
 		width: 80px;
-		height: 80px;
+		height: 107px;
 		display: flex;
 		align-items: center;
 		justify-content: center;

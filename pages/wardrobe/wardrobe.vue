@@ -95,7 +95,7 @@
 													:src="selectedClothes.includes(item) ? '/static/checked.png' : '/static/unChecked.png'"
 													class="clothes-checkbox-icon" mode="aspectFit" />
 											</view>
-											<image class="clothes-image" :src="item.image" mode="aspectFit" />
+											<image class="clothes-image" :src="item.image" mode="widthFix" />
 											<text class="clothes-name">{{ item.name }}</text>
 											<text class="clothes-time">{{ formatTime(item.createTime) }}</text>
 										</template>
@@ -551,7 +551,7 @@
 	.clothes-item {
 		position: relative;
 		width: 46%;
-		height: 200px;
+		/* height: 200px; */
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
@@ -563,7 +563,6 @@
 
 	.clothes-image {
 		width: 100%;
-		object-fit: contain;
 	}
 
 	.clothes-name {
