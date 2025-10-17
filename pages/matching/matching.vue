@@ -146,7 +146,7 @@
 		onShow() {
 			// 模拟数据加载
 			this.outfits = uni.getStorageSync("outfits") || [];
-			this.outfits.sort((a, b) => {
+			this.outfits?.sort((a, b) => {
 				const timeA = a.time ? a.time : 0;
 				const timeB = b.time ? b.time : 0;
 				return timeB - timeA; // 时间越近越靠前
@@ -290,13 +290,27 @@
 				this.cropperSrc = "";
 				uni.showTabBar();
 			},
-			chooseImage(){
-				uni.chooseImage({
-					count: 1,
-					sourceType: ['album', 'camera'],
+			chooseImage(){				
+				uni.showActionSheet({
+					itemList: ['在线搭配', '拍照上传'],
 					success: res => {
-						uni.hideTabBar();
-						this.cropperSrc = res.tempFilePaths[0];
+						if (res.tapIndex === 0) {
+							setTimeout(() => {
+								uni.setStorageSync('isMatchingMode',true);
+								uni.switchTab({
+									url: `/pages/wardrobe/wardrobe`
+								});
+							}, 100);
+						} else {
+							uni.chooseImage({
+								count: 1,
+								sourceType: ['album', 'camera'],
+								success: res => {
+									uni.hideTabBar();
+									this.cropperSrc = res.tempFilePaths[0];
+								}
+							});
+						}
 					}
 				});
 			}

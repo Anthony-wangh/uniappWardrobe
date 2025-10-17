@@ -13,7 +13,7 @@
 					<view class="nickName">
 						<input v-if="userInfo.nickName" type="nickname" class="nickname-input"
 							:value="userInfo.nickName" @blur="userNameInput" placeholder="请输入昵称" />
-						<text v-if="!userInfo.nickName" class="login-btn">点击登录</text>
+						<text v-if="!userInfo.nickName" class="login-btn" @click="clickLogin">点击登录</text>
 					</view>
 
 					<view class="achievement" v-if="userInfo.nickName">
@@ -69,6 +69,12 @@
 				<text class="arrow">›</text>
 			</navigator>
 
+			<view class="setting-item" @click="jumpToOfficialAccount">
+				<image src="/static/settingIcons/more.png" class="icon" />
+				<text class="label">关注公众号</text>
+				<text class="arrow">›</text>
+			</view>
+
 
 			<navigator url="/pages/settings/about" class="setting-item">
 				<image src="/static/settingIcons/about.png" class="icon" />
@@ -79,7 +85,7 @@
 		</view>
 
 		<!-- 版本信息 -->
-		<view class="version-text">版本 1.1.1</view>
+		<view class="version-text">版本 1.2.0</view>
 	</view>
 
 	<!-- 新增弹窗 -->
@@ -103,7 +109,7 @@
 					<text class="modal-btn-text">每邀请一位新朋友完成登录，即可获取{{this.modalGetresault}}。</text>
 				</view>
 			</button>
-			
+
 			<view class="modal-tip">每天最多只能扩容5次！</view>
 		</view>
 	</view>
@@ -119,8 +125,8 @@
 		data() {
 			return {
 				modalVisible: false, // 新增：控制弹窗显示
-				modalType:'',//扩容弹窗类型：“clothes”,"outfits"
-				modalGetresault:'',//扩容获得结果
+				modalType: '', //扩容弹窗类型：“clothes”,"outfits"
+				modalGetresault: '', //扩容获得结果
 				quota: {
 					clothesCount: 0,
 					outfitsCount: 0,
@@ -139,6 +145,7 @@
 				pushCount: 10,
 				outfits: [],
 				clothes: [],
+				videoAd: null,
 				achievement: {},
 				achievements: [{
 						level: 0,
@@ -182,6 +189,10 @@
 			this.clothes = uni.getStorageSync("clothes") || [];
 			this.updateQuota();
 			this.getAchievement();
+			
+		},
+		onLoad() {
+			this.initAd();
 		},
 		onShareAppMessage() {
 			return {
@@ -196,6 +207,28 @@
 			};
 		},
 		methods: {
+			jumpToOfficialAccount() {
+				if (wx.openOfficialAccountProfile) {
+					wx.openOfficialAccountProfile({
+						username: 'gh_e118b1892187',
+						success: (res) => {
+
+						},
+						fail: (err) => {
+							uni.showToast({
+								title: '跳转失败',
+								icon: 'none'
+							});
+							console.error(err);
+						}
+					});
+				} else {
+					uni.showToast({
+						title: '当前微信版本过低，请升级',
+						icon: 'none'
+					});
+				}
+			},
 			updateQuota() {
 				let quo = uni.getStorageSync("wardrobeQuota");
 
@@ -294,13 +327,12 @@
 				});
 			},
 			openQuotaModal(type) {
-				if(type === 'clothes'){
-					this.modalGetresault = '衣橱额度3点';	
+				if (type === 'clothes') {
+					this.modalGetresault = '衣橱额度3点';
+				} else {
+					this.modalGetresault = '搭配额度1点';
 				}
-				else{
-					this.modalGetresault = '搭配额度1点';	
-				}
-				
+
 				this.modalType = type;
 				this.modalVisible = true;
 				uni.hideTabBar();
@@ -310,54 +342,88 @@
 				this.modalVisible = false;
 				uni.showTabBar();
 			},
+			initAd() {
+				// 在页面onLoad回调事件中创建激励视频广告实例
+				if (wx.createRewardedVideoAd) {
+					this.videoAd = wx.createRewardedVideoAd({
+						adUnitId: 'adunit-91b376ce401c5259'
+					})
+					this.videoAd.onLoad(() => {})
+					this.videoAd.onError((err) => {
+						console.error('激励视频光告加载失败', err)
+					})
+
+					this.videoAd.onClose(res => {
+						// 用户点击了【关闭广告】按钮
+						if (res && res.isEnded) {
+							uni.showToast({
+								title: "广告观看完毕，衣橱额度下发成功！",
+								icon: "success"
+							})
+							this.refreshQuota();
+						} else {
+							// 播放中途退出，不下发游戏奖励
+							uni.showToast({
+								title: "中途退出，奖励下发失败",
+								icon: "none"
+							})
+						}
+					})
+				}
+			},
 			watchAd() {
-				// 在这里触发广告逻辑
-				uni.showToast({
-					title: "广告模块暂不开放，敬请期待！",
-					icon: "none"
-				})
+				// 用户触发广告后，显示激励视频广告
+				if (this.videoAd) {
+					this.videoAd.show().catch(() => {
+						// 失败重试
+						this.videoAd.load()
+							.then(() => this.videoAd.show())
+							.catch(err => {
+								console.error('激励视频 广告显示失败', err)
+							})
+					})
+				}
 			},
 			inviteFriend() {
 				const today = new Date();
 				let inviteTimes = uni.getStorageSync("inviteTimes");
-				if(!inviteTimes){
+				if (!inviteTimes) {
 					inviteTimes = {
-						timeTemp : today.getTime(),
-						times : 0
+						timeTemp: today.getTime(),
+						times: 0
 					};
 				}
-				
+
 				const timeTemp = new Date(inviteTimes.timeTemp);
-				if(timeTemp.getMonth() === today.getMonth() && timeTemp.getDay() === today.getDay()){
-					if(inviteTimes.times>5)
-					{
+				if (timeTemp.getMonth() === today.getMonth() && timeTemp.getDay() === today.getDay()) {
+					if (inviteTimes.times > 5) {
 						uni.showToast({
 							title: "今日已经扩容5次，请明日再来！",
 							icon: "none"
 						})
-						this.closeQuotaModal();	
+						this.closeQuotaModal();
 						return;
-					}						
-					else
-					{
-						inviteTimes.times +=1;
+					} else {
+						inviteTimes.times += 1;
 					}
-				}
-				else{
+				} else {
 					inviteTimes.timeTemp = today.getTime();
 					inviteTimes.times = 1;
 				}
 				uni.setStorageSync("inviteTimes", inviteTimes);
-				
-				if(this.modalType === 'clothes'){
-					this.quota.clothesQuota += 3;					
-				}
-				else{
-					this.quota.outfitsQuota += 1;		
+
+				this.refreshQuota();
+			},
+
+			refreshQuota() {
+				if (this.modalType === 'clothes') {
+					this.quota.clothesQuota += 3;
+				} else {
+					this.quota.outfitsQuota += 1;
 				}
 				uni.setStorageSync("wardrobeQuota", this.quota);
 				// 在这里触发邀请逻辑				
-				this.closeQuotaModal();				
+				this.closeQuotaModal();
 			}
 		}
 
@@ -620,7 +686,8 @@
 		border-radius: 12px;
 		position: relative;
 	}
-	.modal-tip{
+
+	.modal-tip {
 		font-size: 10px;
 		color: #646464;
 		text-align: center;
@@ -661,13 +728,14 @@
 		height: 30px;
 		margin-right: 8px;
 	}
-	.modal-text{
+
+	.modal-text {
 		margin-left: 5px;
 		display: flex;
 		flex-direction: column;
 	}
-	
-	.modal-title{
+
+	.modal-title {
 		text-align: start;
 		font-size: 14px;
 		font-weight: bold;

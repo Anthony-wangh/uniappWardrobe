@@ -94,9 +94,9 @@
 										uni.setStorageSync('wardrobeUserInfo', result.result.data.newUserInfo);	
 										this.isLoggedin = true;
 										const userInfo = result.result.data.newUserInfo;
-										const usingDates = userInfo ? (Math.floor((Date
-											.now() - userInfo.createTime
-										) / (1000 * 60 * 60 * 24))) : 0;
+										
+										const usingTime = Math.max((Date.now() - userInfo.createTime),1) ;
+										const usingDates = userInfo ? (Math.floor(usingTime / (1000 * 60 * 60 * 24))) : 0;
 										//使用天数
 										uni.setStorageSync('wardrobeUsingDates', usingDates);
 										uni.showToast({

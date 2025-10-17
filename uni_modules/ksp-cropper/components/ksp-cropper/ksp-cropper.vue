@@ -30,7 +30,7 @@
 		</view>
 		<view class="toolbar">
 			<view @tap="oncancle" class="btn-cancel">取消</view>
-			<view @tap="rotateAngle" class="btn-rotate">旋转</view>
+			<view @tap="rotateAngle" class="btn-rotate">旋转</view>			
 			<view @tap="onok" class="btn-ok">确定</view>
 		</view>
 	</view>
@@ -871,6 +871,7 @@ export default {
 	color: #d5dfe5;
 	font-weight: bold;
 }
+
 .body {
 	position: absolute;
 	left: 0rpx;

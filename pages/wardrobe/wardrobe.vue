@@ -146,7 +146,7 @@
 				allSeasons: ['春', '夏', '秋', '冬'],
 				seasonDropdownVisible: false,
 				selectSeasonText: '',
-				isExpand: false,
+				isExpand: true,
 				quota: {
 					clothesCount: 0,
 					outfitsCount: 0,
@@ -173,6 +173,14 @@
 			}
 		},
 		onShow() {
+			const isMatching = uni.getStorageSync('isMatchingMode') || false;
+			this.isEditMode = isMatching;
+			if(isMatching){
+				uni.setStorageSync('isMatchingMode',false);	
+				uni.hideTabBar();
+			}
+						
+			
 			const quo = uni.getStorageSync("wardrobeQuota");
 			if (quo) {
 				this.quota = quo;
@@ -181,20 +189,23 @@
 			if (category) {
 				this.categoriesMap = category;
 			}
-
+			
 			this.canAddClothes = this.quota.clothesCount < this.quota.clothesQuota;
 			this.canAddOutfits = this.quota.outfitsCount < this.quota.outfitsQuota;
-
+			
 			this.clothes = uni.getStorageSync("clothes") || [];
-			this.clothes.sort((a, b) => {
+			
+			this.clothes?.sort((a, b) => {
 				const timeA = a.createTime ? a.createTime : 0;
 				const timeB = b.createTime ? b.createTime : 0;
 				return timeB - timeA; // 时间越近越靠前
 			});
-			this.categories[this.currentMainCategoryIndex].subCategories.forEach(sub => {
-				this.$set(this.isSubCollapsed, sub, false);
+			
+			this.categories.forEach(main=>{
+				main.subCategories.forEach(sub => {
+				this.$set(this.isSubCollapsed, sub, true);
+				});
 			});
-
 			this.syncLocalData();
 		},
 		onShareAppMessage() {
