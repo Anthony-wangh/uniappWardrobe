@@ -1,4 +1,6 @@
 <template>
+	<add-tip :tip="tip" :duration="duration"/>
+	
 	<view class="home-page">
 		<!-- 头部 欢迎 & 头像 -->
 		<view class="header">
@@ -55,6 +57,8 @@
 					</view>
 				</div>
 			</div>
+			
+			<ad-custom unit-id="adunit-0f275a04dcdb3985"></ad-custom>
 		</section>
 
 
@@ -66,11 +70,16 @@
 				@cancel="oncancel" @ok="onok"></ksp-cropper>
 		</view>
 	</view>
+	
+	
 </template>
 
 <script>
+	import addTip from "@/wxcomponents/struggler-uniapp-add-tip/struggler-uniapp-add-tip.vue"
 	export default {
-
+		components:{
+		            addTip
+		        },
 		data() {
 			return {
 				weatherInfo: {},
@@ -99,7 +108,11 @@
 				weekDay: '',
 				recentlyClothes: [],
 				usageDay: 0 ,//使用时长
-				cropperSrc:''
+				cropperSrc:'',
+				
+				tip:"点击【添加到我的小程序】，下次访问更便捷！",
+				duration:5,
+				
 			};
 		},
 		onShow() {
@@ -132,6 +145,7 @@
 			};
 		},
 		methods: {
+			
 			getTime() {
 				const date = new Date()
 				this.currentDate = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`

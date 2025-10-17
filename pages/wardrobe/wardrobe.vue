@@ -189,11 +189,10 @@
 			if (category) {
 				this.categoriesMap = category;
 			}
-			
+			this.clothes = uni.getStorageSync("clothes") || [];
+			this.quota.clothesCount = this.clothes.length;
 			this.canAddClothes = this.quota.clothesCount < this.quota.clothesQuota;
 			this.canAddOutfits = this.quota.outfitsCount < this.quota.outfitsQuota;
-			
-			this.clothes = uni.getStorageSync("clothes") || [];
 			
 			this.clothes?.sort((a, b) => {
 				const timeA = a.createTime ? a.createTime : 0;

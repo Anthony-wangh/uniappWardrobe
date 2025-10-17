@@ -155,6 +155,7 @@
 			if (quo) {
 				this.quota = quo;
 			}
+			this.quota.outfitsCount = this.outfits.length;
 
 			const match = uni.getStorageSync('matchCategories');
 			if (match && Array.isArray(match)) {

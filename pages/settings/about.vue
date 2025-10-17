@@ -40,13 +40,15 @@
 	export default {
 		data() {
 			return {
-				version: '1.2.0',
-				updateDate: '2025年9月22日',
+				version: '1.3.0',
+				updateDate: '2025年9月26日',
 				features: [
-					'新增AI功能，体验衣物主体一键抠图的AI特性；',
+					'新增鞋包，配饰的AI抠图功能；'
 				],
 				fixes:[
-					'修复广告组件偶发情况下加载异常的问题；'
+					'修复已知问题',
+					'优化用户体验！'
+					
 				]
 			};
 		},

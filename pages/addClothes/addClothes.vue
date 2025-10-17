@@ -73,6 +73,7 @@
 			
 			<button class="submit-btn" @click="submitForm">保存</button>
 			<text class="error-msg" v-if="errorMsg">{{ errorMsg }}</text>
+			<ad-custom unit-id="adunit-706b39a5cb78cad7"></ad-custom>
 		</view>
 	</view>
 
@@ -88,6 +89,31 @@
 		</view>
 	</view>
 
+
+	<!-- 新增弹窗 -->
+	<view v-if="modalVisible" class="modal-mask">
+		<view class="modal-content">
+			<view class="modal-header">
+				<text class="modal-title">选择抠图类型</text>				
+			</view>
+			<button class="modal-btn" @click="segmentCloth">
+				<image src="/static/segmentCloth.jpeg" class="modal-btn-icon" mode="aspectFit"/>
+				<view class="modal-text">
+					<text class="modal-title">服饰类型</text>
+					<text class="modal-btn-text">擅长处理展开的服饰类和穿在人身上的服饰</text>
+				</view>
+			</button>
+			<button class="modal-btn" @click="segmentShoose">
+				<image src="/static/segmentShoose.jpeg" class="modal-btn-icon" mode="aspectFit"/>
+				<view class="modal-text">
+					<text class="modal-title">鞋包配饰</text>
+					<text class="modal-btn-text">擅长处理鞋子，包包，配饰类型</text>
+				</view>
+			</button>
+
+			<view class="modal-close" @click="closeQuotaModal">取消</view>
+		</view>
+	</view>
 
 </template>
 
@@ -141,7 +167,9 @@
 				accessKeySecret: "",
 				bucket: "wardrobe-bucket",
 				region: "oss-cn-shanghai",
-				videoAd: null
+				videoAd: null,
+				modalVisible:false,
+				
 			};
 		},
 		onLoad(options) {
@@ -185,7 +213,7 @@
 					content: '观看完整广告后进入AI抠图！',
 					success: res => {
 						if (res.confirm) {
-							this.watchAd();
+							this.watchAd();	
 						}
 					}
 				})
@@ -312,8 +340,8 @@
 				});
 				const data = signRes.result;
 
-				this.accessKeyId = data.accessid;
-				this.accessKeySecret = data.accessKeysecret;
+				this.accessKeyId = data.aki;
+				this.accessKeySecret = data.aks;
 
 				const objectName = Date.now() + ".png";
 				const date = new Date().toUTCString();
@@ -336,7 +364,7 @@
 						formData: {
 							key,
 							policy: data.policy,
-							OSSAccessKeyId: data.accessid,
+							OSSAccessKeyId: data.aki,
 							signature: data.signature,
 							success_action_status: "200" // 返回 200
 						},
@@ -350,10 +378,10 @@
 				});
 			},
 
-			async callSegmentCloth(imageUrl) {
+			async callSegmentCloth(imageUrl,isCloth) {
 				const endpoint = "https://imageseg.cn-shanghai.aliyuncs.com/";
 				const params = {
-					Action: "SegmentCloth",
+					Action: isCloth ? "SegmentCloth" : "SegmentCommodity",
 					Version: "2019-12-30",
 					Format: "JSON",
 					AccessKeyId: this.accessKeyId,
@@ -388,13 +416,14 @@
 				});
 			},
 
-			async uploadAndSegment(filePath) {
+			async uploadAndSegment(filePath,isCloth) {
 				try {
 					const ossUrl = await this.uploadToOSS(filePath);
-					const segmentResult = await this.callSegmentCloth(ossUrl);
+					const segmentResult = await this.callSegmentCloth(ossUrl,isCloth);
 					console.log("SegmentCloth 返回：", segmentResult);
 					if (segmentResult && segmentResult.Data) {
-						let segmentUrl = segmentResult.Data.Elements[0].ImageURL;
+						
+						let segmentUrl = isCloth? segmentResult.Data.Elements[0].ImageURL : segmentResult.Data.ImageURL;
 						segmentUrl = segmentUrl.replace('http','https');						
 						uni.downloadFile({
 						  url: segmentUrl,
@@ -412,6 +441,7 @@
 						});
 					}
 					uni.hideLoading();
+					this.modalVisible = false;
 				} catch (err) {
 					console.error(err);
 					uni.hideLoading();
@@ -439,12 +469,8 @@
 
 				this.videoAd.onClose(res => {
 					// 用户点击了【关闭广告】按钮
-					if (res && res.isEnded) {
-						uni.showLoading({
-							title: '正在处理图片...',
-							mask: true
-						})
-						this.uploadAndSegment(this.form.image);
+					if (res && res.isEnded) {						
+						this.modalVisible = true;						
 					}
 				})
 
@@ -461,6 +487,23 @@
 							})
 					})
 				}
+			},
+			segmentCloth(){
+				uni.showLoading({
+					title: '正在处理图片...',
+					mask: true
+				})
+				this.uploadAndSegment(this.form.image,true);
+			},
+			segmentShoose(){
+				uni.showLoading({
+					title: '正在处理图片...',
+					mask: true
+				})
+				this.uploadAndSegment(this.form.image,false);
+			},
+			closeQuotaModal(){
+				this.modalVisible = false;
 			}
 		}
 	}
@@ -692,7 +735,6 @@
 	}
 	
 	.btn-segment{
-		width: 50%;
 		font-size: 30rpx;
 		color: #d5dfe5;
 		background-color: #333;
@@ -722,4 +764,90 @@
 		color: #bababa;
 		margin: 5px 0;
 	}
+	
+	.modal-mask {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.4);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 999;
+	}
+	
+	.modal-content {
+		background: #fff;
+		width: 60%;
+		padding: 16px;
+		border-radius: 12px;
+		position: relative;
+	}
+	
+	.modal-tip {
+		font-size: 10px;
+		color: #646464;
+		text-align: center;
+		margin-top: 10px;
+	}
+	
+	.modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 16px;
+	}
+	
+	.modal-title {
+		text-align: center;
+		font-size: 16px;
+		font-weight: bold;
+	}
+	
+	.modal-close {
+		font-size: 16px;
+		color: #999;
+		text-align: center;
+	}
+	
+	.modal-btn {
+		width: 100%;
+		padding: 10px;
+		border-radius: 10px;
+		margin: 8px 0;
+		display: flex;
+		align-items: center;
+		border: #fff solid 1px;
+		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.03);
+		justify-content: space-between;
+	}
+	
+	.modal-btn-icon {
+		height: 80px;
+		width: 60px;
+		margin-right: 8px;
+	}
+	
+	.modal-text {
+		margin-left: 5px;
+		display: flex;
+		flex-direction: column;
+	}
+	
+	.modal-title {
+		text-align: start;
+		font-size: 14px;
+		font-weight: bold;
+		color: #333;
+	}
+	
+	.modal-btn-text {
+		flex-wrap: wrap;
+		text-align: start;
+		font-size: 12px;
+		color: #666666;
+	}
+	
 </style>
