@@ -29,8 +29,13 @@
 				  canvas-id="outfitCanvas"
 				  class="hidden-canvas"
 				/>
-
+				
 			</view>
+			
+			<view class="matching-tip">提示：可选中衣物卡片，通过拖动衣物卡片和拖动卡片左下角“上一层"以及右下角“缩放旋转"按钮来调整搭配的布局。
+			<view class="tutorial" @click="toTutorial">"点击此处可跳转教程"</view>
+			</view>
+			
 			<!-- 套装详情模块 -->
 			<view class="details-section">
 				<view class="input-row">
@@ -153,6 +158,11 @@
 			}
 		},
 		methods: {
+			toTutorial(){
+				uni.navigateTo({
+				    url: `/pages/webview/webview?url=${encodeURIComponent('https://mp.weixin.qq.com/s/NOF4mH_Dj7uZ9W9mlsZvRw')}`
+				  });
+			},
 			updateQuota(outfits){
 				let quo = uni.getStorageSync("wardrobeQuota");				
 				if(quo){
@@ -662,5 +672,18 @@
 		cursor: pointer;
 		font-weight: bold;
 		border: 2px solid #fff;
+	}
+	
+	.matching-tip{
+		margin: 5px 10px;
+		color: #cbcbcb;
+		font-size: 14px;
+		display: flex;
+		flex-direction: column;
+	}
+	.tutorial{
+		margin-top: 5px;
+		color: blue;
+		font-size: 16px;
 	}
 </style>

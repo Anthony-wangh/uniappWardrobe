@@ -10,6 +10,10 @@
 			<text :class="['login-btn','']" @click="loginClick">
 				一键登录
 			</text>		
+			
+			<text class="cancle-btn" @click="quitClick">
+				取消
+			</text>	
 			<image class="bottom-icon" src="/static/main/icon.png" mode="aspectFit"></image>
 		</view>			
 		
@@ -41,6 +45,9 @@
 		  	};
 		  },
 		methods: {
+			quitClick(){
+				uni.navigateBack();
+			},
 			loginClick(){
 				if(this.isLoggedin){
 					uni.switchTab({
@@ -231,7 +238,18 @@
 	font-weight: bold;
 	padding: 10px 00px;
 	text-align: center;
-	margin-top: 200px;
+	margin-top: 150px;
+}
+.cancle-btn{
+	width: 40%;
+	color: #7c7c7c;
+	/* background-color: #262626; */
+	border-radius: 20px;
+	font-size: 16px;
+	font-weight: bold;
+	padding: 5px 00px;
+	text-align: center;
+	margin-top: 20px;
 }
 
 .login-btn.isLoggedin{

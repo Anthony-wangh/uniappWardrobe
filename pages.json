@@ -78,6 +78,20 @@
 			{
 				"navigationBarTitleText" : ""
 			}
+		},
+		{
+			"path" : "pages/settings/moreMP",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/webview/webview",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
 		}
 		
 

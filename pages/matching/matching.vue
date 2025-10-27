@@ -292,6 +292,8 @@
 				uni.showTabBar();
 			},
 			chooseImage(){				
+				if (!this.checkLogin())
+					return;
 				uni.showActionSheet({
 					itemList: ['在线搭配', '拍照上传'],
 					success: res => {
@@ -314,7 +316,18 @@
 						}
 					}
 				});
-			}
+			},
+			checkLogin() {
+				const userInfo = uni.getStorageSync('wardrobeUserInfo');
+				if (userInfo) {
+					return true;
+				}
+				uni.navigateTo({
+					url: "/pages/login/login"
+				});
+				return false;
+			},
+		
 		}
 	};
 </script>

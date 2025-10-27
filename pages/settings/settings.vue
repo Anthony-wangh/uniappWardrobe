@@ -68,8 +68,14 @@
 				<text class="label">用户隐私协议</text>
 				<text class="arrow">›</text>
 			</navigator>
+			
+			<navigator url="/pages/settings/moreMP" class="setting-item">
+				<image src="/static/settingIcons/message.png" class="icon" />
+				<text class="label">实用工具</text>
+				<text class="arrow">›</text>
+			</navigator>
 
-			<view class="setting-item" @click="jumpToOfficialAccount">
+			<view class="setting-item" @click="openOtherMiniProgram">
 				<image src="/static/settingIcons/more.png" class="icon" />
 				<text class="label">关注公众号</text>
 				<text class="arrow">›</text>
@@ -85,7 +91,7 @@
 		</view>
 
 		<!-- 版本信息 -->
-		<view class="version-text">版本 1.3.0</view>
+		<view class="version-text">版本 1.3.1</view>
 		<ad-custom unit-id="adunit-65485912806f40d1"></ad-custom>
 	</view>
 
@@ -208,6 +214,19 @@
 			};
 		},
 		methods: {
+			openOtherMiniProgram() {
+			      uni.navigateToMiniProgram({
+			        appId: 'wxc894f73cbc13b020', // 替换为目标小程序的 appId
+			        path: 'pages/bills/bills',
+			        success: (res) => {
+			          console.log('跳转成功');
+			        },
+			        fail: (err) => {
+			          console.error('跳转失败', err);
+			        }
+			      });
+			    },
+			
 			jumpToOfficialAccount() {
 				if (wx.openOfficialAccountProfile) {
 					wx.openOfficialAccountProfile({
