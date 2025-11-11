@@ -92,6 +92,20 @@
 			{
 				"navigationBarTitleText" : ""
 			}
+		},
+		{
+			"path" : "pages/matching/RemindTimePopup",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/outfitDetail/outfitDetail",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
 		}
 		
 

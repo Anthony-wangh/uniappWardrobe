@@ -75,7 +75,7 @@
 				<text class="arrow">›</text>
 			</navigator>
 
-			<view class="setting-item" @click="openOtherMiniProgram">
+			<view class="setting-item" @click="jumpToOfficialAccount">
 				<image src="/static/settingIcons/more.png" class="icon" />
 				<text class="label">关注公众号</text>
 				<text class="arrow">›</text>
@@ -91,7 +91,7 @@
 		</view>
 
 		<!-- 版本信息 -->
-		<view class="version-text">版本 1.3.1</view>
+		<view class="version-text">版本 1.4.1</view>
 		<ad-custom unit-id="adunit-65485912806f40d1"></ad-custom>
 	</view>
 
@@ -227,7 +227,7 @@
 			      });
 			    },
 			
-			jumpToOfficialAccount() {
+			jumpToOfficialAccount() {				
 				if (wx.openOfficialAccountProfile) {
 					wx.openOfficialAccountProfile({
 						username: 'gh_e118b1892187',
@@ -654,6 +654,7 @@
 	.setting-item:last-child {
 		border-bottom: none;
 	}
+	
 
 	.icon {
 		width: 22px;

@@ -49,11 +49,11 @@
 			</view>
 			<div class="recommendation-list" v-else>
 				<div v-for="(item, index) in recentlyClothes" :key="index" class="recommendation-card">
-					<image :src="item.image" mode="widthFix" class="item-icon" />
+					<image :src="item.thumbnail" mode="widthFix" class="item-icon" />
 					<view class="item-info">
 						<text class="item-name">{{ item.name }}</text>
-						<text class="item-category">{{ item.primaryCategory }}/{{item.secondaryCategory}}</text>
-						<text class="item-time">{{ formatTime(item.createTime) }}</text>
+						<text class="item-category">{{ item.category }}</text>
+						<text class="item-time">{{ formatTime(item.time) }}</text>
 					</view>
 				</div>
 			</div>
@@ -118,13 +118,13 @@
 		onShow() {
 			this.userInfo = uni.getStorageSync('wardrobeUserInfo') || {};
 			this.usageDay = uni.getStorageSync('wardrobeUsingDates') || 1;
-			const clothes = uni.getStorageSync("clothes") || [];
-			if (clothes.length > 0) {
+			const outfits = uni.getStorageSync("outfits") || [];
+			if (outfits.length > 0) {
 				//取最近五个上传的衣服
-				this.recentlyClothes = clothes.length > 5 ? clothes.slice(-5) : clothes;
+				this.recentlyClothes = outfits.length > 5 ? outfits.slice(-5) : outfits;
 				this.recentlyClothes.sort((a, b) => {
-					const timeA = a.createTime ? a.createTime : 0;
-					const timeB = b.createTime ? b.createTime : 0;
+					const timeA = a.time ? a.time : 0;
+					const timeB = b.time ? b.time : 0;
 					return timeB - timeA; // 时间越近越靠前
 				});
 			}
@@ -354,12 +354,14 @@
 					rec.specialNotes.push(`昼夜温差${diff}℃，建议洋葱式穿搭`);
 				}
 				const parts = [];
-				if (rec.upper.length) parts.push(`- 上衣：${rec.upper.join(' / ')}`);
-				if (rec.lower.length) parts.push(`- 下装：${rec.lower.join(' / ')}`);
-				if (rec.accessories.length) parts.push(`- 配饰：${rec.accessories.join('、')}`);
-				if (rec.specialNotes.length) parts.push(`- 注意：${rec.specialNotes.join('；')}`);
-				if (rec.tips.length) parts.push(`- 小贴士：${rec.tips.join('；')}`);
-				rec.summary = `[穿衣建议]\n${parts.join('\n')}`;
+				let clotherParts = '';
+				if (rec.upper.length)clotherParts = `${rec.upper.join(' / ')}`;
+				if (rec.lower.length) clotherParts +=  `${clotherParts === ''?'':'+'} ${rec.lower.join(' / ')}`;
+				if(clotherParts!=='') parts.push(clotherParts);
+				if (rec.accessories.length) parts.push(`配饰：${rec.accessories.join('、')}`);
+				if (rec.specialNotes.length) parts.push(`注意：${rec.specialNotes.join('；')}`);
+				if (rec.tips.length) parts.push(`*小贴士：${rec.tips.join('；')}`);
+				rec.summary = `【穿衣建议】\n${parts.join('\n')}`;
 				return rec;
 			},
 			onok(ev) {

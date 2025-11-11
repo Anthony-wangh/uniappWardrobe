@@ -39,10 +39,10 @@
 			</view>
 
 			<!-- 名称输入 -->
-			<view class="main-form-group">
+			<!-- <view class="main-form-group">
 				<label>名称</label>
 				<input class="input-field" v-model="form.name" placeholder="请输入衣服名称（必填）" />
-			</view>
+			</view> -->
 
 
 			<!-- <view class="main-form-group">
@@ -271,7 +271,7 @@
 			},
 			submitForm() {
 				if (!this.form.image) return (this.errorMsg = '请上传衣服图片');
-				if (!this.form.name) return (this.errorMsg = '请输入衣服名称');
+				// if (!this.form.name) return (this.errorMsg = '请输入衣服名称');
 				if (!this.form.primaryCategory) return (this.errorMsg = '请选择一级类目');
 				if (!this.form.secondaryCategory) return (this.errorMsg = '请选择二级类目');
 				const id = this.generateUniqueId();

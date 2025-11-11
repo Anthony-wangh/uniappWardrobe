@@ -12,13 +12,13 @@
 			
 			<!-- 搭配模块 -->
 			<view class="outfit-preview" :style="{backgroundSize: 'cover' }" @click="clearSelection">
-				<view class="clothes-item" v-for="(item, index) in selectedClothes" :key="index"
-					:id="'clothesItem' + index" :ref="'clothesItem' + index" :style="getStyle(item)">
+				<view class="clothes-item"  v-for="(item, index) in selectedClothes" :key="index"
+					:id="'clothesItem' + index" :ref="'clothesItem' + index" :style="getStyle(item)" :class="{ active: activeIndex === index }">
 					<image class="clothes-image" :src="item.image" @touchstart.stop="startDrag(index, $event)"
 						@touchmove.stop="handleMove($event)" />
 					<view v-if="activeIndex === index">
-						<image src="/static/upLevel.png" mode="aspectFit" class="zindex-btn" @click.stop="bringToFront(index)"></image>
-						<image src="/static/resize.png" mode="aspectFit"  class="resize-btn" @touchstart.stop="startTransform($event)"
+						<image src="/static/upLevel.png" mode="aspectFit" class="zindex-btn" @click.stop="bringToFront(index)" :style="{ transform: `scale(${1 / (item.scale || 1)})` }"></image>
+						<image src="/static/resize.png" mode="aspectFit"  class="resize-btn" @touchstart.stop="startTransform($event)" :style="{ transform: `scale(${1 / (item.scale || 1)})` }"
 							@touchmove.stop="handleTransform($event)"></image>
 						<!-- <view class="remove-btn" @click.stop="removeClothes(index)">×</view> -->
 					</view>
@@ -507,13 +507,16 @@
 		justify-content: center;
 		/* transition: transform 0.2s ease-in-out; */
 	}
+	.clothes-item.active{
+		border: #707070 dashed 1px;
+	}
 
 	/* 衣物图片 */
 	.clothes-image {
 		width: 100%;
 		height: 100%;
 		border-radius: 2px;
-		box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+		/* box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); */
 	}
 
 
@@ -529,6 +532,7 @@
 		color: white;
 		border-radius: 50%;
 		border: 2px solid #fff;
+		transform-origin: center center;
 	}
 
 	/* 删除按钮 */
@@ -672,6 +676,7 @@
 		cursor: pointer;
 		font-weight: bold;
 		border: 2px solid #fff;
+		transform-origin: center center;
 	}
 	
 	.matching-tip{

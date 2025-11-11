@@ -12,23 +12,27 @@
 					<view class="search-area">
 						<image class="search-btn" src="/static/search.png" mode="aspectFit"></image>
 						<input v-model="searchKeyword" class="search-input" placeholder="搜索衣物名称" />
-					</view>
-
-					<view :class="['edit-btn-inline', isEditMode ? 'finish' : 'edit']" @click="toggleEditMode">
-						<text
-							:class="['edit-btn-text',isEditMode ? 'finish' : 'edit']">{{ isEditMode ? '取消' : '管理' }}</text>
-						<image class="edit-btn-image" :src="isEditMode ? '/static/UnEdit.png':'/static/Edit.png'"
-							mode="aspectFill"></image>
-					</view>
-				</view>
-				<view class="input-row">
-					<picker class="picker-category" mode="selector" :range="categories" @change="onCategoryChange">
-						<view class="input-box-category">
-							<text class="category-text">{{ category }}</text>
-							<image class="filter-icon" src="/static/filter1.png" mode="aspectFit"></image>
+					</view>				
+					
+					
+					<view class="input-row">
+						<picker class="picker-category" mode="selector" :range="categories" @change="onCategoryChange">
+							<view class="edit-btn-inline">
+								<image class="edit-btn-image" src="/static/filter1.png" mode="aspectFit"></image>
+								<text class="edit-btn-text">{{ category }}</text>								
+							</view>
+						</picker>
+						
+						<view :class="['edit-btn-inline', isEditMode ? 'finish' : 'edit']" @click="toggleEditMode">
+							<image class="edit-btn-image" :src="isEditMode ? '/static/UnEdit.png':'/static/guanli.png'"
+								mode="aspectFit"></image>
+							<text
+								:class="['edit-btn-text',isEditMode ? 'finish' : 'edit']">{{ isEditMode ? '取消' : '管理' }}</text>
+							
 						</view>
-					</picker>
+					</view>	
 				</view>
+				
 			</view>
 		</view>
 
@@ -48,7 +52,10 @@
 						<text class="name">{{ item.name }}</text>
 						<text class="category-label">{{ item.category }}</text>
 						<text class="time">{{ getTime(item.time) }}</text>
-						<!-- <button class="share-Btn" open-type="share" @click="onShareClick(item)">分享</button> -->
+						<!-- <text class="msg-Btn" @click="onMsgClick(item)">提醒</text> -->
+						<image v-if="!isEditMode" class="msg-Btn" :src="outfitReminderStateIcon(item)" mode="aspectFit"
+							@click="onMsgClick(item)"></image>
+
 					</view>
 
 				</view>
@@ -62,7 +69,7 @@
 
 
 		<!-- 右下角浮动按钮 -->
-		<view class="floating-btn" @click="chooseImage" :style="{ background: '#8A6FDF' }">
+		<view v-if="!isEditMode" class="floating-btn" @click="chooseImage" :style="{ background: '#8A6FDF' }">
 			<image class="floating-btn-image" src="/static/camera.png" mode="aspectFit"></image>
 			<text class="floating-btn-text">上传套装</text>
 		</view>
@@ -74,18 +81,29 @@
 			</view>
 		</view>
 	</view>
-	
-	
+
+
 	<view class="cropper-container" v-if="cropperSrc !==''">
 		<view class="cropper-wrap">
 			<ksp-cropper mode="free" :width="450" :height="600" :maxWidth="450" :maxHeight="600" :url="cropperSrc"
 				@cancel="oncancel" @ok="onok"></ksp-cropper>
 		</view>
 	</view>
+
+	<!-- 弹窗组件 -->
+	<RemindTimePopup :show.sync="showReminderPopup" :existing-time="existingReminderTime"
+		:outfit-name="reminderOutfit?.name" @confirm="handleSetReminder" @delete="clickDeleteReminder"
+		@close="handleClose" />
 </template>
 
 <script>
+	import RemindTimePopup from './RemindTimePopup.vue';
+	// 🔑 替换为你自己的模板ID（从微信公众平台复制）
+	const TEMPLATE_ID = 'MZhDJGPUMhEWedtgprs9eAB4jgBPLlz1VZm62ZIJbHE'; // ← 必须替换！
 	export default {
+		components: {
+			RemindTimePopup
+		},
 		data() {
 			return {
 				outfits: [{
@@ -119,6 +137,10 @@
 					imageUrl: "https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/cloudstorage/MainIcon.png",
 				},
 				cropperSrc: '', //裁剪图片路径，底图
+				showReminderPopup: false,
+				existingReminderTime: null,
+				reminderOutfit: null, //提醒套装
+				reminders: [] //提醒列表
 			};
 		},
 		onShareAppMessage() {
@@ -141,7 +163,15 @@
 					const matchCategory = this.category === '全部' || item.category === this.category;
 					return matchKeyword && matchCategory;
 				});
+			},
+			reminderContent() {
+				if (this.reminderOutfit === null)
+					return '';
+				return `点击查看今日穿搭【${this.reminderOutfit.name}】`;
 			}
+
+
+
 		},
 		onShow() {
 			// 模拟数据加载
@@ -165,10 +195,51 @@
 			}
 
 			this.syncLocalData();
+			this.getReminders();
 		},
 		methods: {
-			onShareClick(item) {
-				this.shareInfo.imageUrl = item.thumbnail;
+			outfitReminderStateIcon(item) {
+				let iconPath = "/static/reminder-normal.png";
+				if (this.reminders && this.reminders.findIndex(c => c.outfitId === item.id) >= 0) {
+					iconPath = "/static/remindered.png";
+				}
+				return iconPath;
+			},
+			async getReminders() {
+				try {
+					const openid = uni.getStorageSync("wardrobeOpenid");
+					const sendRes = await uniCloud.callFunction({
+						name: 'getReminders',
+						data: {
+							openid: openid
+						}
+					});
+
+					if (sendRes.result && sendRes.result.code === 200) {
+						if(sendRes.result.data){
+							console.log('获取提醒成功：', sendRes.result.data.data);
+							this.reminders = sendRes.result.data.data;
+						}
+						else{
+							this.reminders = [];
+						}
+						
+					} else {
+						console.error('获取提醒失败:', sendRes.result);
+					}
+				} catch (err) {
+					console.error('获取提醒失败', err);
+				}
+			},
+			onMsgClick(item) {
+				this.reminderOutfit = item;
+				this.existingReminderTime = null;
+				if (this.reminders) {
+					const remin = this.reminders.find(c => c.outfitId === item.id);
+					if(remin)
+						this.existingReminderTime = remin.trigger_time;
+				}
+				this.showReminderPopup = true;
 			},
 			syncLocalData() {
 				const userInfo = uni.getStorageSync('wardrobeUserInfo');
@@ -246,7 +317,14 @@
 				this.selectedOutfits.push(item);
 			},
 			deleteSelected() {
-				if (this.selectedOutfits.length === 0) return;
+				if (this.selectedOutfits.length === 0) 
+				{
+					uni.showToast({
+						title:'请选择要删除的搭配',
+						icon:'none'
+					})
+					return;
+				}				
 
 				uni.showModal({
 					title: '确定删除选中的穿搭？',
@@ -291,7 +369,7 @@
 				this.cropperSrc = "";
 				uni.showTabBar();
 			},
-			chooseImage(){				
+			chooseImage() {
 				if (!this.checkLogin())
 					return;
 				uni.showActionSheet({
@@ -299,7 +377,7 @@
 					success: res => {
 						if (res.tapIndex === 0) {
 							setTimeout(() => {
-								uni.setStorageSync('isMatchingMode',true);
+								uni.setStorageSync('isMatchingMode', true);
 								uni.switchTab({
 									url: `/pages/wardrobe/wardrobe`
 								});
@@ -327,7 +405,124 @@
 				});
 				return false;
 			},
-		
+			async handleSetReminder(t) {
+				const openid = uni.getStorageSync("wardrobeOpenid");
+				const authRes = await uni.requestSubscribeMessage({
+					tmplIds: [TEMPLATE_ID]
+				});
+
+				if (authRes[TEMPLATE_ID] !== 'accept') {
+					uni.showToast({
+						title: '需要授权才能接收提醒',
+						icon: 'none'
+					});
+					this.showReminderPopup = false;
+					return;
+				}
+				uni.showLoading({
+					mask: true,
+					title: '请稍等···'
+				})
+
+				// 格式化时间
+				const d = new Date(t);
+				const timeStr =
+					`${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+				const data = {
+					thing2: {
+						value: '今日穿搭提醒'
+					},
+					time30: {
+						value: timeStr
+					},
+					thing11: {
+						value: this.reminderContent
+					}
+				};
+
+
+
+				// 2. 订阅消息
+				const sendRes = await uniCloud.callFunction({
+					name: 'add-reminder',
+					data: {
+						openid: openid,
+						outfitId: this.reminderOutfit.id,
+						trigger_time: t,
+						content: data,
+					}
+				});
+				uni.hideLoading();
+				if (sendRes.result && sendRes.result.code === 200) {
+					uni.showToast({
+						title: sendRes.result.msg,
+						icon: 'success'
+					});
+					this.reminders = sendRes.result.data;
+					this.showReminderPopup = false;
+				} else {
+					console.error('提醒订阅失败:', sendRes.result);
+					uni.showToast({
+						title: '提醒订阅失败，请重试',
+						icon: 'error'
+					});
+					this.showReminderPopup = false;
+				}
+			},
+			clickDeleteReminder(t) {
+				uni.showModal({
+					title: '确定取消提醒？',
+					success: res => {
+						if (res.confirm) {
+							this.handleDeleteReminder(t);
+						}
+					}
+				});
+			},
+			async handleDeleteReminder(t) {
+
+				try {
+					uni.showLoading({
+						mask: true,
+						title: '请稍等···'
+					});
+					const openid = uni.getStorageSync("wardrobeOpenid");
+					// 2. 取消订阅消息
+					const sendRes = await uniCloud.callFunction({
+						name: 'delete-reminder',
+						data: {
+							openid,
+							outfitId: this.reminderOutfit.id
+						}
+					});
+					uni.hideLoading();
+
+					if (sendRes.result && sendRes.result.code === 200) {
+						uni.showToast({
+							title: '已取消提醒！',
+							icon: 'success'
+						});
+						this.reminders = sendRes.result.data;
+						this.showReminderPopup = false;
+					} else {
+						console.error('提醒取消失败:', sendRes.result);
+						uni.showToast({
+							title: '提醒取消失败，请重试',
+							icon: 'error'
+						});
+						this.showReminderPopup = false;
+					}
+				} catch (err) {
+					console.error('删除失败', err);
+				}
+
+
+			},
+			handleClose() {
+				this.showReminderPopup = false;
+			}
+
 		}
 	};
 </script>
@@ -356,7 +551,8 @@
 		/* border-bottom: 1px solid #b0b0b0; */
 		padding-bottom: 10px;
 	}
-.quota{
+
+	.quota {
 		font-size: 14px;
 		color: #6f5bdc;
 	}
@@ -380,17 +576,18 @@
 		align-items: center;
 		display: flex;
 		flex-direction: row;
+		justify-content: space-between;
 	}
 
 	.search-area {
-		width: calc(100% - 70px);
+		width: calc(100% - 30px);
 		display: flex;
 		flex-direction: row;
 		border-radius: 8px;
 		border: 1px solid #e3e3e3;
 		box-shadow: 4px 4px 12rpx rgba(0, 0, 0, 0.05);
 		background-color: #f8f8f8;
-		margin-right: 20px;
+		/* margin-right: 20px; */
 		align-items: center;
 	}
 
@@ -410,49 +607,41 @@
 		/* flex-wrap: wrap; */
 	}
 
+	
+	
 	.edit-btn-inline {
-		width: 70px;
-		height: 25px;
+		width: 60px;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
-		font-size: 14px;
-		color: #333;
-		/* background-color: #f8f8f8; */
-		padding: 6px;
-		border-radius: 8px;
-		justify-content: space-around;
+		justify-items: center;
+		justify-content: space-between;
+		padding: 0 5px;
+	}
+	
+
+
+	.edit-btn-text {
+		margin-top: 5px;
+		font-size: 10px;
+		padding: 0 6px;
+		text-wrap: nowrap;
 	}
 
-	.edit-btn-inline.finish {
-		
-		border: 1px solid #8a8a8a;
-		background-color: #fff;
-	}
-	
-	.edit-btn-inline.edit {
-		border: 1px solid #8A6FDF;
-		background-color: #fff;
-	}
-	
-	.edit-btn-text {
-		font-size: 14px;
-		padding: 0 3px;
-	}
-	
-	
+
 	.edit-btn-text.finish {
-		color: #8a8a8a;
+		color: #666;
 	}
-	
+
 	.edit-btn-text.edit {
 		color: #8A6FDF;
 	}
 
 
 	.edit-btn-image {
-		width: 18px;
-		height: 18px;
-		margin-left: 5px;
+		width: 25px;
+		height: 25px;
+		/* margin-left: 5px; */
 	}
 
 
@@ -520,18 +709,16 @@
 		flex-direction: column;
 		justify-content: space-between;
 		margin: 10px;
-		
+
 		position: relative;
 	}
 
-	.share-Btn {
+	.msg-Btn {
 		position: absolute;
-		right: 5px;
-		bottom: 15px;
-		font-size: 10px;
-		color: #8A6FDF;
-		font-weight: bold;
-		background-color: #fff;
+		right: 3px;
+		bottom: 5px;
+		width: 20px;
+		height: 20px;
 	}
 
 	.name {
@@ -555,7 +742,7 @@
 		position: fixed;
 		right: 20px;
 		bottom: 40px;
-		
+
 		padding: 10px;
 		background-color: #ccd3ff;
 		border-radius: 10px;
@@ -570,8 +757,8 @@
 		width: 30px;
 		height: 30px;
 	}
-	
-	.floating-btn-text{
+
+	.floating-btn-text {
 		font-size: 12px;
 		color: #fff;
 		font-weight: bold;
@@ -599,15 +786,15 @@
 		position: fixed;
 		z-index: 20;
 		bottom: 20px;
-		width: calc(100% - 40px);
+		width: calc(100% - 100px);
 		height: 100rpx;
-		margin: 0 20px;
+		margin: 0 50px;
 		border-radius: 10px;
 		background-color: #fff;
 		display: flex;
 		justify-content: space-around;
 		align-items: center;
-		box-shadow: 4px 4px 12rpx rgba(0, 0, 0, 0.05);
+		box-shadow: 4px 4px 12rpx rgba(0, 0, 0, 0.1);
 
 		animation: slideUp 0.3s ease-out;
 	}
@@ -631,18 +818,18 @@
 	}
 
 	.action-icon {
-		width: 16px;
-		height: 16px;
+		width: 20px;
+		height: 20px;
 		margin-bottom: 4px;
 	}
 
 	.action-text {
 		font-size: 10px;
-		color: #707070;
+		color: #666666;
 	}
 
 	.picker-category {
-		width: 70%;
+		width: 50%;
 		align-items: center;
 		justify-content: center;
 	}
@@ -671,7 +858,7 @@
 	}
 
 	.input-row {
-		width: 150px;
+		width: 100px;
 		display: flex;
 		align-items: center;
 		margin: 10px 0;

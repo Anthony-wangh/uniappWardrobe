@@ -1,0 +1,7 @@
+{
+  "name": "delete-reminder",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}
