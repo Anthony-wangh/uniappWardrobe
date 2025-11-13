@@ -145,7 +145,7 @@ async function sendWechatSubscribe(reminderItem) {
 		return;
 	}
 
-	const page = `/pages/outfitDetail/outfitDetail?outfitId=${reminderItem.outfitId}`; // 请根据实际页面调整
+	const page = `/pages/ootdDetail/ootdDetail?outfitId=${reminderItem.outfitId}`; // 请根据实际页面调整
 
 	try {
 		const accessToken = await getAccessToken();

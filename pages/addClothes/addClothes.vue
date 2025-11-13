@@ -688,11 +688,11 @@
 	}
 
 	.submit-btn {
-		width: 80%;
+		width: 95%;
 		background-color: #8A6FDF;
 		// border: 3px solid #ccd3ff;
 		color: #ffffff;
-		font-size: 16px;
+		font-size: 14px;
 		text-align: center;
 		border-radius: 10px;
 		cursor: pointer;

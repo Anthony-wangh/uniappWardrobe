@@ -1,12 +1,12 @@
-<!-- pages/outfitDetail/outfitDetail.vue -->
+
 <template>
   <view class="container">
     
     <!-- 主标题 -->
-    <view class="title">OOTD</view>
+    <view class="title">我的OOTD</view>
 
     <!-- 副标题 -->
-    <view class="subtitle">这份搭配，专属于今天的你✨</view>
+    <view class="subtitle">整理衣柜，在线搭配，穿搭闹钟，快来跟我一起体验精致生活吧✨</view>
 
     <!-- 搭配图片 -->
     <image
@@ -26,7 +26,7 @@
 	
 	<!-- 关闭按钮 -->
 	<view class="close-btn" @click="onClose">
-	  关闭
+	  现在体验
 	</view>
 	
   </view>
@@ -44,30 +44,17 @@ export default {
     };
   },
   onLoad(options) {
-    // 通常通过 outfitId 从云数据库获取详情
-    const { outfitId } = options;
-    if (outfitId) {
-      this.loadOutfitDetail(outfitId);
+    let data = JSON.parse(decodeURIComponent(options.data));
+    if (!data) {
+		uni.showToast({
+			title:'数据加载失败',
+			icon:'error'
+		})
+    	return;
     }
+	this.outfit = data;
   },
   methods: {
-	loadOutfitDetail(outfitId) {
-	  const outfits = uni.getStorageSync("outfits") || [];
-	  const matching = outfits.find(c=>c.id === outfitId);
-	  if(matching){
-		  this.outfit = matching;
-	  }
-	  else{
-		  uni.showToast({
-		  	title:'加载搭配失败！',
-			icon:'error'
-		  })
-		  setTimeout(()=>{
-			  uni.navigateBack();			  
-		  },300)		  
-	  }	  
-	  
-    },
     onClose() {
       // 返回上一页 或 退出
       uni.navigateBack({
@@ -98,21 +85,19 @@ export default {
 
 /* 关闭按钮 */
 .close-btn {
-  /* background-color: #8A6FDF; */
-  padding: 10px 20px;
+  background-color: #030306;
+  padding: 10px 30px;
   border-radius: 10px;
   margin-top: 20px;
   font-size: 34rpx;
   color: #ffffff;
   text-align: center;
-  border: #8A6FDF solid 1px;
-  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.03);
 }
 
 
 /* 标题 */
 .title {
-  font-size: 64rpx;
+  font-size: 50rpx;
   font-weight: bold;
   text-align: center;
   color: #333;

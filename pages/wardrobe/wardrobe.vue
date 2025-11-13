@@ -4,33 +4,25 @@
 		<view class="header-container">
 			<view class="header">
 				<text class="title-text">我的衣橱</text>
-				<text class="quota">({{quota.clothesCount}}/{{quota.clothesQuota}})</text>
+				<text class="quota">【{{quota.clothesCount}}/{{quota.clothesQuota}}】</text>
 			</view>
 
 			<view class="search-filter-area">
-				<!-- <view class="search-container"> -->
-				<!-- <view class="search-area">
-						<image class="search-btn" src="/static/search.png" mode="aspectFit"></image>
-						<input v-model="searchKeyword" class="search-input" placeholder="搜索衣物名称" />
-					</view> -->
-
-
-				<!-- </view> -->
 
 				<!-- 季节选择下拉 -->
 				<view class="search-options-container">
 					<view class="season-dropdown">
 						<view class="season-btn">
-							<image src="/static/Filter.png" class="arrow-icon" mode="aspectFit"
+							<image src="/static/Filter.png" class="season-arrow-icon" mode="aspectFit"
 								@click.stop="toggleSeasonDropdown" />
-							<text class="edit-btn-text" @click.stop="toggleSeasonDropdown">季节</text>
-
+							<text class="season-btn-text" @click.stop="toggleSeasonDropdown">季节></text>
 						</view>
 
 						<view v-if="selectSeasonText!==''" class="season-selection">
 							<text class="season-selection-text">{{selectSeasonText}}</text>
 							<text class="clear-select-season" @click="clearSelectSeason">×</text>
 						</view>
+
 					</view>
 
 
@@ -64,69 +56,78 @@
 
 					<image class="main-category-image" :src="categoryIcon(category,index)" mode="aspectFit"></image>
 					<text class="main-category-name" :class="{ active: currentMainCategoryIndex === index }">
-						{{ category.name }}
+						{{ category.name + (currentMainCategoryIndex === index? `·${getClothesForMain(currentMainCategory).length}件` : ``)}} 
 					</text>
 				</view>
 			</view>
 
 			<!-- 主体内容 -->
 			<view class="main-content">
-				<view class="search-container">
-					<view class="category-count">
-						<text class="category-name">{{currentMainCategory}}</text>
-						<text class="category-count-tex">· {{ getClothesForMain(currentMainCategory).length }}</text>
-					</view>
-					<view class="fold-all" @click="clickFoldall">
-						<text class="season-btn-text">{{ isExpand ? '全部收起' : '全部展开' }}</text>
-						<image :class="['arrow', isExpand ? '' : 'open']" src='/static/Expend.png' mode="aspectFit">
-						</image>
-					</view>
-				</view>
-
 				<scroll-view scroll-y class="list-area">
-					<view v-for="subCat in currentSubCategories" :key="subCat" class="subcategory-section">
-						<view class="subcategory-header" @click="toggleSubCollapse(subCat)">
-							<view class="subcategory-left">
-								<text class="subcategory-title">
-									{{ subCat }} · {{ getClothesForSub(subCat).length }}
-								</text>
-								<view class="add-btn" @click.stop="onAddItemClick(subCat)">
-									<text class="add-text">上传 +</text>
-									<!-- <image src="/static/add.png" mode="aspectFit" class="add-icon" /> -->
+					<!-- “全部”类目：平铺展示所有衣服 -->
+					<template v-if="currentMainCategory === '全部'">
+						<view class="clothes-section">
+							<view class="clothes-row" v-for="(row, rowIndex) in getRows(getAllItemsWithAddAll())"
+								:key="rowIndex">
+								<view v-for="(item, itemIndex) in row" :key="itemIndex" class="clothes-item"
+									@click.stop="toggleSelectClothes(item)" @longpress="longPressClothes(item)">
+									<template>
+										<view class="checkbox" v-if="isEditMode">
+											<image
+												:src="selectedClothes.includes(item) ? '/static/checked.png' : '/static/unChecked.png'"
+												class="clothes-checkbox-icon" mode="aspectFit" />
+										</view>
+										<image class="clothes-image" :src="item.image" mode="widthFix" />
+										<!-- <text class="clothes-name">{{ item.name }}</text> -->
+										<!-- <text class="clothes-time">{{ formatTime(item.createTime) }}</text> -->
+									</template>
 								</view>
-
 							</view>
-							<!-- <text class="toggle-btn" :style="{ color: '#8A6FDF' }">
-								{{ isSubCollapsed[subCat] ? '收起' : '展开' }}
-							</text> -->
-							<image class="toggle-btn" :class="['arrow', isSubCollapsed[subCat] ? '' : 'open']"
-								src='/static/Expend.png' mode="aspectFit">
-							</image>
 						</view>
+					</template>
 
-						<view v-if="isSubCollapsed[subCat]">
-							<view class="clothes-section">
-								<view class="clothes-row" v-for="(row, rowIndex) in getRows(getAllItemsWithAdd(subCat))"
-									:key="rowIndex">
-									<view v-for="(item, itemIndex) in row" :key="itemIndex" class="clothes-item"
-										@click.stop="toggleSelectClothes(item)" @longpress="longPressClothes(item)">
-										<template>
-											<view class="checkbox" v-if="isEditMode">
-												<image
-													:src="selectedClothes.includes(item) ? '/static/checked.png' : '/static/unChecked.png'"
-													class="clothes-checkbox-icon" mode="aspectFit" />
-											</view>
-											<image class="clothes-image" :src="item.image" mode="widthFix" />
-											<!-- <text class="clothes-name">{{ item.name }}</text> -->
-											<!-- <text class="clothes-time">{{ formatTime(item.createTime) }}</text> -->
-										</template>
+					<!-- 非“全部”类目：按二级类目分组展示 -->
+					<template v-else>
+						<view v-for="subCat in currentSubCategories" :key="subCat" class="subcategory-section">
+							<view class="subcategory-header" @click="toggleSubCollapse(subCat)">
+								<view class="subcategory-left">
+									<text class="subcategory-title">
+										{{ subCat }} · {{ getClothesForSub(subCat).length }}件
+									</text>
+									<view class="add-btn" @click.stop="onAddItemClick(subCat)">
+										<text class="add-text">上传 +</text>
+									</view>
+
+								</view>
+								<image class="toggle-btn" :class="['arrow', isSubCollapsed[subCat] ? '' : 'open']"
+									src='/static/Expend.png' mode="aspectFit">
+								</image>
+							</view>
+
+							<view v-if="isSubCollapsed[subCat]">
+								<view class="clothes-section">
+									<view class="clothes-row" v-for="(row, rowIndex) in getRows(getAllItemsWithAdd(subCat))"
+										:key="rowIndex">
+										<view v-for="(item, itemIndex) in row" :key="itemIndex" class="clothes-item"
+											@click.stop="toggleSelectClothes(item)" @longpress="longPressClothes(item)">
+											<template>
+												<view class="checkbox" v-if="isEditMode">
+													<image
+														:src="selectedClothes.includes(item) ? '/static/checked.png' : '/static/unChecked.png'"
+														class="clothes-checkbox-icon" mode="aspectFit" />
+												</view>
+												<image class="clothes-image" :src="item.image" mode="widthFix" />
+												<!-- <text class="clothes-name">{{ item.name }}</text> -->
+												<!-- <text class="clothes-time">{{ formatTime(item.createTime) }}</text> -->
+											</template>
+										</view>
 									</view>
 								</view>
+
 							</view>
 
 						</view>
-
-					</view>
+					</template>
 				</scroll-view>
 
 			</view>
@@ -162,15 +163,19 @@
 			return {
 				currentMainCategoryIndex: 0,
 				categoriesMap: {
+					全部: [],
 					上衣: ['T恤', '衬衫', '外套', '羽绒服'],
 					裤子: ['牛仔裤', '运动裤', '休闲裤', '裙子'],
+					裙装: ['连衣裙','短裙'],
 					鞋: ['运动鞋', '板鞋', '高跟鞋', '靴子'],
 					配饰: ['帽子', '眼镜', '丝巾'],
 					包: ['单肩包', '双肩包']
 				},
 				categoriesIcons: {
+					全部: 'allClothes',
 					上衣: 'upClothes',
 					裤子: 'pants',
+					裙装: 'dress',
 					鞋: 'shoots',
 					包: 'packege',
 					配饰: 'accessories'
@@ -227,9 +232,12 @@
 			if (quo) {
 				this.quota = quo;
 			}
-			const category = uni.getStorageSync('wartrobeCategory');
-			if (category) {
-				this.categoriesMap = category;
+			const category = uni.getStorageSync('wartrobeCategories');
+			if (category) {				
+				this.categoriesMap = {
+				            全部: [],
+				            ...category
+				        };
 			}
 			this.clothes = uni.getStorageSync("clothes") || [];
 			this.quota.clothesCount = this.clothes.length;
@@ -262,6 +270,12 @@
 			};
 		},
 		methods: {
+			previewIcon(item) {
+				uni.previewImage({
+					urls: [item.image],
+					current: 0
+				});
+			},
 			categoryIcon(item, index) {
 				const iconName = this.categoriesIcons[item.name];
 				return this.currentMainCategoryIndex === index ? `/static/category/${iconName}-select.png` :
@@ -354,6 +368,13 @@
 			getClothesForMain(mainCat) {
 				if (!this.clothes)
 					return [];
+				if (mainCat === '全部') {
+					return this.clothes.filter(item =>
+						(this.searchKeyword.trim() === '' || item.name.includes(this.searchKeyword.trim())) &&
+						(this.selectedSeasons.length === 0 || this.selectedSeasons.some(season => item.seasons?.includes(
+							season)))
+					);
+				}
 				return this.clothes.filter(item =>
 					item.primaryCategory === mainCat &&
 					(this.searchKeyword.trim() === '' || item.name.includes(this.searchKeyword.trim())) &&
@@ -363,8 +384,8 @@
 			},
 			getRows(clothesList) {
 				const rows = [];
-				for (let i = 0; i < clothesList.length; i += 2) {
-					rows.push(clothesList.slice(i, i + 2));
+				for (let i = 0; i < clothesList.length; i += 5) {
+					rows.push(clothesList.slice(i, i + 5));
 				}
 				return rows;
 			},
@@ -383,8 +404,10 @@
 				}
 			},
 			toggleSelectClothes(item) {
-				if (!this.isEditMode)
+				if (!this.isEditMode) {
+					this.previewIcon(item);
 					return;
+				}
 				const index = this.selectedClothes.indexOf(item);
 				if (index > -1) {
 					this.selectedClothes.splice(index, 1);
@@ -472,6 +495,14 @@
 			saveClothes() {
 				uni.setStorageSync("clothes", this.clothes);
 			},
+			// 为“全部”类目获取所有衣服（不区分二级类目）
+			getAllItemsWithAddAll() {
+				return this.clothes.filter(item =>
+					(this.searchKeyword.trim() === '' || item.name.includes(this.searchKeyword.trim())) &&
+					(this.selectedSeasons.length === 0 || this.selectedSeasons.some(season => item.seasons?.includes(
+						season)))
+				);
+			},
 			getAllItemsWithAdd(subCat) {
 				const mainCat = this.categories[this.currentMainCategoryIndex].name;
 				const clothesList = this.clothes
@@ -523,22 +554,22 @@
 		display: flex;
 		flex-direction: column;
 		height: 100vh;
-		background-color: #fff;
+		background-color: #f8f8f8;
 	}
 
 	/* 顶部栏 */
 	.header-container {
 		width: 100%;
 		padding-top: calc(var(--status-bar-height) + 30px);
-		box-shadow: 0px 4px 12rpx rgba(0, 0, 0, 0.05);
-		border-bottom: #ccc solid 1px;
-		background-color: #f8f8f8;
+		/* box-shadow: 0px 4px 12rpx rgba(0, 0, 0, 0.05); */
+		/* border-bottom: #ccc solid 1px; */
+		/* background-color: #f8f8f8; */
 	}
 
 	.header {
 		display: flex;
 		align-items: center;
-		padding-bottom: 15px;
+		padding-bottom: 5px;
 	}
 
 	.quota {
@@ -573,7 +604,9 @@
 	}
 
 	.subcategory-section {
-		/* background: #fcfcfc; */
+		/* background: #fff; */
+		/* border-radius: 10px;
+		box-shadow: 4px 4px 12rpx rgba(0, 0, 0, 0.05); */
 		margin-bottom: 5px;
 		padding: 5px 0;
 	}
@@ -588,16 +621,17 @@
 	.subcategory-left {
 		display: flex;
 		align-items: center;
+		border-left: #6456b4 solid 2px;
 	}
 
 	.subcategory-title {
-		margin-left: 15px;
+		margin-left: 10px;
 		font-size: 12px;
 		color: #666;
 	}
 
 	.toggle-btn {
-		font-size: 14px;
+		font-size: 12px;
 		margin-right: 10px;
 	}
 
@@ -605,29 +639,33 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
+		
 	}
 
 	.clothes-row {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: space-between;
+		justify-content: flex-start;
+		/* 不满三个靠左 */
 		width: 100%;
-		gap: 2%;
-		padding: 5px 0px;
-
+		gap: 10rpx;
+		/* 统一间距（可根据设计调整）*/
+		padding: 5px 0;
 	}
 
 	.clothes-item {
 		position: relative;
-		width: 46%;
-		/* height: 200px; */
+		width: calc((100% - 44rpx) / 5);/* (总宽 - 两个 gap) / 3 */
+		
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
 		box-shadow: 2px 4px 12rpx rgba(0, 0, 0, 0.05);
-		/* border: #999 solid 1px; */
-		border-radius: 10px;
+		border-radius: 3px;
 		overflow: hidden;
+		flex-shrink: 0;/* 防止被压缩 */
+		/* border: #ccc solid 1px; */
+		
 	}
 
 	.clothes-image {
@@ -682,11 +720,11 @@
 
 	.checkbox {
 		position: absolute;
-		top: 2px;
-		right: 2px;
+		top: 0px;
+		right: 0px;
 		z-index: 10;
-		width: 24px;
-		height: 24px;
+		width: 18px;
+		height: 18px;
 	}
 
 	.checkbox-icon {
@@ -695,11 +733,11 @@
 	}
 
 	.clothes-checkbox-icon {
-		width: 25px;
-		height: 25px;
-		background-color: #fff;
-		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
-		border-radius: 5px;
+		width: 18px;
+		height: 18px;
+		background-color: #f4f4f4;
+		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+		border-radius: 2px;
 	}
 
 	.bottom-action-bar {
@@ -710,7 +748,8 @@
 		height: 120rpx;
 		margin: 0 50px;
 		border-radius: 10px;
-		background: linear-gradient(135deg, #C09AFF, #d7c0ff);
+		/* background: linear-gradient(135deg, #0d0a12, #d7c0ff); */
+		background-color: #1d1d1d;
 		display: flex;
 		justify-content: space-around;
 		align-items: center;
@@ -731,7 +770,7 @@
 
 	.bottom-action-bar-line {
 		color: #fff;
-		font-size: 20px;
+		font-size: 14px;
 	}
 
 	.action-btn {
@@ -742,8 +781,8 @@
 
 
 	.action-icon {
-		width: 30px;
-		height: 30px;
+		width: 20px;
+		height: 20px;
 	}
 
 	.action-text {
@@ -753,7 +792,6 @@
 
 	.action-text.dapei {
 		color: #fff;
-		font-weight: bold;
 	}
 
 
@@ -763,8 +801,6 @@
 		align-items: center;
 		display: flex;
 		justify-content: space-between;
-		/* background: linear-gradient(90deg, #a390ff, #fff); */
-		/* border-left: #6456b4 solid 2px; */
 		box-shadow: 4px 4px 12rpx rgba(0, 0, 0, 0.05);
 	}
 
@@ -776,14 +812,14 @@
 
 	.category-name {
 		color: #6456b4;
-		font-size: 16px;
+		font-size: 12px;
 		font-weight: bold;
 	}
 
 	.category-count-tex {
 		color: #ccb7ff;
-		font-size: 14px;
-		margin-left: 15px;
+		font-size: 12px;
+		margin-left: 5px;
 	}
 
 	.search-area {
@@ -817,20 +853,23 @@
 	/* 新增：主区域左右布局 */
 	.main-body {
 		display: flex;
+		flex-direction: column;
 		flex: 1;
 		height: calc(100vh - 290px);
 	}
 
 	/* 左侧类目栏 */
 	.main-category-vertical {
-		width: 80px;
-		background-color: #f8f8f8;
-		/* border-right: 1px solid #ddd; */
-		box-shadow: 4px 0px 8px rgba(0, 0, 0, 0.05);
+		width: 100%;
+		background-color: #fafafa;
+		border-top: 1px solid #d8d8d8;
+		border-bottom: 1px solid #d8d8d8;
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		align-items: center;
-		padding-top: 10px;
+		padding-top: 2px;
+
 	}
 
 	.main-category-image {
@@ -839,10 +878,12 @@
 	}
 
 	.main-category-name {
-		margin-top: 5px;
-		font-size: 14px;
+		margin-top: 3px;
+		font-size: 10px;
 		color: #666;
 		text-align: center;
+		
+		white-space: nowrap;
 	}
 
 	.main-category-name.active {
@@ -851,8 +892,9 @@
 	}
 
 	.category-tab-vertical {
-		padding: 10px 0;
-		width: 100%;
+		padding: 7px 0;
+
+		flex: 1;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -861,7 +903,7 @@
 	}
 
 	.category-tab-vertical.active {
-		border-left: #6456b4 solid 3px;
+		border-bottom: #6456b4 solid 3px;
 		box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
 		background-color: #fff;
 	}
@@ -871,7 +913,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		margin: 0 20px;
+		margin: 0 10px;
 		gap: 10px;
 		position: relative;
 	}
@@ -879,6 +921,7 @@
 	.search-options-container {
 		width: 100%;
 		display: flex;
+		flex-direction: row;
 		align-items: center;
 		position: relative;
 		justify-content: space-between;
@@ -895,7 +938,7 @@
 	}
 
 	.season-selection {
-		margin-left: 10px;
+		margin-left: 5px;
 		text-align: center;
 		align-items: center;
 	}
@@ -928,7 +971,7 @@
 
 	.season-btn {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		align-items: center;
 		justify-content: space-between;
 		padding: 6px;
@@ -951,19 +994,18 @@
 		padding: 10px 20px;
 		/* border-radius: 8px; */
 	}
-
-
-
-
-
 	.season-btn-text {
-		font-size: 14px;
+		font-size: 12px;
 		padding: 0 3px;
-		color: #3b3b3b;
+		color: #333;
+	}
+	.season-arrow-icon{
+		width: 14px;
+		height: 14px;
 	}
 
 	.edit-btn-text {
-		font-size: 10px;
+		font-size: 8px;
 		padding: 0 3px;
 		color: #515151;
 	}
@@ -979,8 +1021,8 @@
 
 
 	.edit-btn-image {
-		width: 25px;
-		height: 25px;
+		width: 20px;
+		height: 20px;
 		/* margin-left: 5px; */
 	}
 

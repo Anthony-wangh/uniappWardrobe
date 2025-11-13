@@ -6,65 +6,75 @@
 			<text class="title">类目设置</text>
 		</view>
 
-		<!-- 主类目列表 -->
-		<scroll-view scroll-y class="category-list" @click="dropdownIndex=null">	
-						
-			<view class="section-title">衣物类目</view>
-			<view v-for="(subList, category, index) in categoriesMap" :key="category" class="category-item">
-				<!-- 主类目行 -->
-				<view class="category-header" @click="toggleCollapse(category)">
-					<view class="left" >
-						<text :class="['arrow', collapsed[category] ? '' : 'open']">▶</text>
-						<text class="category-name">{{ category }}</text>
-					</view>
-
-					<!-- 更多操作 -->
-					<view class="menu-button" :id="'menu-' + index" @click.stop="toggleDropdown(index)">⋯</view>
-					<view v-if="dropdownIndex === index" class="dropdown"
-						:style="{ top: dropdownPosition.top + 'px', left: dropdownPosition.left + 'px' }">
-						<view class="dropdown-item" @click.stop="editCategory(category)">
-							<image class="dropdown-icon" src="/static/handleIcons/edit.png"></image>
-							<text class="dropdown-name">修改</text>
-						</view>
-						<view class="dropdown-item" @click.stop="addSubCategory(category)">
-							<image class="dropdown-icon" src="/static/handleIcons/add.png"></image>
-							<text class="dropdown-name">添加</text>
-						</view>
-						<view class="dropdown-item delete" @click.stop="deleteCategory(category)">
-							<image class="dropdown-icon" src="/static/shanchu.png"></image>
-							<text class="dropdown-name">删除</text>
-						</view>
-					</view>
-				</view>
-
-				<!-- 子类目列表 -->
-				<view v-show="!collapsed[category]" class="sub-list">
-					<view v-for="(sub, index) in subList" :key="index" class="sub-item">
-						<text class="sub-item-text" @click="editSubCategory(category,sub,index)">• {{ sub }}</text>
-						<image class="sub-item-edit" src="/static/handleIcons/edit.png"
-							@click="editSubCategory(category,sub,index)"></image>
-						<image class="sub-item-delete" src="/static/handleIcons/delete.png"
-							@click="deleteSubCategory(category,sub,index)"></image>
-					</view>
-				</view>
+		<!-- 单选标签 -->
+		<view class="tab-container">
+			<view class="tab-item" :class="{ 'active': activeTab === 'clothes' }" @click="activeTab = 'clothes'">
+				衣服类目
 			</view>
-		
-			<view class="section-title">搭配类目</view>
-		<!-- 搭配类目区域 -->
-			<view class="match-section">			
-			<view class="match-item" v-for="(item, index) in matchCategories" :key="index">
-				<text class="match-name">{{ item }}</text>
-				<image class="sub-item-edit" src="/static/handleIcons/edit.png" @click="editMatchCategory(index)" />
-				<image class="sub-item-delete" src="/static/handleIcons/delete.png" @click="deleteMatchCategory(index)" />
+			<view class="tab-item" :class="{ 'active': activeTab === 'match' }" @click="activeTab = 'match'">
+				穿搭场景
 			</view>
 		</view>
-		
+
+		<!-- 主类目列表 -->
+		<scroll-view scroll-y class="category-list" @click="dropdownIndex=null">
+
+			<!-- 衣服类目 -->
+			<block v-if="activeTab === 'clothes'">
+				<view v-for="(subList, category, index) in categoriesMap" :key="category" class="category-item">
+					<!-- 主类目头部 -->
+					<view class="category-header">
+						<view class="header-content">
+							<image class="category-icon" :src="categoryIcon(category)" />
+							<text class="category-name">{{ category }}</text>
+						</view>
+					</view>
+
+					<!-- 子类目网格 -->
+					<view class="sub-grid">
+						<view v-for="(sub, subIndex) in subList" :key="subIndex" class="sub-item-wrapper">
+							<view class="sub-item" @click="editSubCategory(category,sub,subIndex)">
+								<text class="sub-item-text">{{ sub }}</text>
+								<text class="sub-item-delete" src="/static/handleIcons/delete.png"
+									@click.stop="deleteSubCategory(category,sub,subIndex)">x</text>
+							</view>
+						</view>
+						<view class="sub-item-wrapper">
+							<view class="sub-item add-match-item" @click="addSubCategory(category)">
+								<image class="add-icon" src="/static/plus-l.png" />
+							</view>
+						</view>
+					</view>
+				</view>
+			</block>
+
+			<!-- 搭配类目 -->
+			<block v-if="activeTab === 'match'">
+				<!-- 搭配类目区域 -->
+				<view class="match-section">
+					<view class="sub-grid">
+						<view v-for="(item, index) in matchCategories" :key="index" class="sub-item-wrapper">
+							<view class="sub-item" @click="editMatchCategory(index)">
+								<text class="sub-item-text">{{ item }}</text>
+								<text class="sub-item-delete" src="/static/handleIcons/delete.png"
+									@click.stop="deleteMatchCategory(index)">x</text>
+							</view>
+						</view>
+						<view class="sub-item-wrapper">
+							<view class="add-match-item" @click="addMatchCategory">
+								<image class="add-icon" src="/static/plus-l.png" />
+							</view>
+						</view>
+					</view>
+				</view>
+			</block>
+
 		</scroll-view>
 
-		<!-- 右下角浮动按钮 -->
-		<view class="floating-btn" @click="openAddCategory">
+		<!-- 右下角浮动按钮 - 仅用于添加衣物类目 -->
+		<!-- <view v-if="activeTab === 'clothes'" class="floating-btn" @click="openAddCategory">
 			<image class="floating-btn-image" src="/static/plus-l.png" mode="aspectFit"></image>
-		</view>
+		</view> -->
 
 		<!-- 输入弹窗 -->
 		<view v-if="modalVisible" class="modal-mask" @click="modalVisible = false">
@@ -73,9 +83,10 @@
 				<view class="modal-context">
 					<input v-model="inputValue" class="modal-input" placeholder="请输入类目名称" />
 				</view>
+				<view class="modal-tip">输入最多10个字</view>
 				<view class="modal-actions">
-					<button size="mini" type="default" @click="modalVisible = false">取消</button>
-					<button size="mini" type="primary" @click="confirmModal">确定</button>
+					<view class="modal-actions-cancle" @click="modalVisible = false">取消</view>
+					<view class="modal-actions-confirm" @click="confirmModal">确定</view>
 				</view>
 			</view>
 		</view>
@@ -89,15 +100,18 @@
 				categoriesMap: {
 					上衣: ['T恤', '衬衫', '外套', '羽绒服'],
 					裤子: ['牛仔裤', '运动裤', '休闲裤', '裙子'],
+					裙装: ['连衣裙','短裙'],
 					鞋: ['运动鞋', '板鞋', '高跟鞋', '靴子'],
 					配饰: ['帽子', '眼镜', '丝巾'],
 					包: ['单肩包', '双肩包']
 				},
-				collapsed: {},
-				dropdownIndex: null,
-				dropdownPosition: {
-					top: 0,
-					left: 0
+				categoriesIcons: {
+					上衣: 'upClothes',
+					裤子: 'pants',
+					裙装: 'dress',
+					鞋: 'shoots',
+					包: 'packege',
+					配饰: 'accessories'
 				},
 				modalVisible: false,
 				modalTitle: '',
@@ -107,54 +121,27 @@
 				sourceSubCategoryIndex: null,
 				//搭配类目
 				matchCategories: ['日常通勤', '春日出游', '周末约会', '正式场合'],
+				// 当前选中的标签
+				activeTab: 'clothes',
 
+				
 			};
-		},		
+		},
 		onShow() {
-			const category=uni.getStorageSync('wartrobeCategory');
-			if(category){
+			const category = uni.getStorageSync('wartrobeCategories');
+			if (category) {
 				this.categoriesMap = category;
 			}
-			for (const key in this.categoriesMap) {
-				this.$set(this.collapsed, key, true);
-			}
-			
-			
+
 			const match = uni.getStorageSync('matchCategories');
 			if (match && Array.isArray(match)) {
 				this.matchCategories = match;
 			}
 		},
 		methods: {
-			toggleCollapse(category) {
-				this.collapsed[category] = !this.collapsed[category];
-			},
-			toggleDropdown(index) {
-				if (this.dropdownIndex === index) {
-					this.dropdownIndex = null;
-				} else {
-
-					this.$nextTick(() => {
-						const query = uni.createSelectorQuery().in(this);
-						query.select(`#menu-${index}`).boundingClientRect(rect => {
-							if (rect) {
-								this.dropdownPosition = {
-									top: rect.top + rect.height,
-									left: rect.left - 60
-								};
-								this.dropdownIndex = index;
-							}
-						}).exec();
-					});
-				}
-			},
-			editCategory(category) {
-				this.modalTitle = '修改主类目';
-				this.inputValue = category;
-				this.actionType = 'editMain';
-				this.targetCategory = category;
-				this.modalVisible = true;
-				this.dropdownIndex = null;
+			categoryIcon(item) {
+				const iconName = this.categoriesIcons[item];
+				return `/static/category/${iconName}-select.png`;
 			},
 			addSubCategory(category) {
 				this.modalTitle = `新增“${category}”的子类目`;
@@ -162,21 +149,6 @@
 				this.actionType = 'addSub';
 				this.targetCategory = category;
 				this.modalVisible = true;
-				this.dropdownIndex = null;
-			},
-			deleteCategory(category) {
-				uni.showModal({
-					title: '提示',
-					content: `确定删除“${category}”及其子类目？`,
-					success: res => {
-						if (res.confirm) {
-							// 删除主类目
-							delete this.categoriesMap[category];
-							this.save();
-						}
-					}
-				});
-				this.dropdownIndex = null;
 			},
 			openAddCategory() {
 				uni.showActionSheet({
@@ -197,7 +169,7 @@
 
 			editSubCategory(mainCategory, subCategory, index) {
 				this.modalTitle = '修改类目';
-				this.targetCategory=mainCategory;
+				this.targetCategory = mainCategory;
 				this.inputValue = subCategory;
 				this.sourceSubCategoryIndex = index;
 				this.actionType = 'editSub';
@@ -215,10 +187,16 @@
 						}
 					}
 				});
-				this.dropdownIndex = null;
 			},
 			confirmModal() {
 				const value = this.inputValue.trim();
+				if (value.length > 10) {
+					uni.showToast({
+						title: '最多10个文字',
+						icon: 'none',
+					});
+					return;
+				}
 				if (!value) return uni.showToast({
 					title: '名称不能为空',
 					icon: 'none'
@@ -232,20 +210,14 @@
 						});
 					}
 					this.$set(this.categoriesMap, value, []);
-					this.$set(this.collapsed, value, false);
 				} else if (this.actionType === 'editMain') {
-					if (value === this.targetCategory) {
-						this.modalVisible = false;
-						return;
-					}
-					if (this.categoriesMap[value]) {
-						return uni.showToast({
-							title: '该类目已存在',
-							icon: 'none'
-						});
-					}
-					this.$set(this.categoriesMap, value, this.categoriesMap[this.targetCategory]);
-					this.$delete(this.categoriesMap, this.targetCategory);
+					// 衣物一级类目不可修改名称
+					uni.showToast({
+						title: '衣物一级类目不可修改',
+						icon: 'none'
+					});
+					this.modalVisible = false;
+					return;
 				} else if (this.actionType === 'addSub') {
 					const list = this.categoriesMap[this.targetCategory];
 					if (list.includes(value)) {
@@ -266,8 +238,7 @@
 					sublist[this.sourceSubCategoryIndex] = value;
 					this.categoriesMap[this.targetCategory] = sublist;
 					this.sourceSubCategoryIndex = null;
-				}
-				else if (this.actionType === 'editMatch') {
+				} else if (this.actionType === 'editMatch') {
 					if (this.matchCategories.includes(value)) {
 						return uni.showToast({
 							title: '搭配类目已存在',
@@ -276,8 +247,7 @@
 					}
 					this.matchCategories[this.sourceSubCategoryIndex] = value;
 					this.sourceSubCategoryIndex = null;
-				}
-				else if (this.actionType === 'addMatch') {
+				} else if (this.actionType === 'addMatch') {
 					if (this.matchCategories.includes(value)) {
 						return uni.showToast({
 							title: '搭配类目已存在',
@@ -290,14 +260,14 @@
 				this.inputValue = '';
 				this.save();
 			},
-			save(){
-				uni.setStorageSync('wartrobeCategory',this.categoriesMap);
+			save() {
+				uni.setStorageSync('wartrobeCategories', this.categoriesMap);
 				uni.setStorageSync('matchCategories', this.matchCategories);
 			},
 			goBack() {
 				uni.navigateBack();
 			},
-			
+
 			editMatchCategory(index) {
 				this.modalTitle = '修改搭配类目';
 				this.inputValue = this.matchCategories[index];
@@ -305,7 +275,7 @@
 				this.sourceSubCategoryIndex = index;
 				this.modalVisible = true;
 			},
-			
+
 			deleteMatchCategory(index) {
 				uni.showModal({
 					title: '提示',
@@ -313,23 +283,28 @@
 					success: res => {
 						if (res.confirm) {
 							this.matchCategories.splice(index, 1);
-							this.save(); // 可拓展同步保存逻辑
+							this.save();
 						}
 					}
 				});
-			}
+			},
 
-			
+			addMatchCategory() {
+				this.modalTitle = '新增搭配类目';
+				this.inputValue = '';
+				this.actionType = 'addMatch';
+				this.modalVisible = true;
+			}
 		}
 	};
 </script>
 
 <style scoped>
 	.category-container {
-		min-height: 100vh;
 		background: #fdfdfd;
 		position: relative;
 		justify-items: center;
+		align-items: center;
 	}
 
 	/* 顶部栏 */
@@ -339,154 +314,144 @@
 		align-items: center;
 		padding: 12px 0px;
 		background-color: #fff;
-		border-bottom: 1px solid #e5e5e5;
-		
+
 		padding-top: calc(var(--status-bar-height) + 40px);
 	}
-	
+
 	.back-icon {
-		width: 24px;
-		height: 24px;
+		width: 20px;
+		height: 20px;
 		margin-right: 12px;
 		margin-left: 20px;
 	}
-	
+
 	.title {
 		font-size: 18px;
 		font-weight: bold;
 		color: #333;
 	}
-	
+
+	/* 标签页样式 */
+	.tab-container {
+		width: 100%;
+		display: flex;
+		background-color: #fff;
+		border-bottom: 1px solid #e5e5e5;
+		padding: 0 10px;
+	}
+
+	.tab-item {
+		flex: 1;
+		text-align: center;
+		padding: 12px 0;
+		font-size: 16px;
+		color: #666;
+		border-bottom: 2px solid transparent;
+	}
+
+	.tab-item.active {
+		color: #8A6FDF;
+		border-bottom: 2px solid #8A6FDF;
+		font-weight: bold;
+	}
 
 	.category-list {
-		height: calc(100vh - 120px);
+		height: calc(100vh - 150px);
+		width: 100%;
+		/* margin: 0 10px; */
 	}
 
 	.category-item {
-		border-top: 1px solid #eee;
-		margin: 10px 10px 0 10px;
 		background-color: #fff;
-		border-radius: 5px;
-		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+		border-radius: 8px;
+		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+		margin-bottom: 15px;
+		overflow: hidden;
 	}
 
 	.category-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		padding: 15px;
 	}
 
-	.left {
+	.header-content {
 		display: flex;
 		align-items: center;
 	}
 
-	.category-name {
-		color: #212121;
-		font-size: 16px;
-		font-weight: bold;
-	}
-
-	.arrow {
-		margin-right: 6px;
-		transition: transform 0.2s ease;
-		margin-left: 10px;
-		font-size: 14px;
-	}
-
-	.arrow.open {
-		transform: rotate(90deg);
-	}
-
-	.menu-button {
-		padding: 6px;
-		font-size: 20px;
+	.category-icon {
+		width: 25px;
+		height: 25px;
 		margin-right: 10px;
 	}
 
-	.dropdown {
-		position: fixed;
-		z-index: 999;
-		background: white;
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-		border-radius: 6px;
-		width: 80px;
-	}
-
-	.dropdown-item {
-		padding: 10px;
-		border-bottom: 1px solid #eee;
-		display: flex;
-		justify-content: space-around;
-	}
-
-	.dropdown-item:last-child {
-		border-bottom: none;
-	}
-
-	.dropdown-item.delete {
-		color: red;
-	}
-
-	.dropdown-icon {
-		width: 20px;
-		height: 20px;
-	}
-
-	.dropdown-name {
-		color: #707070;
+	.category-name {
+		color: #7f6edf;
 		font-size: 14px;
+		font-weight: bold;
 	}
 
-	.sub-list {
-		padding-left: 24px;
-		padding-bottom: 10px;
+	.add-sub-btn {
+		width: 30px;
+		height: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: #8A6FDF;
+		border-radius: 50%;
+	}
+
+	.add-icon {
+		width: 18px;
+		height: 18px;
+	}
+
+	.sub-grid {
+		display: flex;
+		flex-wrap: wrap;
+		margin: 10px;
+		gap: 20px;
+	}
+
+	.sub-item-wrapper {
+		flex: 0 0 calc((100% - 80px)/5);
+		/* 5个子项一行 */
+
 	}
 
 	.sub-item {
-		align-items: center;
-		justify-items: center;
-		padding: 4px 0;
 		position: relative;
+		/* width: 100px; */
+		height: 40px;
+		border-radius: 8rpx;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
 	}
 
 	.sub-item-text {
 		font-size: 12px;
-		color: #707070;
+		color: #666;
+		text-align: center;
+		padding: 0 10rpx;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	.sub-item-edit {
-		width: 20px;
-		height: 20px;
-		margin-left: 5px;
-	}
 
 	.sub-item-delete {
-		width: 20px;
-		height: 20px;
+		color: #6d62c3;
+		font-size: 18px;
 		position: absolute;
-		right: 10px;
-		align-items: center;
+		right: -5px;
+		top: -12px;
 	}
 
-	.floating-btn {
-		position: fixed;
-		right: 20px;
-		bottom: 40px;
-		width: 50px;
-		height: 50px;
-		background-color: #8A6FDF;
-		border-radius: 25px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	}
-	
-	.floating-btn-image {
-		width: 30px;
-		height: 30px;
-	}
+
 
 	.modal-mask {
 		position: fixed;
@@ -503,7 +468,7 @@
 
 	.modal {
 		background: white;
-		padding: 20px 0;
+		padding-top: 20px;
 		width: 80%;
 		border-radius: 10px;
 		justify-items: center;
@@ -524,50 +489,71 @@
 	}
 
 	.modal-input {
-		border: 1px solid #ddd;
+		border: 1px solid #b5b5b5;
 		border-radius: 6px;
 		margin: 5px 10px;
 
 		padding: 8px;
+		text-align: center;
 
+	}
+	
+	.modal-tip{
+		font-size: 12px;
+		color: #919191;
+		margin: 5px 10px;
+		text-align: center;
 	}
 
 	.modal-actions {
+		width: 100%;
 		display: flex;
-		justify-content: space-between;
+		justify-content: space-around;
+		border-top: #ddd solid 1px;
+		flex: 1;
+		margin-top: 5px;
+		
 	}
 	
+	.modal-actions-cancle{
+		font-size: 14px;
+		color: #333;
+		text-align: center;
+		width: 50%;
+		padding: 10px 0;
+	}
+	.modal-actions-confirm{
+		width: 50%;
+		font-size: 14px;
+		color: #6d62c3;
+		text-align: center;
+		border-left: #ddd solid 1px;
+		padding: 10px 0;
+	}
+
 	.section-title {
-		padding: 12px 16px 6px;
+		padding: 12px 0 6px;
 		font-size: 16px;
 		font-weight: bold;
 		color: #333;
 	}
-	
+
 	.match-section {
-		margin: 10px 10px 0;
 		background-color: #fff;
-		border-radius: 6px;
-		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+		border-radius: 8px;
+		box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 		padding: 10px;
-	}
-	
-	.match-item {
-		display: flex;
-		align-items: center;
-		padding: 8px 0;
-		border-bottom: 1px solid #eee;
-		position: relative;
-	}
-	
-	.match-item:last-child {
-		border-bottom: none;
-	}
-	
-	.match-name {
-		font-size: 16px;
-		color: #212121;
-		margin-left: 10px;
+		margin-bottom: 15px;
 	}
 
+	.add-match-item {
+		background-color: #d8d8ff;
+		border: 1px dashed #a3a8ef;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		
+		height: 40px;
+		border-radius: 8rpx;
+	}
 </style>

@@ -91,7 +91,7 @@
 		</view>
 
 		<!-- 版本信息 -->
-		<view class="version-text">版本 1.4.1</view>
+		<view class="version-text">版本 1.5.0</view>
 		<ad-custom unit-id="adunit-65485912806f40d1"></ad-custom>
 	</view>
 

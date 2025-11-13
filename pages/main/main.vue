@@ -1,6 +1,6 @@
 <template>
-	<add-tip :tip="tip" :duration="duration"/>
-	
+	<add-tip :tip="tip" :duration="duration" />
+
 	<view class="home-page">
 		<!-- 头部 欢迎 & 头像 -->
 		<view class="header">
@@ -12,7 +12,6 @@
 			</view>
 			<view v-if="!userInfo.nickName" class="login-btn" @click="clickLogin">点击登录</view>
 		</view>
-
 
 		<!-- 天气卡片 -->
 		<view class="weather-card">
@@ -41,45 +40,51 @@
 				<text class="action-text">上传套装</text>
 			</view>
 		</view>
+
+		<!-- 图片轮播模块 -->
+		<view class="banner-section">
+			<label class="banner-section-title">精彩资讯</label>
+			<swiper class="banner-swiper" :indicator-dots="true" :autoplay="true" :interval="3000" :duration="500" :circular="true"
+				indicator-color="rgba(255, 255, 255, 0.3)" indicator-active-color="#fff">
+				<swiper-item v-for="(banner, index) in banners" :key="index">
+					<view class="banner-item" @click="clickBanner(index)">
+						<image :src="banner" mode="aspectFill" class="banner-image" />
+					</view>
+				</swiper-item>
+			</swiper>
+		</view>
+
 		<!-- 推荐模块 -->
-		<section class="recommendation-section">
-			<h2 class="section-title">最近上传</h2>
+		<!-- <section class="recommendation-section">
+			<h2 class="section-title">最近搭配</h2>
 			<view class="empty-state-text" v-if="recentlyClothes.length===0">
 				还没有上传任何衣服哦，快去上传一件吧~
 			</view>
 			<div class="recommendation-list" v-else>
 				<div v-for="(item, index) in recentlyClothes" :key="index" class="recommendation-card">
 					<image :src="item.thumbnail" mode="widthFix" class="item-icon" />
-					<view class="item-info">
-						<text class="item-name">{{ item.name }}</text>
-						<text class="item-category">{{ item.category }}</text>
-						<text class="item-time">{{ formatTime(item.time) }}</text>
-					</view>
+
 				</div>
 			</div>
-			
-			<ad-custom unit-id="adunit-0f275a04dcdb3985"></ad-custom>
-		</section>
-
-
-
+		</section> -->
+	<ad-custom unit-id="adunit-0f275a04dcdb3985"></ad-custom>
 	</view>
+	
 	<view class="cropper-container" v-if="cropperSrc !==''">
 		<view class="cropper-wrap">
 			<ksp-cropper mode="free" :width="450" :height="600" :maxWidth="450" :maxHeight="600" :url="cropperSrc"
 				@cancel="oncancel" @ok="onok"></ksp-cropper>
 		</view>
 	</view>
-	
-	
+
 </template>
 
 <script>
 	import addTip from "@/wxcomponents/struggler-uniapp-add-tip/struggler-uniapp-add-tip.vue"
 	export default {
-		components:{
-		            addTip
-		        },
+		components: {
+			addTip
+		},
 		data() {
 			return {
 				weatherInfo: {},
@@ -95,10 +100,11 @@
 				weatherTips: '',
 				windText: '',
 				weatherIcon: '',
-				banners: [
-					'/static/banners/banner1.png',
-					'/static/banners/banner2.png',
-					'/static/banners/banner3.png'
+				banners: [					
+					'https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/bannersImage/matching.jpg',
+					'https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/bannersImage/reminder.jpg',
+					'https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/bannersImage/segment.jpg',
+					'https://mp-5df80302-4973-4391-bd75-89493f11fa67.cdn.bspapp.com/bannersImage/gongzhonghao.jpg'
 				],
 				userInfo: {},
 				isLoggedIn: false,
@@ -107,12 +113,12 @@
 				currentDate: '',
 				weekDay: '',
 				recentlyClothes: [],
-				usageDay: 0 ,//使用时长
-				cropperSrc:'',
-				
-				tip:"点击【添加到我的小程序】，下次访问更便捷！",
-				duration:5,
-				
+				usageDay: 0, //使用时长
+				cropperSrc: '',
+
+				tip: "点击【添加到我的小程序】，下次访问更便捷！",
+				duration: 5,
+
 			};
 		},
 		onShow() {
@@ -145,7 +151,44 @@
 			};
 		},
 		methods: {
-			
+			clickBanner(index) {
+				switch (index) {
+					case 3:
+						this.jumpToOfficialAccount();
+						break;
+					case 0:
+						uni.navigateTo({
+							url: `/pages/webview/webview?url=${encodeURIComponent('https://mp.weixin.qq.com/s/NOF4mH_Dj7uZ9W9mlsZvRw')}`
+						});
+						break;
+					case 1:
+						uni.navigateTo({
+							url: `/pages/webview/webview?url=${encodeURIComponent('https://mp.weixin.qq.com/s/y3nw-7N_T4aqLm-Axc8Qeg')}`
+						});
+						break;
+					case 2:
+						uni.navigateTo({
+							url: `/pages/webview/webview?url=${encodeURIComponent('https://mp.weixin.qq.com/s/12okTFOhTlzI1JukAXkksQ')}`
+						});
+						break;
+				}
+			},
+			jumpToOfficialAccount() {
+				if (wx.openOfficialAccountProfile) {
+					wx.openOfficialAccountProfile({
+						username: 'gh_e118b1892187',
+						success: (res) => {},
+						fail: (err) => {
+							console.error(err);
+						}
+					});
+				} else {
+					uni.showToast({
+						title: '当前微信版本过低，请升级',
+						icon: 'none'
+					});
+				}
+			},
 			getTime() {
 				const date = new Date()
 				this.currentDate = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
@@ -355,9 +398,9 @@
 				}
 				const parts = [];
 				let clotherParts = '';
-				if (rec.upper.length)clotherParts = `${rec.upper.join(' / ')}`;
-				if (rec.lower.length) clotherParts +=  `${clotherParts === ''?'':'+'} ${rec.lower.join(' / ')}`;
-				if(clotherParts!=='') parts.push(clotherParts);
+				if (rec.upper.length) clotherParts = `${rec.upper.join(' / ')}`;
+				if (rec.lower.length) clotherParts += `${clotherParts === ''?'':'+'} ${rec.lower.join(' / ')}`;
+				if (clotherParts !== '') parts.push(clotherParts);
 				if (rec.accessories.length) parts.push(`配饰：${rec.accessories.join('、')}`);
 				if (rec.specialNotes.length) parts.push(`注意：${rec.specialNotes.join('；')}`);
 				if (rec.tips.length) parts.push(`*小贴士：${rec.tips.join('；')}`);
@@ -378,7 +421,7 @@
 				this.cropperSrc = "";
 				uni.showTabBar();
 			},
-			chooseImage(){
+			chooseImage() {
 				if (!this.checkLogin())
 					return;
 				uni.showActionSheet({
@@ -386,7 +429,7 @@
 					success: res => {
 						if (res.tapIndex === 0) {
 							setTimeout(() => {
-								uni.setStorageSync('isMatchingMode',true);
+								uni.setStorageSync('isMatchingMode', true);
 								uni.switchTab({
 									url: `/pages/wardrobe/wardrobe`
 								});
@@ -412,7 +455,7 @@
 	.home-page {
 		display: flex;
 		flex-direction: column;
-		background: #F9F9F9;
+		background: #ffffff;
 		height: 100vh;
 		position: relative;
 	}
@@ -554,6 +597,34 @@
 		font-weight: bold;
 	}
 
+	.banner-section {
+		margin: 0 20px;
+		margin-top: 20px;
+		border-radius: 10px;
+	}
+
+	.banner-section-title {
+		font-size: 16px;
+		font-weight: 600;
+		margin-bottom: 20px;
+	}
+
+	.banner-swiper {
+		height: 180px;
+		margin-top: 10px;
+	}
+
+	.banner-item {
+		width: 100%;
+		height: 180px;
+	}
+
+	.banner-image {
+		width: 100%;
+		height: 180px;
+		border-radius: 10px;
+	}
+
 	.empty-state-text {
 		font-size: 12px;
 		color: #8A6FDF;
@@ -577,21 +648,21 @@
 			margin: 0 20px;
 
 			.recommendation-card {
-				min-width: 150px;
+				min-width: 100px;
 				margin-right: 10px;
-				box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.05);
+				box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.05);
 				display: flex;
 				flex-direction: column;
-				border: #d1d1d1 solid 1px;
-				border-radius: 20px;
-				border-bottom-left-radius: 10px;
-				border-bottom-right-radius: 10px;
+				border: #f0f0f0 solid 1px;
+				border-radius: 10px;
+				border-bottom-left-radius: 5px;
+				border-bottom-right-radius: 5px;
 				background-color: #F9F9F9;
 
 				.item-icon {
 					width: 100%;
-					height: 160px;
-					border-radius: 20px;
+					height: 100px;
+					border-radius: 10px;
 				}
 
 				.item-info {
@@ -600,7 +671,7 @@
 					flex-direction: column;
 
 					.item-name {
-						font-size: 15px;
+						font-size: 12px;
 						color: #161616;
 
 						max-width: 100px;

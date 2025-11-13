@@ -66,13 +66,6 @@
 			}
 		},
 		{
-			"path" : "pages/settings/messageList",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
-			}
-		},
-		{
 			"path" : "pages/settings/about",
 			"style" : 
 			{
@@ -101,13 +94,26 @@
 			}
 		},
 		{
-			"path" : "pages/outfitDetail/outfitDetail",
+			"path" : "pages/ootdDetail/ootdDetail",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/matching/outfitDetail",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
+		},
+		{
+			"path" : "pages/matching/outfitShareView",
 			"style" : 
 			{
 				"navigationBarTitleText" : ""
 			}
 		}
-		
 
 	],
 	"globalStyle": {
